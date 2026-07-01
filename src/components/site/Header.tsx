@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, NavLink } from "react-router-dom";
 import { Menu, X, User } from "lucide-react";
 import logo from "@/assets/brand/logo.png";
 import { site } from "@/config/site";
@@ -18,15 +18,19 @@ export function Header() {
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
           {site.nav.map((item) => (
-            <Link
+            <NavLink
               key={item.to}
               to={item.to}
-              activeOptions={{ exact: item.to === "/" }}
-              className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
-              activeProps={{ className: "text-primary" }}
+              end={item.to === "/"}
+              className={({ isActive }) =>
+                cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  isActive ? "text-primary" : "text-foreground/80",
+                )
+              }
             >
               {item.label}
-            </Link>
+            </NavLink>
           ))}
         </nav>
         <div className="hidden md:block">
@@ -54,15 +58,20 @@ export function Header() {
       >
         <div className="space-y-1 px-4 py-4">
           {site.nav.map((item) => (
-            <Link
+            <NavLink
               key={item.to}
               to={item.to}
+              end={item.to === "/"}
               onClick={() => setOpen(false)}
-              className="block rounded-md px-3 py-2 text-sm font-medium text-foreground/80 hover:bg-secondary hover:text-primary"
-              activeProps={{ className: "text-primary" }}
+              className={({ isActive }) =>
+                cn(
+                  "block rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary hover:text-primary",
+                  isActive ? "text-primary" : "text-foreground/80",
+                )
+              }
             >
               {item.label}
-            </Link>
+            </NavLink>
           ))}
           <a
             href="#login"
