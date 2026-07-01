@@ -3,7 +3,8 @@ import { LayoutDashboard, FileText, Users, Image, Palette, LogOut, ExternalLink,
 import { logout } from "./api/client";
 import { cn } from "@/lib/utils";
 
-const nav = [
+type NavItem = { to: string; end?: boolean; label: string; icon: typeof LayoutDashboard; disabled?: boolean };
+const nav: NavItem[] = [
   { to: "/admin", end: true, label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/pages", label: "Pages (CMS)", icon: FileText },
   { to: "/admin/properties", label: "Properties", icon: Building2 },
