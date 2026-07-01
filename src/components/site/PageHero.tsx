@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { Home, ChevronRight } from "lucide-react";
 import heroBg from "@/assets/brand/hero.jpg";
 
