@@ -21,7 +21,7 @@ export interface CmsPage {
   formId?: string | null;         // assigned Lead Form for the page (auto-rendered)
   blocks?: PageBlock[];           // visual page-builder blocks
   showInNav?: boolean;            // include in Navigation Manager auto-detected pages
-  template?: "standard" | "builder"; // rendering mode
+  template?: "standard" | "builder" | "blank" | "landing" | "contact" | "blog" | "full_width"; // rendering mode / starter layout
   seoKeywords?: string;
   ogImage?: string | null;
   canonical?: string;
