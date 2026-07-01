@@ -133,6 +133,7 @@ export default function App() {
               </>
             }
           />
+          <Route path="/lead/:slug" element={<PublicLeadPage />} />
           <Route path="*" element={<NotFound />} />
               </Routes>
             </SiteLayout>
