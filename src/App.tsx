@@ -33,6 +33,8 @@ const AdminFormBuilder = lazy(() => import("@/admin/pages/FormBuilderPage").then
 const AdminLeadPages = lazy(() => import("@/admin/pages/LeadPagesListPage").then((m) => ({ default: m.LeadPagesListPage })));
 const AdminLeadPageEditor = lazy(() => import("@/admin/pages/LeadPageEditorPage").then((m) => ({ default: m.LeadPageEditorPage })));
 const AdminAnalytics = lazy(() => import("@/admin/pages/AnalyticsPage").then((m) => ({ default: m.AnalyticsPage })));
+const AdminSeo = lazy(() => import("@/admin/pages/SeoManagerPage").then((m) => ({ default: m.SeoManagerPage })));
+const AdminIntegrations = lazy(() => import("@/admin/pages/IntegrationsPage").then((m) => ({ default: m.IntegrationsPage })));
 const PublicLeadPage = lazy(() => import("@/pages/LeadPage").then((m) => ({ default: m.LeadPage })));
 const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
 
@@ -80,6 +82,8 @@ export default function App() {
           <Route path="lead-pages" element={<AdminLeadPages />} />
           <Route path="lead-pages/:id" element={<AdminLeadPageEditor />} />
           <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="seo" element={<AdminSeo />} />
+          <Route path="integrations" element={<AdminIntegrations />} />
         </Route>
 
         {/* Public site */}
