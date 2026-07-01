@@ -3,7 +3,6 @@ import { Route, Routes } from "react-router-dom";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Seo } from "@/components/site/Seo";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
-import { Link } from "react-router-dom";
 
 const HomePage = lazy(() => import("@/pages/HomePage").then((m) => ({ default: m.HomePage })));
 const AboutPage = lazy(() => import("@/pages/AboutPage").then((m) => ({ default: m.AboutPage })));
@@ -32,24 +31,13 @@ const AdminMedia = lazy(() => import("@/admin/pages/MediaPage").then((m) => ({ d
 const AdminSettings = lazy(() => import("@/admin/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })));
 const AdminForms = lazy(() => import("@/admin/pages/FormsListPage").then((m) => ({ default: m.FormsListPage })));
 const AdminFormBuilder = lazy(() => import("@/admin/pages/FormBuilderPage").then((m) => ({ default: m.FormBuilderPage })));
-const AdminLeadPages = lazy(() => import("@/admin/pages/LeadPagesListPage").then((m) => ({ default: m.LeadPagesListPage })));
-const AdminLeadPageEditor = lazy(() => import("@/admin/pages/LeadPageEditorPage").then((m) => ({ default: m.LeadPageEditorPage })));
 const AdminAnalytics = lazy(() => import("@/admin/pages/AnalyticsPage").then((m) => ({ default: m.AnalyticsPage })));
 const AdminSeo = lazy(() => import("@/admin/pages/SeoManagerPage").then((m) => ({ default: m.SeoManagerPage })));
 const AdminIntegrations = lazy(() => import("@/admin/pages/IntegrationsPage").then((m) => ({ default: m.IntegrationsPage })));
 const AdminNavigation = lazy(() => import("@/admin/pages/NavigationPage").then((m) => ({ default: m.NavigationPage })));
 const PublicLeadPage = lazy(() => import("@/pages/LeadPage").then((m) => ({ default: m.LeadPage })));
+const DynamicPage = lazy(() => import("@/pages/DynamicPage").then((m) => ({ default: m.DynamicPage })));
 const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
-
-function NotFound() {
-  return (
-    <div className="mx-auto max-w-md px-4 py-24 text-center">
-      <h1 className="text-7xl font-bold text-foreground">404</h1>
-      <p className="mt-4 text-muted-foreground">The page you're looking for doesn't exist.</p>
-      <Link to="/" className="mt-6 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Go home</Link>
-    </div>
-  );
-}
 
 export default function App() {
   return (
@@ -83,8 +71,6 @@ export default function App() {
           <Route path="settings" element={<AdminSettings />} />
           <Route path="forms" element={<AdminForms />} />
           <Route path="forms/:id" element={<AdminFormBuilder />} />
-          <Route path="lead-pages" element={<AdminLeadPages />} />
-          <Route path="lead-pages/:id" element={<AdminLeadPageEditor />} />
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="seo" element={<AdminSeo />} />
           <Route path="integrations" element={<AdminIntegrations />} />
@@ -153,7 +139,7 @@ export default function App() {
             }
           />
           <Route path="/lead/:slug" element={<PublicLeadPage />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<DynamicPage />} />
                 </Routes>
               </ErrorBoundary>
             </SiteLayout>

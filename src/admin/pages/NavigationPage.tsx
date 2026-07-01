@@ -480,7 +480,12 @@ function MobileSettingsPanel() {
 export function NavigationPage() {
   const qc = useQueryClient();
   const { data: menus = [] } = useQuery({ queryKey: ["admin-menus"], queryFn: listMenus });
-  const { data: pages = [] } = useQuery({ queryKey: ["admin-pages"], queryFn: listPages });
+  const { data: allPages = [] } = useQuery({ queryKey: ["admin-pages"], queryFn: listPages });
+  // Only offer published pages that opt in to nav — automatically detects every new CMS page.
+  const pages = useMemo(
+    () => allPages.filter((p) => p.status === "published" && (p.showInNav ?? true)),
+    [allPages],
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [newForm, setNewForm] = useState<{ name: string; slug: string; location: MenuLocation }>({ name: "", slug: "", location: "custom" });
