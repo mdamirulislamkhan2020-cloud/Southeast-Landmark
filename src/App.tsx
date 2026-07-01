@@ -29,6 +29,9 @@ const AdminMedia = lazy(() => import("@/admin/pages/MediaPage").then((m) => ({ d
 const AdminSettings = lazy(() => import("@/admin/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })));
 const AdminForms = lazy(() => import("@/admin/pages/FormsListPage").then((m) => ({ default: m.FormsListPage })));
 const AdminFormBuilder = lazy(() => import("@/admin/pages/FormBuilderPage").then((m) => ({ default: m.FormBuilderPage })));
+const AdminLeadPages = lazy(() => import("@/admin/pages/LeadPagesListPage").then((m) => ({ default: m.LeadPagesListPage })));
+const AdminLeadPageEditor = lazy(() => import("@/admin/pages/LeadPageEditorPage").then((m) => ({ default: m.LeadPageEditorPage })));
+const PublicLeadPage = lazy(() => import("@/pages/LeadPage").then((m) => ({ default: m.LeadPage })));
 const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
 
 function NotFound() {
@@ -71,6 +74,8 @@ export default function App() {
           <Route path="settings" element={<AdminSettings />} />
           <Route path="forms" element={<AdminForms />} />
           <Route path="forms/:id" element={<AdminFormBuilder />} />
+          <Route path="lead-pages" element={<AdminLeadPages />} />
+          <Route path="lead-pages/:id" element={<AdminLeadPageEditor />} />
         </Route>
 
         {/* Public site */}
@@ -133,6 +138,7 @@ export default function App() {
               </>
             }
           />
+          <Route path="/lead/:slug" element={<PublicLeadPage />} />
           <Route path="*" element={<NotFound />} />
               </Routes>
             </SiteLayout>
