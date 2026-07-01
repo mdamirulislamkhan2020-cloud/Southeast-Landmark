@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,9 @@ export function LoginPage() {
             </div>
             {err && <div className="text-sm text-destructive">{err}</div>}
             <Button type="submit" className="w-full" disabled={busy}>{busy ? "Signing in..." : "Sign in"}</Button>
+            <div className="text-center">
+              <Link to="/admin/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">Forgot password?</Link>
+            </div>
             <p className="text-xs text-muted-foreground text-center">Default: any email + password 4+ chars (mock mode).</p>
           </form>
         </CardContent>

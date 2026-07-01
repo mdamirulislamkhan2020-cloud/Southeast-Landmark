@@ -3,6 +3,7 @@ import { Mail, MapPin, Phone, Clock } from "lucide-react";
 import logo from "@/assets/brand/logo.png";
 import { site } from "@/config/site";
 import { useFooterSettings, useMenu } from "@/lib/use-navigation";
+import { NewsletterForm } from "./NewsletterForm";
 
 export function Footer() {
   const footerSettings = useFooterSettings();
@@ -72,6 +73,11 @@ export function Footer() {
             <li className="flex gap-3"><Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><a href={`mailto:${site.email}`} className="hover:text-primary">{site.email}</a></li>
             <li className="flex gap-3"><Clock className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span>{site.hours}</span></li>
           </ul>
+          <div className="mt-6">
+            <div className="text-xs font-semibold uppercase tracking-wider text-primary">Newsletter</div>
+            <p className="mt-1 text-xs text-muted-foreground">Project launches & investment updates.</p>
+            <NewsletterForm />
+          </div>
         </div>
       </div>
       <div className="border-t border-border/60">

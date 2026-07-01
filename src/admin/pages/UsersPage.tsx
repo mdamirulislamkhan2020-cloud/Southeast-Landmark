@@ -16,6 +16,7 @@ import { Plus, Pencil, Trash2, KeyRound, Search, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { createUser, deleteUser, listUsers, resetUserPassword, updateUser, permissionsFor } from "../api/settings-client";
 import { PERMISSION_KEYS, PERMISSION_LABELS, ROLE_LABELS, type AdminUser, type PermissionKey, type UserRole } from "../api/settings";
+import { sendPasswordResetEmail, sendWelcomeEmail } from "@/services/email-service";
 
 const PAGE_SIZE = 8;
 
@@ -42,8 +43,17 @@ function UserEditor({ open, onOpenChange, initial }: { open: boolean; onOpenChan
 
   const save = async () => {
     if (!form.name || !form.email) return toast.error("Name and email required");
-    if (initial?.id) { await updateUser(initial.id, form); toast.success("User updated"); }
-    else { await createUser(form); toast.success("User added"); }
+    if (initial?.id) {
+      await updateUser(initial.id, form);
+      toast.success("User updated");
+    } else {
+      const created = await createUser(form);
+      toast.success("User added");
+      // Fire-and-forget welcome email through the centralised SMTP service.
+      const r = await sendWelcomeEmail(created.email, created.name);
+      if (r.ok && r.data?.simulated) toast.warning("Welcome email simulated (no backend).");
+      else if (!r.ok) toast.error(`Welcome email failed: ${r.error ?? "unknown error"}`);
+    }
     qc.invalidateQueries({ queryKey: ["admin-users"] });
     onOpenChange(false);
   };
@@ -126,7 +136,23 @@ export function UsersPage() {
 
   const del = useMutation({ mutationFn: (id: string) => deleteUser(id), onSuccess: () => { toast.success("User deleted"); qc.invalidateQueries({ queryKey: ["admin-users"] }); } });
   const toggle = useMutation({ mutationFn: (u: AdminUser) => updateUser(u.id, { active: !u.active }), onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }) });
-  const reset = useMutation({ mutationFn: (id: string) => resetUserPassword(id), onSuccess: (r) => toast.success(`Temp password: ${r.tempPassword}`) });
+  const reset = useMutation({
+    mutationFn: async (u: AdminUser) => {
+      const r = await resetUserPassword(u.id);
+      const mail = await sendPasswordResetEmail(u.email, r.tempPassword);
+      return { ...r, mail, user: u };
+    },
+    onSuccess: ({ tempPassword, mail, user }) => {
+      toast.success(`Temp password for ${user.email}: ${tempPassword}`);
+      if (mail.ok && mail.data?.simulated) {
+        toast.warning("Password reset email simulated (no backend).");
+      } else if (!mail.ok) {
+        toast.error(`Reset email failed: ${mail.error ?? "unknown error"}`);
+      } else {
+        toast.success("Password reset email sent");
+      }
+    },
+  });
 
   return (
     <div className="space-y-4">
@@ -184,7 +210,7 @@ export function UsersPage() {
                 <TableCell className="text-xs text-muted-foreground">{u.lastLogin ? new Date(u.lastLogin).toLocaleString() : "—"}</TableCell>
                 <TableCell className="text-right">
                   <div className="inline-flex gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => reset.mutate(u.id)}><KeyRound className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => reset.mutate(u)}><KeyRound className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => { setEditing(u); setEditorOpen(true); }}><Pencil className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => { if (confirm("Delete this user?")) del.mutate(u.id); }}><Trash2 className="h-4 w-4" /></Button>
                   </div>

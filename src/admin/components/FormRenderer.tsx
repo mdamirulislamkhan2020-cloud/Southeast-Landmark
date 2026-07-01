@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import type { FormField, LeadForm, LogicGroup } from "../api/forms";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +15,36 @@ import { Progress } from "@/components/ui/progress";
 import { Star } from "lucide-react";
 import { submitLead } from "../api/crm-client";
 import type { CrmAnalytics } from "../api/crm";
+import { formatAnswers, notifyAdmin, type EmailSource } from "@/services/email-service";
+
+/**
+ * Map form purpose → email source. Purpose comes from the LeadForm settings
+ * (defaults to "lead_form"). Keeping this in one place makes every future form
+ * type (site visit, brochure, callback, …) route through the same helper.
+ */
+const PURPOSE_TO_SOURCE: Record<string, EmailSource> = {
+  lead_form: "lead_form",
+  site_visit: "site_visit_request",
+  project_inquiry: "project_inquiry",
+  inquiry: "inquiry_form",
+  callback: "callback_request",
+  brochure: "brochure_request",
+  newsletter: "newsletter_subscription",
+  contact: "contact_form",
+};
+
+function purposeFromForm(form: LeadForm): EmailSource {
+  const raw = (form as unknown as { settings?: { purpose?: string } }).settings?.purpose;
+  if (raw && raw in PURPOSE_TO_SOURCE) return PURPOSE_TO_SOURCE[raw];
+  const name = form.name.toLowerCase();
+  if (name.includes("site visit")) return "site_visit_request";
+  if (name.includes("brochure")) return "brochure_request";
+  if (name.includes("callback")) return "callback_request";
+  if (name.includes("newsletter")) return "newsletter_subscription";
+  if (name.includes("inquiry") || name.includes("enquiry")) return "project_inquiry";
+  if (name.includes("contact")) return "contact_form";
+  return "lead_form";
+}
 
 type Values = Record<string, string | string[] | boolean | number>;
 
@@ -49,16 +81,20 @@ export function FormRenderer({ form }: { form: LeadForm }) {
   });
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const inFlight = useRef(false);
   const fieldsById = useMemo(() => new Map(form.fields.map((f) => [f.id, f])), [form.fields]);
   const steps = form.multiStep ? form.steps : form.steps.slice(0, 1);
   const stepFields = form.fields.filter((f) => (form.multiStep ? (f.step ?? 0) === step : true)).filter((f) => !f.hidden);
 
   const set = (name: string, v: Values[string]) => setValues((prev) => ({ ...prev, [name]: v }));
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.multiStep && step < steps.length - 1) { setStep(step + 1); return; }
-    setSubmitted(true);
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setSubmitting(true);
     try {
       const answers: Record<string, unknown> = {};
       form.fields.forEach((f) => {
@@ -106,15 +142,47 @@ export function FormRenderer({ form }: { form: LeadForm }) {
           } catch { /* ignore */ }
         }
       }
-      void submitLead({
-        formId: form.id,
-        formName: form.name,
-        answers,
-        leadPageSlug,
-        analytics,
-        source: leadPageSlug ? `Lead Page: ${leadPageSlug}` : `Form: ${form.name}`,
+      // 1. Persist the lead in the CRM (best-effort, non-blocking).
+      try {
+        await submitLead({
+          formId: form.id,
+          formName: form.name,
+          answers,
+          leadPageSlug,
+          analytics,
+          source: leadPageSlug ? `Lead Page: ${leadPageSlug}` : `Form: ${form.name}`,
+        });
+      } catch { /* CRM failure shouldn't block the email path */ }
+
+      // 2. Email the admin via the centralised SMTP service.
+      const source = purposeFromForm(form);
+      const replyTo =
+        (typeof answers.email === "string" && answers.email) ||
+        (typeof answers.emailAddress === "string" && answers.emailAddress) ||
+        undefined;
+      const res = await notifyAdmin({
+        source,
+        subject: `[${form.name}] New submission`,
+        text: `Form: ${form.name}\nSource: ${source}\n\n${formatAnswers(answers)}`,
+        replyTo,
+        meta: { formId: form.id, leadPageSlug },
       });
-    } catch { /* non-blocking */ }
+      if (!res.ok) {
+        toast.error(res.error ?? "We couldn't send your submission. Please try again.");
+        return;
+      }
+      setSubmitted(true);
+      if (res.data?.simulated) {
+        toast.warning("Submitted — email backend not connected yet (simulated).");
+      } else {
+        toast.success(form.settings.thankYou || form.design.successMessage || "Thanks — we'll be in touch.");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Submission failed");
+    } finally {
+      inFlight.current = false;
+      setSubmitting(false);
+    }
   };
 
   const btnRadius = form.design.buttonStyle === "pill" ? "rounded-full" : form.design.buttonStyle === "square" ? "rounded-none" : "rounded-md";
@@ -228,7 +296,10 @@ export function FormRenderer({ form }: { form: LeadForm }) {
       </div>
       <div className="mt-6 flex justify-between">
         {form.multiStep && step > 0 ? <Button type="button" variant="outline" className={btnRadius} onClick={() => setStep(step - 1)}>Previous</Button> : <span />}
-        <Button type="submit" className={btnRadius}>{form.multiStep && step < steps.length - 1 ? "Next" : "Submit"}</Button>
+        <Button type="submit" className={btnRadius} disabled={submitting} aria-busy={submitting}>
+          {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {form.multiStep && step < steps.length - 1 ? "Next" : submitting ? "Sending…" : "Submit"}
+        </Button>
       </div>
     </form>
   );
