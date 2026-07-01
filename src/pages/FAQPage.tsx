@@ -30,7 +30,7 @@ const faqs = [
   },
 ];
 
-export function FAQPage() {
+function FAQPageStatic() {
   return (
     <div>
       <PageHero title="FAQ" crumb="FAQ" />
@@ -64,5 +64,13 @@ export function FAQPage() {
         </div>
       </section>
     </div>
+  );
+}
+import { CmsPageContent as _CmsPageContent__FAQPage } from "@/components/site/CmsPageContent";
+export function FAQPage() {
+  return (
+    <_CmsPageContent__FAQPage path="/faq">
+      <FAQPageStatic />
+    </_CmsPageContent__FAQPage>
   );
 }

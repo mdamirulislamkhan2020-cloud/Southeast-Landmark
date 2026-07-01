@@ -13,7 +13,7 @@ const posts = [
   { title: "Starting Your Land Investment Journey with ৳ 10 Lac", date: "20/12/2025", img: p3 },
 ];
 
-export function BlogPage() {
+function BlogPageStatic() {
   return (
     <div>
       <PageHero title="Blog" crumb="Blog" />
@@ -49,5 +49,13 @@ export function BlogPage() {
         </div>
       </section>
     </div>
+  );
+}
+import { CmsPageContent as _CmsPageContent__BlogPage } from "@/components/site/CmsPageContent";
+export function BlogPage() {
+  return (
+    <_CmsPageContent__BlogPage path="/blog">
+      <BlogPageStatic />
+    </_CmsPageContent__BlogPage>
   );
 }

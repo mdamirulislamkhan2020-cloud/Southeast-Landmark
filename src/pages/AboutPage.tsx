@@ -10,7 +10,7 @@ const features = [
   { icon: Headphones, title: "Dedicated Support", body: "A dedicated project team supports you from site visit to registration." },
 ];
 
-export function AboutPage() {
+function AboutPageStatic() {
   return (
     <div>
       <PageHero title="About" crumb="About" />
@@ -79,5 +79,13 @@ export function AboutPage() {
         </div>
       </section>
     </div>
+  );
+}
+import { CmsPageContent as _CmsPageContent__AboutPage } from "@/components/site/CmsPageContent";
+export function AboutPage() {
+  return (
+    <_CmsPageContent__AboutPage path="/about">
+      <AboutPageStatic />
+    </_CmsPageContent__AboutPage>
   );
 }
