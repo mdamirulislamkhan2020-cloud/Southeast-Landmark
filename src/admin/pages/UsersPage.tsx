@@ -34,7 +34,11 @@ function UserEditor({ open, onOpenChange, initial }: { open: boolean; onOpenChan
   const onRoleChange = (role: UserRole) => setForm((f) => ({ ...f, role, permissions: permissionsFor(role) }));
   const togglePerm = (k: PermissionKey) => setForm((f) => ({ ...f, permissions: { ...(f.permissions ?? {}), [k]: !f.permissions?.[k] } }));
 
-  const onFile = async (f: File | null) => { if (f) setForm((s) => ({ ...s, avatar: "" })), setForm((s) => ({ ...s, avatar: await fileToDataUrl(f) })); };
+  const onFile = async (f: File | null) => {
+    if (!f) return;
+    const dataUrl = await fileToDataUrl(f);
+    setForm((s) => ({ ...s, avatar: dataUrl }));
+  };
 
   const save = async () => {
     if (!form.name || !form.email) return toast.error("Name and email required");
