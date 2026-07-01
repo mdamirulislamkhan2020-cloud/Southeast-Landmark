@@ -3,6 +3,7 @@ import { User, Calendar } from "lucide-react";
 import p1 from "@/assets/brand/property-1.jpg";
 import p2 from "@/assets/brand/property-2.jpg";
 import p3 from "@/assets/brand/property-3.jpg";
+import { blockData, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
 
 const posts = [
   { title: "A Practical Guide to Land Investment in Bangladesh", date: "12/02/2026", img: p1 },
@@ -13,22 +14,24 @@ const posts = [
   { title: "Starting Your Land Investment Journey with ৳ 10 Lac", date: "20/12/2025", img: p3 },
 ];
 
-function BlogPageStatic() {
+export function BlogPage() {
+  const blocks = useCmsPageBlocks("/blog");
+  const heroBlock = blockData(blocks, "blog.hero");
+  const gridBlock = blockData(blocks, "blog.grid");
+
   return (
     <div>
-      <PageHero title="Blog" crumb="Blog" />
+      <PageHero title={cmsString(heroBlock, "title", "Blog")} crumb={cmsString(heroBlock, "crumb", "Blog")} />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
           <div>
-            <p className="text-sm font-medium text-primary">News &amp; Insights</p>
+            <p className="text-sm font-medium text-primary">{cmsString(gridBlock, "eyebrow", "News & Insights")}</p>
             <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-              Land Investment News &amp; Township Insights
+              {cmsString(gridBlock, "title", "Land Investment News & Township Insights")}
             </h2>
           </div>
           <p className="text-muted-foreground">
-            Explore our journal for expert land investment articles, township
-            planning updates and stories from behind the scenes at Southeast
-            Landmark.
+            {cmsString(gridBlock, "subtitle", "Explore our journal for expert land investment articles, township planning updates and stories from behind the scenes at Southeast Landmark.")}
           </p>
         </div>
         <div className="mt-12 grid gap-6 md:grid-cols-2">
@@ -49,13 +52,5 @@ function BlogPageStatic() {
         </div>
       </section>
     </div>
-  );
-}
-import { CmsPageContent as _CmsPageContent__BlogPage } from "@/components/site/CmsPageContent";
-export function BlogPage() {
-  return (
-    <_CmsPageContent__BlogPage path="/blog">
-      <BlogPageStatic />
-    </_CmsPageContent__BlogPage>
   );
 }
