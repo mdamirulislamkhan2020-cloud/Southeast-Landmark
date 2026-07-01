@@ -16,6 +16,7 @@ import { Plus, Pencil, Trash2, KeyRound, Search, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { createUser, deleteUser, listUsers, resetUserPassword, updateUser, permissionsFor } from "../api/settings-client";
 import { PERMISSION_KEYS, PERMISSION_LABELS, ROLE_LABELS, type AdminUser, type PermissionKey, type UserRole } from "../api/settings";
+import { sendPasswordResetEmail, sendWelcomeEmail } from "@/services/email-service";
 
 const PAGE_SIZE = 8;
 
@@ -42,8 +43,17 @@ function UserEditor({ open, onOpenChange, initial }: { open: boolean; onOpenChan
 
   const save = async () => {
     if (!form.name || !form.email) return toast.error("Name and email required");
-    if (initial?.id) { await updateUser(initial.id, form); toast.success("User updated"); }
-    else { await createUser(form); toast.success("User added"); }
+    if (initial?.id) {
+      await updateUser(initial.id, form);
+      toast.success("User updated");
+    } else {
+      const created = await createUser(form);
+      toast.success("User added");
+      // Fire-and-forget welcome email through the centralised SMTP service.
+      const r = await sendWelcomeEmail(created.email, created.name);
+      if (r.ok && r.data?.simulated) toast.warning("Welcome email simulated (no backend).");
+      else if (!r.ok) toast.error(`Welcome email failed: ${r.error ?? "unknown error"}`);
+    }
     qc.invalidateQueries({ queryKey: ["admin-users"] });
     onOpenChange(false);
   };
