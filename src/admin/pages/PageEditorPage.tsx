@@ -367,6 +367,12 @@ export function PageEditorPage() {
 
 function BlockQuickSettings({ block, forms, onChange }: { block: PageBlock; forms: { id: string; name: string }[]; onChange: (patch: Record<string, unknown>) => void }) {
   const d = block.data as Record<string, unknown>;
+  const [jsonDraft, setJsonDraft] = useState(JSON.stringify(d, null, 2));
+
+  useEffect(() => {
+    setJsonDraft(JSON.stringify(block.data ?? {}, null, 2));
+  }, [block.id, block.data]);
+
   const str = (k: string) => (typeof d[k] === "string" ? (d[k] as string) : "");
   const strOrNull = (v: unknown) => (typeof v === "string" ? v : "");
 
@@ -381,15 +387,42 @@ function BlockQuickSettings({ block, forms, onChange }: { block: PageBlock; form
     </div>
   );
 
+  const JsonEditor = ({ label = "Section data" }: { label?: string }) => (
+    <div className="space-y-1">
+      <Label className="text-xs">{label}</Label>
+      <Textarea
+        rows={10}
+        value={jsonDraft}
+        onChange={(e) => setJsonDraft(e.target.value)}
+        onBlur={() => {
+          try {
+            const parsed = JSON.parse(jsonDraft) as Record<string, unknown>;
+            onChange(parsed);
+          } catch {
+            toast.error("Invalid JSON in section data");
+          }
+        }}
+        className="font-mono text-xs"
+      />
+      <p className="text-[11px] text-muted-foreground">Edit repeatable items such as cards, stats, testimonials, FAQs and facilities here.</p>
+    </div>
+  );
+
   switch (block.type) {
     case "hero":
-      return (<div className="space-y-3"><Field k="title" label="Title" /><Field k="subtitle" label="Subtitle" textarea rows={2} /><Field k="image" label="Background image URL" /><Field k="ctaLabel" label="CTA label" /><Field k="ctaHref" label="CTA link" /></div>);
-    case "text": return <Field k="html" label="HTML" textarea rows={8} />;
+      return (<div className="space-y-3"><Field k="title" label="Title" /><Field k="crumb" label="Breadcrumb label" /><Field k="subtitle" label="Subtitle" textarea rows={2} /><Field k="image" label="Image URL" /><Field k="ctaLabel" label="CTA label" /><Field k="ctaHref" label="CTA link" /><JsonEditor /></div>);
+    case "text": return (<div className="space-y-3"><Field k="eyebrow" label="Eyebrow" /><Field k="title" label="Title" /><Field k="subtitle" label="Subtitle" /><Field k="body" label="Body" textarea rows={4} /><Field k="body1" label="Body 1" textarea rows={4} /><Field k="body2" label="Body 2" textarea rows={4} /><Field k="ctaLabel" label="CTA label" /><Field k="ctaHref" label="CTA link" /><Field k="html" label="HTML" textarea rows={6} /><JsonEditor /></div>);
     case "image": return (<div className="space-y-3"><Field k="src" label="Image URL" /><Field k="alt" label="Alt" /><Field k="caption" label="Caption" /></div>);
     case "video": return <Field k="url" label="Embed URL" />;
+    case "features": return (<div className="space-y-3"><Field k="eyebrow" label="Eyebrow" /><Field k="title" label="Title" /><Field k="subtitle" label="Subtitle" textarea rows={3} /><JsonEditor label="Features data" /></div>);
+    case "counter": return (<div className="space-y-3"><Field k="title" label="Title" /><Field k="subtitle" label="Subtitle" textarea rows={3} /><JsonEditor label="Counter data" /></div>);
+    case "faq": return (<div className="space-y-3"><Field k="eyebrow" label="Eyebrow" /><Field k="title" label="Title" /><Field k="subtitle" label="Subtitle" textarea rows={3} /><JsonEditor label="FAQ items/data" /></div>);
+    case "testimonials": return (<div className="space-y-3"><Field k="eyebrow" label="Eyebrow" /><Field k="title" label="Title" /><JsonEditor label="Testimonials data" /></div>);
     case "cta": return (<div className="space-y-3"><Field k="title" label="Title" /><Field k="subtitle" label="Subtitle" textarea rows={2} /><Field k="ctaLabel" label="CTA label" /><Field k="ctaHref" label="CTA link" /></div>);
     case "contact": return (<div className="space-y-3"><Field k="phone" label="Phone" /><Field k="email" label="Email" /><Field k="address" label="Address" /></div>);
     case "map": return <Field k="embed" label="Embed HTML/URL" textarea rows={4} />;
+    case "property_grid": return (<div className="space-y-3"><Field k="eyebrow" label="Eyebrow" /><Field k="title" label="Title" /><Field k="ctaLabel" label="CTA label" /><Field k="ctaHref" label="CTA link" /><Field k="searchTitle" label="Search/filter title" /><Field k="facilitiesTitle" label="Facilities title" /><JsonEditor label="Projects/facilities data" /></div>);
+    case "blog_grid": return (<div className="space-y-3"><Field k="eyebrow" label="Eyebrow" /><Field k="title" label="Title" /><Field k="subtitle" label="Subtitle" textarea rows={3} /><Field k="ctaLabel" label="CTA label" /><Field k="ctaHref" label="CTA link" /><JsonEditor label="Blog section data" /></div>);
     case "html": return <Field k="html" label="Custom HTML" textarea rows={8} />;
     case "spacing": return (
       <div className="space-y-1"><Label className="text-xs">Height (px)</Label>

@@ -3,6 +3,7 @@ import { MapPin, LandPlot, Layers, Ruler, Search } from "lucide-react";
 import p1 from "@/assets/brand/property-1.jpg";
 import p2 from "@/assets/brand/property-2.jpg";
 import p3 from "@/assets/brand/property-3.jpg";
+import { blockData, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
 
 const items = [
   { img: p1, title: "Landmark City — Phase 1", location: "Purbachal, Dhaka", price: "৳ 18 Lac/katha", katha: 3, blocks: "A–D", status: "Ongoing" },
@@ -23,14 +24,19 @@ const amenities = [
   "Playground / Park",
 ];
 
-function PropertyPageStatic() {
+export function PropertyPage() {
+  const blocks = useCmsPageBlocks("/property");
+  const heroBlock = blockData(blocks, "property.hero");
+  const gridBlock = blockData(blocks, "property.grid");
+  const editableAmenities = cmsList<string>(gridBlock, "amenities", amenities);
+
   return (
     <div>
-      <PageHero title="Projects" crumb="Projects" />
+      <PageHero title={cmsString(heroBlock, "title", "Projects")} crumb={cmsString(heroBlock, "crumb", "Projects")} />
       <section className="mx-auto grid max-w-7xl gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[300px_1fr] lg:px-8">
         <aside className="space-y-6">
           <div className="rounded-2xl border border-border/60 bg-card p-6">
-            <h3 className="font-display text-lg font-semibold text-primary">Find Your Plot</h3>
+            <h3 className="font-display text-lg font-semibold text-primary">{cmsString(gridBlock, "searchTitle", "Find Your Plot")}</h3>
             <div className="mt-4 space-y-3">
               <label className="relative block">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -49,9 +55,9 @@ function PropertyPageStatic() {
             </div>
           </div>
           <div className="rounded-2xl border border-border/60 bg-card p-6">
-            <h3 className="font-display text-lg font-semibold text-primary">Project Facilities</h3>
+            <h3 className="font-display text-lg font-semibold text-primary">{cmsString(gridBlock, "facilitiesTitle", "Project Facilities")}</h3>
             <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-              {amenities.map((a) => (
+              {editableAmenities.map((a) => (
                 <li key={a} className="flex items-center gap-2">
                   <input type="checkbox" className="h-4 w-4 accent-[oklch(0.78_0.14_85)]" /> {a}
                 </li>
@@ -85,13 +91,5 @@ function PropertyPageStatic() {
         </div>
       </section>
     </div>
-  );
-}
-import { CmsPageContent as _CmsPageContent__PropertyPage } from "@/components/site/CmsPageContent";
-export function PropertyPage() {
-  return (
-    <_CmsPageContent__PropertyPage path="/property">
-      <PropertyPageStatic />
-    </_CmsPageContent__PropertyPage>
   );
 }
