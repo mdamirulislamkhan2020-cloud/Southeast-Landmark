@@ -210,7 +210,7 @@ export function UsersPage() {
                 <TableCell className="text-xs text-muted-foreground">{u.lastLogin ? new Date(u.lastLogin).toLocaleString() : "—"}</TableCell>
                 <TableCell className="text-right">
                   <div className="inline-flex gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => reset.mutate(u.id)}><KeyRound className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => reset.mutate(u)}><KeyRound className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => { setEditing(u); setEditorOpen(true); }}><Pencil className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => { if (confirm("Delete this user?")) del.mutate(u.id); }}><Trash2 className="h-4 w-4" /></Button>
                   </div>
