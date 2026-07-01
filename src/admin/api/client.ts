@@ -17,7 +17,7 @@ const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !==
 const LS_PAGES = "sel_admin_pages_v1";
 const LS_LEADS = "sel_admin_leads_v1";
 const LS_AUTH = "sel_admin_auth_v1";
-const LS_PAGES_MIGRATION = "sel_admin_pages_migration_v2";
+const LS_PAGES_MIGRATION = "sel_admin_pages_migration_v3";
 
 function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -38,73 +38,76 @@ export function defaultBlocksForSlug(slug: string): PageBlock[] {
     case "/":
       return [
         mkBlock("hero", {
+          key: "home.hero",
           title: "Own Your Land in a Planned Township — Today and for Generations",
-          subtitle: "Southeast Landmark delivers verified plots, clean papers and long-term appreciation.",
           image: "",
           ctaLabel: "Explore Projects",
           ctaHref: "/property",
+          stats: [
+            { k: "8k+", v: "Plot Owners" },
+            { k: "31k+", v: "Katha Delivered" },
+            { k: "৳ 34L", v: "Starting Plot Price" },
+          ],
         }),
-        mkBlock("features", { items: [
-          { title: "Easy Installments", text: "Flexible monthly installment facilities to make land ownership accessible." },
-          { title: "Clean & Verified Land", text: "Every plot is legally cleared, mutation-ready and independently verified." },
-          { title: "Transparent Documentation", text: "Full land papers, layout plans and approvals — accessible on request." },
-          { title: "Dedicated Support", text: "A dedicated project team guides you from site visit to plot handover." },
+        mkBlock("features", { key: "home.features", eyebrow: "", title: "Grow the Value of Your Land Portfolio", subtitle: "Discover why plot buyers and land investors trust Southeast Landmark for planned township development, clean documentation and long-term appreciation.", items: [
+          { title: "Easy Installments", body: "Flexible monthly installment facilities to make land ownership accessible." },
+          { title: "Clean & Verified Land", body: "Every plot is legally cleared, mutation-ready and independently verified." },
+          { title: "Transparent Documentation", body: "Full land papers, layout plans and approvals — accessible on request." },
+          { title: "Dedicated Support", body: "A dedicated project team guides you from site visit to plot handover." },
         ] }),
-        mkBlock("text", { html: "<h2>Welcome to Southeast Landmark</h2><p>Planned townships. Verified land. Trusted handover. From land acquisition and layout approval to plot registration, we work transparently and on schedule.</p>" }),
-        mkBlock("property_grid", { limit: 6, category: "" }),
-        mkBlock("counter", { items: [
-          { value: 10000, label: "Plot Owners" },
-          { value: 3000, label: "Land Investors" },
-          { value: 25, label: "Years Experience" },
-          { value: 30, label: "Land Value Growth %" },
+        mkBlock("text", { key: "home.about", eyebrow: "About Us", title: "Welcome to Southeast Landmark", subtitle: "Planned Townships. Verified Land. Trusted Handover.", body1: "Southeast Landmark Ltd. is a Dhaka-based land development company dedicated to planning and delivering residential plots and township projects that combine strong infrastructure, clean documentation and lasting land value for every plot owner.", body2: "From land acquisition and layout approval to plot registration and handover, we work transparently and on schedule so families and investors can trust that the plot they book today will stand strong for generations.", ctaLabel: "Learn About Us", ctaHref: "/about" }),
+        mkBlock("property_grid", { key: "home.projects", eyebrow: "Featured Projects", title: "Ongoing & Upcoming Land Projects", ctaLabel: "Explore all projects →", ctaHref: "/property" }),
+        mkBlock("testimonials", { key: "home.testimonials", eyebrow: "Testimonials", title: "Trust, Planning and Service in Every Plot Handover", items: [
+          { name: "Rafiq Ahmed", role: "Business Owner", body: "Southeast Landmark guided me through every step of my plot booking. Documentation and handover were smooth and honest." },
+          { name: "Nasrin Kabir", role: "Architect", body: "Their township planning and road layout are exceptional. I recommend their projects to every client seeking long-term land value." },
+          { name: "Imran Hossain", role: "Land Investor", body: "Clear papers, honest timelines and real appreciation on my plot. Exactly what a modern land development partner should be." },
+          { name: "Sadia Rahman", role: "Plot Owner", body: "From site visit to registration, the team was responsive and transparent. My family is proud of the land we own." },
         ] }),
-        mkBlock("testimonials", { source: "all" }),
-        mkBlock("blog_grid", { limit: 3 }),
-        mkBlock("cta", {
-          title: "Ready to invest in land that lasts?",
-          subtitle: "Talk to our team about ongoing and upcoming township projects.",
-          ctaLabel: "Contact Us",
-          ctaHref: "/contact",
-        }),
+        mkBlock("counter", { key: "home.stats", title: "You Book. We Develop.", subtitle: "Focus on what matters. Southeast Landmark manages land planning, approvals, infrastructure and handover so your plot investment quietly appreciates in value.", items: [
+          { value: "10,000+", label: "Plot Owners" },
+          { value: "3,000+", label: "Land Investors" },
+          { value: "25", label: "Years Experience" },
+          { value: "30%", label: "Land Value Growth" },
+        ] }),
+        mkBlock("blog_grid", { key: "home.blog", eyebrow: "News & Insights", title: "Stay Informed with Our Latest Stories", ctaLabel: "View all posts →", ctaHref: "/blog" }),
       ];
     case "/about":
       return [
-        mkBlock("hero", { title: "About Southeast Landmark", subtitle: "Planned townships, verified land and trusted handover.", image: "", ctaLabel: "", ctaHref: "" }),
-        mkBlock("text", { html: "<p>Southeast Landmark Ltd. is a Dhaka-based land development company delivering residential plots and township projects with strong infrastructure, clean documentation and lasting land value.</p>" }),
-        mkBlock("features", { items: [
-          { title: "Easy Installments", text: "Flexible monthly installment support to make plot ownership accessible." },
-          { title: "Verified Land", text: "Every project is legally cleared, mutation-ready and independently verified." },
-          { title: "Transparent Papers", text: "Full land documentation and approvals accessible for every plot owner." },
-          { title: "Dedicated Support", text: "A dedicated project team supports you from site visit to registration." },
+        mkBlock("hero", { key: "about.hero", title: "About", crumb: "About" }),
+        mkBlock("text", { key: "about.intro", title: "Grow the Value of Your Land Portfolio", body: "Southeast Landmark Ltd. is a land development company on a mission to make planned, secure land ownership accessible. Our teams combine urban planning, civil engineering and land expertise to deliver residential plots and townships that stand out for their infrastructure, clean papers and long-term value." }),
+        mkBlock("features", { key: "about.features", items: [
+          { title: "Easy Installments", body: "Flexible monthly installment support to make plot ownership accessible." },
+          { title: "Verified Land", body: "Every project is legally cleared, mutation-ready and independently verified." },
+          { title: "Transparent Papers", body: "Full land documentation and approvals accessible for every plot owner." },
+          { title: "Dedicated Support", body: "A dedicated project team supports you from site visit to registration." },
         ] }),
-        mkBlock("cta", { title: "Book a Consultation", subtitle: "Talk to our team about your plot goals.", ctaLabel: "Contact Us", ctaHref: "/contact" }),
+        mkBlock("text", { key: "about.story", eyebrow: "Our Story", title: "Welcome to Southeast Landmark", body1: "Southeast Landmark is a land development company committed to delivering thoughtfully planned residential plots and township projects for families and investors across Bangladesh.", body2: "From land acquisition and layout approval to plot registration and handover, we work transparently and on schedule — so that families and land investors alike can trust the plot they book today will stand strong for generations.", services: ["Residential Land Development", "Planned Township Development", "Residential Plot Sales", "Land Investment Advisory", "Site Visit Booking", "Installment Payment Support", "Customer Consultation", "After-Sales Support"] }),
       ];
     case "/property":
       return [
-        mkBlock("hero", { title: "Our Land Projects", subtitle: "Explore ongoing, upcoming and completed township projects.", image: "", ctaLabel: "", ctaHref: "" }),
-        mkBlock("property_grid", { limit: 12, category: "" }),
-        mkBlock("cta", { title: "Interested in a plot?", subtitle: "Get a callback from our sales team.", ctaLabel: "Request Callback", ctaHref: "/contact" }),
+        mkBlock("hero", { key: "property.hero", title: "Projects", crumb: "Projects" }),
+        mkBlock("property_grid", { key: "property.grid", searchTitle: "Find Your Plot", facilitiesTitle: "Project Facilities", amenities: ["Wide Roads", "Boundary Wall", "Utility Connections", "Drainage System", "Security", "Mosque & Community Space", "Playground / Park"] }),
       ];
     case "/blog":
       return [
-        mkBlock("hero", { title: "News & Insights", subtitle: "Guides, market updates and stories from Southeast Landmark.", image: "", ctaLabel: "", ctaHref: "" }),
-        mkBlock("blog_grid", { limit: 12 }),
+        mkBlock("hero", { key: "blog.hero", title: "Blog", crumb: "Blog" }),
+        mkBlock("blog_grid", { key: "blog.grid", eyebrow: "News & Insights", title: "Land Investment News & Township Insights", subtitle: "Explore our journal for expert land investment articles, township planning updates and stories from behind the scenes at Southeast Landmark." }),
       ];
     case "/faq":
       return [
-        mkBlock("hero", { title: "Frequently Asked Questions", subtitle: "Answers to the questions plot buyers ask us most.", image: "", ctaLabel: "", ctaHref: "" }),
-        mkBlock("faq", { items: [
-          { q: "What areas does Southeast Landmark cover?", a: "We currently focus on Mohammadpur, Adabor, and surrounding zones in Dhaka." },
-          { q: "Do you offer installment plans?", a: "Yes, most properties support flexible installment plans up to 36 months." },
-          { q: "Can I schedule a site visit?", a: "Absolutely — book from any property page or contact our sales team." },
-          { q: "Are the properties ready to move in?", a: "Availability varies. Each listing shows its current status (available, upcoming, sold)." },
+        mkBlock("hero", { key: "faq.hero", title: "FAQ", crumb: "FAQ" }),
+        mkBlock("faq", { key: "faq.content", eyebrow: "Frequently Asked Questions", title: "Answers to the Questions We Hear Most", subtitle: "If you can’t find what you’re looking for below, our team is happy to help — reach out through the contact page and we’ll get back within one business day.", items: [
+          { q: "Who can book a plot with Southeast Landmark?", a: "Any adult resident or non-resident Bangladeshi with valid identification and a compliant source of funds can book a residential plot in our projects. Our team will guide you through booking, installments and registration step by step." },
+          { q: "Is a land plot a long-term commitment?", a: "Our residential plots are designed for long-term ownership and land value appreciation. That said, plot owners are free to resell, transfer or gift their plot according to their own timelines." },
+          { q: "How does plot pricing and installment work?", a: "Every project has a transparent per-katha price schedule, along with down-payment and monthly installment options. There are no hidden fees — you see the full breakdown, including registration and utility charges, before you book." },
+          { q: "What after-sales support do you provide?", a: "After plot handover we support mutation, registration follow-up and project infrastructure upkeep such as roads, drainage and boundary walls. Our customer team stays available for any post-booking assistance you need." },
+          { q: "Can I book a site visit to a project?", a: "Absolutely. Book a site visit through our contact page or by phone and we will arrange a guided project tour, layout walk-through and plot selection at a time that suits you." },
         ] }),
       ];
     case "/contact":
       return [
-        mkBlock("hero", { title: "Get in Touch", subtitle: "Our team is ready to help with your plot and township inquiries.", image: "", ctaLabel: "", ctaHref: "" }),
-        mkBlock("contact", { phone: "+880 1700 000000", email: "info@southeastlandmark.com", address: "Mohammadpur, Dhaka, Bangladesh" }),
-        mkBlock("lead_form", { formId: null, title: "Send us a message" }),
+        mkBlock("hero", { key: "contact.hero", title: "Contact Us", crumb: "Contact Us" }),
+        mkBlock("contact", { key: "contact.info", formTitle: "Book a Site Visit or Project Inquiry", formSubtitle: "Share your details and our land consultant will get in touch.", buttonLabel: "Book Your Plot Consultation", phone: "01591-134357", email: "info@southeastlandmark.com", address: "Corporate Office: 19/2-C, 4th floor, Ring Road, Adabor, Mohammadpur, Dhaka – 1207" }),
       ];
     default:
       return [];
@@ -124,7 +127,8 @@ function migrateDefaultPageBlocks() {
     let changed = false;
     const next = pages.map((p) => {
       const hasBlocks = Array.isArray(p.blocks) && p.blocks.length > 0;
-      if (hasBlocks) return p;
+      const hasCmsSectionKeys = hasBlocks && p.blocks!.some((block) => typeof block.data?.key === "string");
+      if (hasCmsSectionKeys) return p;
       const seedBlocks = defaultBlocksForSlug(p.slug);
       if (seedBlocks.length === 0) return p;
       changed = true;
