@@ -27,6 +27,8 @@ const AdminUsers = lazy(() => import("@/admin/pages/UsersPage").then((m) => ({ d
 const AdminTheme = lazy(() => import("@/admin/pages/ThemePage").then((m) => ({ default: m.ThemePage })));
 const AdminMedia = lazy(() => import("@/admin/pages/MediaPage").then((m) => ({ default: m.MediaPage })));
 const AdminSettings = lazy(() => import("@/admin/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })));
+const AdminForms = lazy(() => import("@/admin/pages/FormsListPage").then((m) => ({ default: m.FormsListPage })));
+const AdminFormBuilder = lazy(() => import("@/admin/pages/FormBuilderPage").then((m) => ({ default: m.FormBuilderPage })));
 const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
 
 function NotFound() {
@@ -67,6 +69,8 @@ export default function App() {
           <Route path="media" element={<AdminMedia />} />
           <Route path="theme" element={<AdminTheme />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="forms" element={<AdminForms />} />
+          <Route path="forms/:id" element={<AdminFormBuilder />} />
         </Route>
 
         {/* Public site */}
