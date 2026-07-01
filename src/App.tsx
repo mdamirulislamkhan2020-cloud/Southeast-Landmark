@@ -3,7 +3,6 @@ import { Route, Routes } from "react-router-dom";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Seo } from "@/components/site/Seo";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
-import { Link } from "react-router-dom";
 
 const HomePage = lazy(() => import("@/pages/HomePage").then((m) => ({ default: m.HomePage })));
 const AboutPage = lazy(() => import("@/pages/AboutPage").then((m) => ({ default: m.AboutPage })));
@@ -39,16 +38,6 @@ const AdminNavigation = lazy(() => import("@/admin/pages/NavigationPage").then((
 const PublicLeadPage = lazy(() => import("@/pages/LeadPage").then((m) => ({ default: m.LeadPage })));
 const DynamicPage = lazy(() => import("@/pages/DynamicPage").then((m) => ({ default: m.DynamicPage })));
 const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
-
-function NotFound() {
-  return (
-    <div className="mx-auto max-w-md px-4 py-24 text-center">
-      <h1 className="text-7xl font-bold text-foreground">404</h1>
-      <p className="mt-4 text-muted-foreground">The page you're looking for doesn't exist.</p>
-      <Link to="/" className="mt-6 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Go home</Link>
-    </div>
-  );
-}
 
 export default function App() {
   return (
