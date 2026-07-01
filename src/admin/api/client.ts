@@ -131,24 +131,8 @@ function migrateDefaultPageBlocks() {
       if (hasCmsSectionKeys) return p;
       const seedBlocks = defaultBlocksForSlug(p.slug);
       if (seedBlocks.length === 0) return p;
-      const sourceBlocks = Array.isArray(p.blocks) ? p.blocks : [];
-      const usedIndexes = new Set<number>();
-      const mergedBlocks = seedBlocks.map((seedBlock) => {
-        const sourceIndex = sourceBlocks.findIndex((block, index) => !usedIndexes.has(index) && block.type === seedBlock.type);
-        if (sourceIndex === -1) return seedBlock;
-        usedIndexes.add(sourceIndex);
-        const sourceBlock = sourceBlocks[sourceIndex];
-        return {
-          ...seedBlock,
-          data: {
-            ...seedBlock.data,
-            ...sourceBlock.data,
-            key: seedBlock.data.key,
-          },
-        };
-      });
       changed = true;
-      return { ...p, blocks: mergedBlocks, updatedAt: new Date().toISOString() };
+      return { ...p, blocks: seedBlocks, updatedAt: new Date().toISOString() };
     });
     if (changed) writeLS(LS_PAGES, next);
     window.localStorage.setItem(LS_PAGES_MIGRATION, "done");
