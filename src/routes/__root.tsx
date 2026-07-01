@@ -77,14 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Southeast Landmark Ltd — Building Landmarks You Can Call Home" },
+      { name: "description", content: "Southeast Landmark Ltd is a Dhaka real estate company delivering comfortable, high-quality residential spaces for plot owners and investors." },
+      { name: "author", content: "Southeast Landmark Ltd" },
+      { property: "og:site_name", content: "Southeast Landmark Ltd" },
+      { property: "og:title", content: "Southeast Landmark Ltd" },
+      { property: "og:description", content: "Building Landmarks You Can Call Home." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
