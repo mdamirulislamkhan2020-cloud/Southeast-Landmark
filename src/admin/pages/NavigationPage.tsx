@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -167,7 +167,7 @@ function renderTree(
   dragOverId: string | null,
 ) {
   const tree = buildTree(items);
-  const walk = (nodes: ReturnType<typeof buildTree>): JSX.Element[] =>
+  const walk = (nodes: ReturnType<typeof buildTree>): ReactElement[] =>
     nodes.flatMap((n) => [
       <MenuItemRow
         key={n.id}
