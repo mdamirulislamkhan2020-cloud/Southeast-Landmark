@@ -76,6 +76,7 @@ export default function App() {
           <Route path="seo" element={<AdminSeo />} />
           <Route path="integrations" element={<AdminIntegrations />} />
           <Route path="navigation" element={<AdminNavigation />} />
+          <Route path="smtp" element={<AdminSmtp />} />
         </Route>
 
         {/* Public site */}
