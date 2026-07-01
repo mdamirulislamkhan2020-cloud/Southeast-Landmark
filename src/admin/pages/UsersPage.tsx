@@ -136,7 +136,23 @@ export function UsersPage() {
 
   const del = useMutation({ mutationFn: (id: string) => deleteUser(id), onSuccess: () => { toast.success("User deleted"); qc.invalidateQueries({ queryKey: ["admin-users"] }); } });
   const toggle = useMutation({ mutationFn: (u: AdminUser) => updateUser(u.id, { active: !u.active }), onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }) });
-  const reset = useMutation({ mutationFn: (id: string) => resetUserPassword(id), onSuccess: (r) => toast.success(`Temp password: ${r.tempPassword}`) });
+  const reset = useMutation({
+    mutationFn: async (u: AdminUser) => {
+      const r = await resetUserPassword(u.id);
+      const mail = await sendPasswordResetEmail(u.email, r.tempPassword);
+      return { ...r, mail, user: u };
+    },
+    onSuccess: ({ tempPassword, mail, user }) => {
+      toast.success(`Temp password for ${user.email}: ${tempPassword}`);
+      if (mail.ok && mail.data?.simulated) {
+        toast.warning("Password reset email simulated (no backend).");
+      } else if (!mail.ok) {
+        toast.error(`Reset email failed: ${mail.error ?? "unknown error"}`);
+      } else {
+        toast.success("Password reset email sent");
+      }
+    },
+  });
 
   return (
     <div className="space-y-4">
