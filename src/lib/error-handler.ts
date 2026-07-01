@@ -14,7 +14,6 @@ export function toErrorMessage(err: unknown, fallback = "Something went wrong"):
 
 /** Log an error to the console with a stable prefix. */
 export function logError(scope: string, err: unknown, extra?: Record<string, unknown>) {
-  // eslint-disable-next-line no-console
   console.error(`[${scope}]`, err, extra ?? "");
 }
 
