@@ -17,6 +17,7 @@ import {
   getCrmLead, listAssignees, setScore, updateLeadStatus, updateNote, updateTaskStatus,
 } from "../api/crm-client";
 import { LEAD_STATUSES, type LeadStatus } from "../api/crm";
+import { sendLeadAssignmentEmail } from "@/services/email-service";
 
 export function LeadDetailPage() {
   const { id = "" } = useParams();
@@ -37,7 +38,26 @@ export function LeadDetailPage() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ["crm-lead", id] });
 
   const statusMut = useMutation({ mutationFn: (s: LeadStatus) => updateLeadStatus(id, s), onSuccess: () => { toast.success("Status updated"); invalidate(); qc.invalidateQueries({ queryKey: ["crm-leads"] }); } });
-  const assignMut = useMutation({ mutationFn: (uid: string | null) => assignLead(id, uid), onSuccess: () => { toast.success("Assignment updated"); invalidate(); qc.invalidateQueries({ queryKey: ["crm-leads"] }); } });
+  const assignMut = useMutation({
+    mutationFn: (uid: string | null) => assignLead(id, uid),
+    onSuccess: async (_res, uid) => {
+      toast.success("Assignment updated");
+      invalidate();
+      qc.invalidateQueries({ queryKey: ["crm-leads"] });
+      if (!uid || !lead) return;
+      const assignee = assignees.find((a) => a.id === uid);
+      if (!assignee?.email) return;
+      const r = await sendLeadAssignmentEmail({
+        assigneeEmail: assignee.email,
+        assigneeName: assignee.name,
+        leadName: lead.name || "Unnamed lead",
+        leadId: id,
+      });
+      if (r.ok && r.data?.simulated) toast.warning("Assignee notified (simulated — no email backend).");
+      else if (r.ok) toast.success(`Notified ${assignee.name} by email`);
+      else toast.error(r.error ?? "Failed to notify assignee");
+    },
+  });
   const scoreMut = useMutation({ mutationFn: (n: number) => setScore(id, n), onSuccess: invalidate });
   const noteAdd = useMutation({ mutationFn: () => addNote(id, note), onSuccess: () => { setNote(""); toast.success("Note added"); invalidate(); } });
   const noteEdit = useMutation({ mutationFn: (nid: string) => updateNote(id, nid, editingNoteText), onSuccess: () => { setEditingNote(null); toast.success("Note updated"); invalidate(); } });
