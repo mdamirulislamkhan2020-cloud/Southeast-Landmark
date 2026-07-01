@@ -4,8 +4,12 @@ import { site } from "@/config/site";
 import { useState } from "react";
 import { toast } from "sonner";
 import { sendAppEmail } from "@/services/email-service";
+import { blockData, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
 
-function ContactPageStatic() {
+export function ContactPage() {
+  const blocks = useCmsPageBlocks("/contact");
+  const heroBlock = blockData(blocks, "contact.hero");
+  const contactBlock = blockData(blocks, "contact.info");
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -54,7 +58,7 @@ function ContactPageStatic() {
 
   return (
     <div>
-      <PageHero title="Contact Us" crumb="Contact Us" />
+      <PageHero title={cmsString(heroBlock, "title", "Contact Us")} crumb={cmsString(heroBlock, "crumb", "Contact Us")} />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-2">
           <div className="overflow-hidden rounded-2xl border border-border/60">
@@ -66,8 +70,8 @@ function ContactPageStatic() {
             />
           </div>
           <div className="rounded-2xl border border-border/60 bg-card p-8">
-            <h2 className="font-display text-2xl font-semibold text-primary">Book a Site Visit or Project Inquiry</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Share your details and our land consultant will get in touch.</p>
+            <h2 className="font-display text-2xl font-semibold text-primary">{cmsString(contactBlock, "formTitle", "Book a Site Visit or Project Inquiry")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{cmsString(contactBlock, "formSubtitle", "Share your details and our land consultant will get in touch.")}</p>
             <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <input name="name" required placeholder="Full Name" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
@@ -102,7 +106,7 @@ function ContactPageStatic() {
               <textarea name="message" placeholder="Message (any specific project or plot requirement)" rows={5} className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
               <button type="submit" disabled={submitting} aria-busy={submitting} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:brightness-110 disabled:opacity-70">
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                {submitting ? "Sending…" : "Book Your Plot Consultation"}
+                {submitting ? "Sending…" : cmsString(contactBlock, "buttonLabel", "Book Your Plot Consultation")}
               </button>
             </form>
           </div>
@@ -110,9 +114,9 @@ function ContactPageStatic() {
 
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {[
-            { icon: Phone, label: "Phone", value: site.phone, href: `tel:${site.phone}` },
-            { icon: Mail, label: "Email", value: site.email, href: `mailto:${site.email}` },
-            { icon: MapPin, label: "Address", value: site.address, href: "#" },
+            { icon: Phone, label: "Phone", value: cmsString(contactBlock, "phone", site.phone), href: `tel:${cmsString(contactBlock, "phone", site.phone)}` },
+            { icon: Mail, label: "Email", value: cmsString(contactBlock, "email", site.email), href: `mailto:${cmsString(contactBlock, "email", site.email)}` },
+            { icon: MapPin, label: "Address", value: cmsString(contactBlock, "address", site.address), href: "#" },
           ].map((c) => (
             <a key={c.label} href={c.href} className="flex items-start gap-4 rounded-2xl border border-border/60 bg-card p-6 transition hover:border-primary/50">
               <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
@@ -127,13 +131,5 @@ function ContactPageStatic() {
         </div>
       </section>
     </div>
-  );
-}
-import { CmsPageContent as _CmsPageContent__ContactPage } from "@/components/site/CmsPageContent";
-export function ContactPage() {
-  return (
-    <_CmsPageContent__ContactPage path="/contact">
-      <ContactPageStatic />
-    </_CmsPageContent__ContactPage>
   );
 }
