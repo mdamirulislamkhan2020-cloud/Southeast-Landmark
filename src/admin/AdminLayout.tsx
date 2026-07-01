@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, FileText, Users, Image, Palette, LogOut, ExternalLink, Building2, Newspaper, HelpCircle, MessageSquareQuote, Settings, UserCog } from "lucide-react";
+import { LayoutDashboard, FileText, Users, Image, Palette, LogOut, ExternalLink, Building2, Newspaper, HelpCircle, MessageSquareQuote, Settings, UserCog, FormInput } from "lucide-react";
 import { logout } from "./api/client";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ const nav: NavItem[] = [
   { to: "/admin/blog", label: "Blog", icon: Newspaper },
   { to: "/admin/faqs", label: "FAQs", icon: HelpCircle },
   { to: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote },
+  { to: "/admin/forms", label: "Lead Forms", icon: FormInput },
   { to: "/admin/leads", label: "Leads", icon: Users },
   { to: "/admin/users", label: "Users & Roles", icon: UserCog },
   { to: "/admin/media", label: "Media Library", icon: Image },
