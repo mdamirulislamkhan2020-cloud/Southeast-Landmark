@@ -4,10 +4,10 @@ import about from "@/assets/brand/about.jpg";
 import { site } from "@/config/site";
 
 const features = [
-  { icon: Wallet, title: "Passive Income", body: "Earn steady rental income with quarterly distributions." },
-  { icon: ShieldCheck, title: "Secure & Compliant", body: "Every project is legally structured and independently audited." },
-  { icon: FileText, title: "Transparency", body: "Complete documentation for every property, always accessible." },
-  { icon: Headphones, title: "Support", body: "A dedicated team on call 24 hours a day, 7 days a week." },
+  { icon: Wallet, title: "Easy Installments", body: "Flexible monthly installment support to make plot ownership accessible." },
+  { icon: ShieldCheck, title: "Verified Land", body: "Every project is legally cleared, mutation-ready and independently verified." },
+  { icon: FileText, title: "Transparent Papers", body: "Full land documentation and approvals accessible for every plot owner." },
+  { icon: Headphones, title: "Dedicated Support", body: "A dedicated project team supports you from site visit to registration." },
 ];
 
 export function AboutPage() {
@@ -18,14 +18,15 @@ export function AboutPage() {
         <div className="grid gap-12 lg:grid-cols-2 lg:items-start">
           <div>
             <h2 className="font-display text-3xl font-semibold sm:text-4xl">
-              Boost the Potential of Your Property Portfolio
+              Grow the Value of Your Land Portfolio
             </h2>
           </div>
           <p className="text-muted-foreground">
-            Southeast Landmark Ltd. exists to make quality living accessible.
-            Our teams combine architecture, engineering and hospitality thinking
-            to deliver residences that stand out for their comfort, durability
-            and long-term value.
+            Southeast Landmark Ltd. is a land development company on a mission
+            to make planned, secure land ownership accessible. Our teams
+            combine urban planning, civil engineering and land expertise to
+            deliver residential plots and townships that stand out for their
+            infrastructure, clean papers and long-term value.
           </p>
         </div>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -44,7 +45,7 @@ export function AboutPage() {
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <div className="overflow-hidden rounded-3xl border border-primary/20">
-            <img src={about} alt="Southeast Landmark residence" loading="lazy" width={1200} height={900} className="h-full w-full object-cover" />
+            <img src={about} alt="Southeast Landmark township project" loading="lazy" width={1200} height={900} className="h-full w-full object-cover" />
           </div>
           <div>
             <div className="inline-flex items-center gap-2 text-sm font-medium text-primary">
@@ -53,10 +54,27 @@ export function AboutPage() {
             <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">Welcome to {site.short}</h2>
             <p className="mt-4 text-muted-foreground">{site.tagline}</p>
             <p className="mt-3 text-muted-foreground">
-              From plot acquisition to final handover we work transparently and
-              on schedule, so that families and investors alike can trust the
-              home they choose today will stand strong for generations.
+              From land acquisition and layout approval to plot registration
+              and handover, we work transparently and on schedule — so that
+              families and land investors alike can trust the plot they book
+              today will stand strong for generations.
             </p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {[
+                "Residential Land Development",
+                "Planned Township Development",
+                "Residential Plot Sales",
+                "Land Investment Advisory",
+                "Site Visit Booking",
+                "Installment Payment Support",
+                "Customer Consultation",
+                "After-Sales Support",
+              ].map((s) => (
+                <div key={s} className="rounded-lg border border-border/60 bg-card px-3 py-2 text-sm text-foreground/85">
+                  {s}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
