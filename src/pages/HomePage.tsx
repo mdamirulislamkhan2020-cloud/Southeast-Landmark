@@ -11,9 +11,9 @@ import {
   Award,
   TrendingUp,
   MapPin,
-  Bed,
-  Bath,
+  LandPlot,
   Ruler,
+  Layers,
   Calendar,
 } from "lucide-react";
 import { site } from "@/config/site";
@@ -24,36 +24,36 @@ import p2 from "@/assets/brand/property-2.jpg";
 import p3 from "@/assets/brand/property-3.jpg";
 
 const features = [
-  { icon: Wallet, title: "Passive Income", body: "Earn steady rental returns with quarterly distributions." },
-  { icon: ShieldCheck, title: "Secure & Compliant", body: "Every project is legally structured and independently audited." },
-  { icon: FileText, title: "Transparency", body: "Consult the complete documentation for every property, on demand." },
-  { icon: Headphones, title: "Support", body: "A dedicated team on call 24 hours a day, 7 days a week." },
+  { icon: Wallet, title: "Easy Installments", body: "Flexible monthly installment facilities to make land ownership accessible." },
+  { icon: ShieldCheck, title: "Clean & Verified Land", body: "Every plot is legally cleared, mutation-ready and independently verified." },
+  { icon: FileText, title: "Transparent Documentation", body: "Full land papers, layout plans and approvals — accessible on request." },
+  { icon: Headphones, title: "Dedicated Support", body: "A dedicated project team guides you from site visit to plot handover." },
 ];
 
 const stats = [
-  { icon: Users, label: "Members", value: "10,000+" },
-  { icon: Building2, label: "Investors", value: "3,000+" },
+  { icon: Users, label: "Plot Owners", value: "10,000+" },
+  { icon: Building2, label: "Land Investors", value: "3,000+" },
   { icon: Award, label: "Years Experience", value: "25" },
-  { icon: TrendingUp, label: "Returns Up To", value: "30%" },
+  { icon: TrendingUp, label: "Land Value Growth", value: "30%" },
 ];
 
 const properties = [
-  { img: p1, title: "The Landmark Residences", location: "Gulshan, Dhaka", price: "৳ 1.85 Cr", beds: 3, baths: 3, sqft: 2100 },
-  { img: p2, title: "Riverside Villa Estate", location: "Bashundhara R/A, Dhaka", price: "৳ 3.20 Cr", beds: 4, baths: 4, sqft: 3400 },
-  { img: p3, title: "Skyline Tower Condominium", location: "Dhanmondi, Dhaka", price: "৳ 92 Lac", beds: 2, baths: 2, sqft: 1450 },
+  { img: p1, title: "Landmark City — Phase 1", location: "Purbachal, Dhaka", price: "৳ 18 Lac/katha", status: "Ongoing", katha: 3, blocks: "A–D" },
+  { img: p2, title: "Riverside Township", location: "Keraniganj, Dhaka", price: "৳ 24 Lac/katha", status: "Upcoming", katha: 5, blocks: "A–F" },
+  { img: p3, title: "Skyline Green Enclave", location: "Savar, Dhaka", price: "৳ 12 Lac/katha", status: "Completed", katha: 3, blocks: "A–C" },
 ];
 
 const testimonials = [
-  { name: "Rafiq Ahmed", role: "Business Owner", body: "Southeast Landmark handled every detail with professionalism. The handover was smooth and the space is exactly as promised." },
-  { name: "Nasrin Kabir", role: "Architect", body: "Their attention to material quality and finish stands out. I recommend them to every client looking for long-term value." },
-  { name: "Imran Hossain", role: "Investor", body: "Clear documentation, honest timelines, real returns. Exactly what a modern property partner should be." },
-  { name: "Sadia Rahman", role: "Homeowner", body: "From the first visit to key handover, the team was responsive and transparent. My family feels at home." },
+  { name: "Rafiq Ahmed", role: "Business Owner", body: "Southeast Landmark guided me through every step of my plot booking. Documentation and handover were smooth and honest." },
+  { name: "Nasrin Kabir", role: "Architect", body: "Their township planning and road layout are exceptional. I recommend their projects to every client seeking long-term land value." },
+  { name: "Imran Hossain", role: "Land Investor", body: "Clear papers, honest timelines and real appreciation on my plot. Exactly what a modern land development partner should be." },
+  { name: "Sadia Rahman", role: "Plot Owner", body: "From site visit to registration, the team was responsive and transparent. My family is proud of the land we own." },
 ];
 
 const blogs = [
-  { title: "A Practical Guide to Real Estate Investing in 2026", author: "Editorial", date: "12 Feb 2026" },
-  { title: "Ten Tips for Launching Your Property Portfolio", author: "Editorial", date: "05 Feb 2026" },
-  { title: "How to Evaluate a Turn-Key Property Purchase", author: "Editorial", date: "22 Jan 2026" },
+  { title: "A Practical Guide to Land Investment in Bangladesh 2026", author: "Editorial", date: "12 Feb 2026" },
+  { title: "Ten Tips Before Booking Your First Residential Plot", author: "Editorial", date: "05 Feb 2026" },
+  { title: "How to Evaluate a Planned Township Project", author: "Editorial", date: "22 Jan 2026" },
 ];
 
 export function HomePage() {
@@ -63,14 +63,14 @@ export function HomePage() {
       <section className="relative overflow-hidden">
         <div className="mx-auto max-w-7xl px-4 pt-16 pb-10 sm:px-6 lg:px-8">
           <h1 className="mx-auto max-w-5xl text-center font-display text-4xl leading-tight font-semibold sm:text-6xl">
-            Unlock the <span className="text-gradient-gold">Door</span> to your
-            Dream Property Today and Forever
+            Own Your <span className="text-gradient-gold">Land</span> in a
+            Planned Township — Today and for Generations
           </h1>
           <div className="mt-12 grid gap-8 lg:grid-cols-[1fr_320px]">
             <div className="relative overflow-hidden rounded-3xl border border-primary/20 shadow-2xl shadow-primary/10">
               <img
                 src={hero}
-                alt="Luxury residence at dusk"
+                alt="Planned residential township at dusk"
                 width={1600}
                 height={1024}
                 className="h-full w-full object-cover"
@@ -79,9 +79,9 @@ export function HomePage() {
             </div>
             <aside className="flex flex-col justify-between gap-6 rounded-3xl border border-primary/20 bg-card p-8">
               {[
-                { k: "8k+", v: "Happy Clients" },
-                { k: "31k+", v: "5-Star Reviews" },
-                { k: "৳ 34L", v: "Welcome Package" },
+                { k: "8k+", v: "Plot Owners" },
+                { k: "31k+", v: "Katha Delivered" },
+                { k: "৳ 34L", v: "Starting Plot Price" },
               ].map((s) => (
                 <div key={s.v}>
                   <div className="font-display text-4xl font-semibold text-gradient-gold">
@@ -94,7 +94,7 @@ export function HomePage() {
                 to="/property"
                 className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
               >
-                Start Exploring <ArrowUpRight className="h-4 w-4" />
+                Explore Projects <ArrowUpRight className="h-4 w-4" />
               </Link>
             </aside>
           </div>
@@ -105,12 +105,12 @@ export function HomePage() {
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="font-display text-3xl font-semibold sm:text-4xl">
-            Boost the Potential of Your Property Portfolio
+            Grow the Value of Your Land Portfolio
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Discover the qualities that make Southeast Landmark the preferred
-            partner for owners and investors seeking sustainable, comfortable
-            living spaces.
+            Discover why plot buyers and land investors trust Southeast Landmark
+            for planned township development, clean documentation and long-term
+            appreciation.
           </p>
         </div>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -143,43 +143,43 @@ export function HomePage() {
               Welcome to {site.short}
             </h2>
             <h3 className="mt-4 font-display text-lg text-primary">
-              Building Landmarks You Can Call Home
+              Planned Townships. Verified Land. Trusted Handover.
             </h3>
             <p className="mt-4 text-muted-foreground">
-              Southeast Landmark Ltd. is a Dhaka-based real estate company
-              dedicated to designing and delivering residences that combine
-              craftsmanship, comfort, and lasting value. Every project is guided
-              by a single principle — the best possible functionality of space
-              for our valued plot owners.
+              Southeast Landmark Ltd. is a Dhaka-based land development company
+              dedicated to planning and delivering residential plots and
+              township projects that combine strong infrastructure, clean
+              documentation and lasting land value for every plot owner.
             </p>
             <p className="mt-3 text-muted-foreground">
-              From plot acquisition to final handover, we work transparently and
-              on schedule, so that families and investors alike can trust the
-              home they choose today will stand strong for generations.
+              From land acquisition and layout approval to plot registration and
+              handover, we work transparently and on schedule so families and
+              investors can trust that the plot they book today will stand
+              strong for generations.
             </p>
             <Link
               to="/about"
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
             >
-              Discover More <ArrowUpRight className="h-4 w-4" />
+              Learn About Us <ArrowUpRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Properties */}
+      {/* Projects */}
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 text-sm font-medium text-primary">
-              <Sparkles className="h-4 w-4" /> Featured Properties
+              <Sparkles className="h-4 w-4" /> Featured Projects
             </div>
             <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-              All Property Spotlight
+              Ongoing & Upcoming Land Projects
             </h2>
           </div>
           <Link to="/property" className="text-sm font-semibold text-primary hover:underline">
-            View all properties →
+            Explore all projects →
           </Link>
         </div>
         <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -190,6 +190,9 @@ export function HomePage() {
                 <div className="absolute left-4 top-4 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
                   {p.price}
                 </div>
+                <div className="absolute right-4 top-4 rounded-full bg-background/85 px-3 py-1 text-xs font-semibold text-primary">
+                  {p.status}
+                </div>
               </div>
               <div className="p-6">
                 <h3 className="font-display text-lg font-semibold">{p.title}</h3>
@@ -197,9 +200,9 @@ export function HomePage() {
                   <MapPin className="h-4 w-4 text-primary" /> {p.location}
                 </p>
                 <div className="mt-4 flex items-center gap-4 border-t border-border/60 pt-4 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5"><Bed className="h-4 w-4 text-primary" /> {p.beds} Beds</span>
-                  <span className="inline-flex items-center gap-1.5"><Bath className="h-4 w-4 text-primary" /> {p.baths} Baths</span>
-                  <span className="inline-flex items-center gap-1.5"><Ruler className="h-4 w-4 text-primary" /> {p.sqft} sqft</span>
+                  <span className="inline-flex items-center gap-1.5"><LandPlot className="h-4 w-4 text-primary" /> {p.katha} katha</span>
+                  <span className="inline-flex items-center gap-1.5"><Layers className="h-4 w-4 text-primary" /> Blocks {p.blocks}</span>
+                  <span className="inline-flex items-center gap-1.5"><Ruler className="h-4 w-4 text-primary" /> Planned</span>
                 </div>
               </div>
             </article>
@@ -214,7 +217,7 @@ export function HomePage() {
             <Sparkles className="h-4 w-4" /> Testimonials
           </div>
           <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-            Trust, Quality and Service in Every Handover
+              Trust, Planning and Service in Every Plot Handover
           </h2>
         </div>
         <div className="mt-12 grid gap-6 md:grid-cols-2">
@@ -245,11 +248,12 @@ export function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="font-display text-3xl font-semibold sm:text-4xl">
-              You Invest. <span className="text-gradient-gold">We Do The Rest.</span>
+              You Book. <span className="text-gradient-gold">We Develop.</span>
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Focus on what matters. Southeast Landmark manages design, delivery
-              and property care so your investment quietly compounds in value.
+              Focus on what matters. Southeast Landmark manages land planning,
+              approvals, infrastructure and handover so your plot investment
+              quietly appreciates in value.
             </p>
           </div>
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

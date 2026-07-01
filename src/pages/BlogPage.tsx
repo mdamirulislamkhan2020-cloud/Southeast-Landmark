@@ -5,12 +5,12 @@ import p2 from "@/assets/brand/property-2.jpg";
 import p3 from "@/assets/brand/property-3.jpg";
 
 const posts = [
-  { title: "A Practical Guide to Real Estate Investing", date: "12/02/2026", img: p1 },
-  { title: "Ten Tips for Launching Your Property Portfolio", date: "05/02/2026", img: p2 },
-  { title: "How to Evaluate a Turn-Key Property Purchase", date: "22/01/2026", img: p3 },
-  { title: "Building for the Next Generation of Owners", date: "15/01/2026", img: p2 },
-  { title: "How Do You Value a Residential Investment?", date: "05/01/2026", img: p1 },
-  { title: "Getting Started with Your First ৳ 10 Lac", date: "20/12/2025", img: p3 },
+  { title: "A Practical Guide to Land Investment in Bangladesh", date: "12/02/2026", img: p1 },
+  { title: "Ten Tips Before Booking Your First Residential Plot", date: "05/02/2026", img: p2 },
+  { title: "How to Evaluate a Planned Township Project", date: "22/01/2026", img: p3 },
+  { title: "Planning Townships for the Next Generation of Plot Owners", date: "15/01/2026", img: p2 },
+  { title: "How Do You Value a Residential Land Plot?", date: "05/01/2026", img: p1 },
+  { title: "Starting Your Land Investment Journey with ৳ 10 Lac", date: "20/12/2025", img: p3 },
 ];
 
 export function BlogPage() {
@@ -22,12 +22,13 @@ export function BlogPage() {
           <div>
             <p className="text-sm font-medium text-primary">News &amp; Insights</p>
             <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-              Stay Informed with Our Latest News &amp; Insights
+              Land Investment News &amp; Township Insights
             </h2>
           </div>
           <p className="text-muted-foreground">
-            Explore our journal for expert articles, industry updates and stories
-            from behind the scenes at Southeast Landmark.
+            Explore our journal for expert land investment articles, township
+            planning updates and stories from behind the scenes at Southeast
+            Landmark.
           </p>
         </div>
         <div className="mt-12 grid gap-6 md:grid-cols-2">
