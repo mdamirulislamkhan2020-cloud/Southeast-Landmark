@@ -32,13 +32,12 @@ const AdminMedia = lazy(() => import("@/admin/pages/MediaPage").then((m) => ({ d
 const AdminSettings = lazy(() => import("@/admin/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })));
 const AdminForms = lazy(() => import("@/admin/pages/FormsListPage").then((m) => ({ default: m.FormsListPage })));
 const AdminFormBuilder = lazy(() => import("@/admin/pages/FormBuilderPage").then((m) => ({ default: m.FormBuilderPage })));
-const AdminLeadPages = lazy(() => import("@/admin/pages/LeadPagesListPage").then((m) => ({ default: m.LeadPagesListPage })));
-const AdminLeadPageEditor = lazy(() => import("@/admin/pages/LeadPageEditorPage").then((m) => ({ default: m.LeadPageEditorPage })));
 const AdminAnalytics = lazy(() => import("@/admin/pages/AnalyticsPage").then((m) => ({ default: m.AnalyticsPage })));
 const AdminSeo = lazy(() => import("@/admin/pages/SeoManagerPage").then((m) => ({ default: m.SeoManagerPage })));
 const AdminIntegrations = lazy(() => import("@/admin/pages/IntegrationsPage").then((m) => ({ default: m.IntegrationsPage })));
 const AdminNavigation = lazy(() => import("@/admin/pages/NavigationPage").then((m) => ({ default: m.NavigationPage })));
 const PublicLeadPage = lazy(() => import("@/pages/LeadPage").then((m) => ({ default: m.LeadPage })));
+const DynamicPage = lazy(() => import("@/pages/DynamicPage").then((m) => ({ default: m.DynamicPage })));
 const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
 
 function NotFound() {
@@ -83,8 +82,6 @@ export default function App() {
           <Route path="settings" element={<AdminSettings />} />
           <Route path="forms" element={<AdminForms />} />
           <Route path="forms/:id" element={<AdminFormBuilder />} />
-          <Route path="lead-pages" element={<AdminLeadPages />} />
-          <Route path="lead-pages/:id" element={<AdminLeadPageEditor />} />
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="seo" element={<AdminSeo />} />
           <Route path="integrations" element={<AdminIntegrations />} />
@@ -153,7 +150,7 @@ export default function App() {
             }
           />
           <Route path="/lead/:slug" element={<PublicLeadPage />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<DynamicPage />} />
                 </Routes>
               </ErrorBoundary>
             </SiteLayout>
