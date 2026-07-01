@@ -17,17 +17,42 @@ export function ContactPage() {
             />
           </div>
           <div className="rounded-2xl border border-border/60 bg-card p-8">
-            <h2 className="font-display text-2xl font-semibold text-primary">Get in Touch</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Let’s answer your questions.</p>
+            <h2 className="font-display text-2xl font-semibold text-primary">Book a Site Visit or Project Inquiry</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Share your details and our land consultant will get in touch.</p>
             <form className="mt-6 space-y-4" onSubmit={(e) => e.preventDefault()}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <input required placeholder="Full Name" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
-                <input required type="email" placeholder="Email Address" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
+                <input required type="tel" placeholder="Mobile Number" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
               </div>
-              <input placeholder="Subject" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
-              <textarea placeholder="Message" rows={6} className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <input type="email" placeholder="Email Address" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
+                <select className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary">
+                  <option value="">Interested Project</option>
+                  <option>Landmark City — Purbachal</option>
+                  <option>Riverside Township — Keraniganj</option>
+                  <option>Skyline Green Enclave — Savar</option>
+                  <option>Any Ongoing / Upcoming Project</option>
+                </select>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <select className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary">
+                  <option value="">Plot Size Interest</option>
+                  <option>3 Katha</option>
+                  <option>5 Katha</option>
+                  <option>7.5 Katha</option>
+                  <option>10 Katha or above</option>
+                </select>
+                <select className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary">
+                  <option value="">Purpose</option>
+                  <option>Own Residence</option>
+                  <option>Land Investment</option>
+                  <option>Site Visit Booking</option>
+                  <option>Installment Information</option>
+                </select>
+              </div>
+              <textarea placeholder="Message (any specific project or plot requirement)" rows={5} className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
               <button type="submit" className="w-full rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:brightness-110">
-                Send Message
+                Book Your Plot Consultation
               </button>
             </form>
           </div>
