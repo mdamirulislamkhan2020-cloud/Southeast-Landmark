@@ -21,8 +21,14 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          react: ["react", "react-dom", "react-router-dom"],
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("react-router") || id.includes("react-dom") || id.includes("/react/")) {
+              return "react";
+            }
+            if (id.includes("@radix-ui")) return "radix";
+            if (id.includes("lucide-react")) return "icons";
+          }
         },
       },
     },
