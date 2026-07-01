@@ -96,7 +96,7 @@ export default function App() {
             path="/"
             element={
               <>
-                <Seo title="Southeast Landmark Ltd — Building Landmarks You Can Call Home" description="Southeast Landmark Ltd is a Dhaka real estate company delivering comfortable, high-quality residential spaces for plot owners and investors." path="/" />
+                <Seo title="Southeast Landmark Ltd — Planned Residential Plots & Township Development" description="Southeast Landmark Ltd is a Dhaka-based land development company offering planned residential plots, township projects and secure land investment." path="/" />
                 <HomePage />
               </>
             }
@@ -105,7 +105,7 @@ export default function App() {
             path="/about"
             element={
               <>
-                <Seo title="About — Southeast Landmark Ltd" description="Learn about Southeast Landmark Ltd, a Dhaka real estate company dedicated to comfortable, lasting living spaces." path="/about" />
+                <Seo title="About — Southeast Landmark Ltd" description="Learn about Southeast Landmark Ltd, a Dhaka-based land development company delivering planned residential plots and township projects." path="/about" />
                 <AboutPage />
               </>
             }
@@ -114,7 +114,7 @@ export default function App() {
             path="/property"
             element={
               <>
-                <Seo title="Properties — Southeast Landmark Ltd" description="Browse residential properties by Southeast Landmark across Dhaka." path="/property" />
+                <Seo title="Projects — Southeast Landmark Ltd" description="Explore ongoing, upcoming and completed land development and residential plot projects by Southeast Landmark across Bangladesh." path="/property" />
                 <PropertyPage />
               </>
             }
@@ -123,7 +123,7 @@ export default function App() {
             path="/blog"
             element={
               <>
-                <Seo title="Blog — Southeast Landmark Ltd" description="News, insights and stories from Southeast Landmark." path="/blog" />
+                <Seo title="Blog — Southeast Landmark Ltd" description="Land investment insights, township updates and news from Southeast Landmark." path="/blog" />
                 <BlogPage />
               </>
             }
@@ -132,7 +132,7 @@ export default function App() {
             path="/faq"
             element={
               <>
-                <Seo title="FAQ — Southeast Landmark Ltd" description="Answers to the questions we hear most about our properties and process." path="/faq" />
+                <Seo title="FAQ — Southeast Landmark Ltd" description="Answers to common questions about our residential plots, land projects, booking and installment facilities." path="/faq" />
                 <FAQPage />
               </>
             }
@@ -141,7 +141,7 @@ export default function App() {
             path="/contact"
             element={
               <>
-                <Seo title="Contact — Southeast Landmark Ltd" description="Get in touch with the Southeast Landmark team in Mohammadpur, Dhaka." path="/contact" />
+                <Seo title="Contact — Southeast Landmark Ltd" description="Book a site visit or request project details from the Southeast Landmark land development team in Mohammadpur, Dhaka." path="/contact" />
                 <ContactPage />
               </>
             }
