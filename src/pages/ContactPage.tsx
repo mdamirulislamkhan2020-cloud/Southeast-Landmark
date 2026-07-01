@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { sendAppEmail } from "@/services/email-service";
 
-export function ContactPage() {
+function ContactPageStatic() {
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -127,5 +127,13 @@ export function ContactPage() {
         </div>
       </section>
     </div>
+  );
+}
+import { CmsPageContent as _CmsPageContent__ContactPage } from "@/components/site/CmsPageContent";
+export function ContactPage() {
+  return (
+    <_CmsPageContent__ContactPage path="/contact">
+      <ContactPageStatic />
+    </_CmsPageContent__ContactPage>
   );
 }

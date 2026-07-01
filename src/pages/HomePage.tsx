@@ -56,7 +56,7 @@ const blogs = [
   { title: "How to Evaluate a Planned Township Project", author: "Editorial", date: "22 Jan 2026" },
 ];
 
-export function HomePage() {
+function HomePageStatic() {
   return (
     <div>
       {/* Hero */}
@@ -299,5 +299,13 @@ export function HomePage() {
         </div>
       </section>
     </div>
+  );
+}
+import { CmsPageContent as _CmsPageContent__HomePage } from "@/components/site/CmsPageContent";
+export function HomePage() {
+  return (
+    <_CmsPageContent__HomePage path="/">
+      <HomePageStatic />
+    </_CmsPageContent__HomePage>
   );
 }

@@ -1,5 +1,5 @@
 import type { CmsPage, DashboardStats, Lead, PageStatus } from "./types";
-import type { PageBlock } from "./lead-pages";
+import type { PageBlock, BlockType } from "./lead-pages";
 
 /**
  * Admin API client.
@@ -17,9 +17,122 @@ const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !==
 const LS_PAGES = "sel_admin_pages_v1";
 const LS_LEADS = "sel_admin_leads_v1";
 const LS_AUTH = "sel_admin_auth_v1";
+const LS_PAGES_MIGRATION = "sel_admin_pages_migration_v2";
 
 function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+}
+
+/**
+ * Default block sets for the built-in pages. These mirror what the
+ * hardcoded frontend already renders so the Page Builder is never empty
+ * for the shipped site. Frontends fall back to their static markup only
+ * when a CMS page has no blocks.
+ */
+function mkBlock(type: BlockType, data: Record<string, unknown>): PageBlock {
+  return { id: uid(), type, data };
+}
+
+export function defaultBlocksForSlug(slug: string): PageBlock[] {
+  switch (slug) {
+    case "/":
+      return [
+        mkBlock("hero", {
+          title: "Own Your Land in a Planned Township — Today and for Generations",
+          subtitle: "Southeast Landmark delivers verified plots, clean papers and long-term appreciation.",
+          image: "",
+          ctaLabel: "Explore Projects",
+          ctaHref: "/property",
+        }),
+        mkBlock("features", { items: [
+          { title: "Easy Installments", text: "Flexible monthly installment facilities to make land ownership accessible." },
+          { title: "Clean & Verified Land", text: "Every plot is legally cleared, mutation-ready and independently verified." },
+          { title: "Transparent Documentation", text: "Full land papers, layout plans and approvals — accessible on request." },
+          { title: "Dedicated Support", text: "A dedicated project team guides you from site visit to plot handover." },
+        ] }),
+        mkBlock("text", { html: "<h2>Welcome to Southeast Landmark</h2><p>Planned townships. Verified land. Trusted handover. From land acquisition and layout approval to plot registration, we work transparently and on schedule.</p>" }),
+        mkBlock("property_grid", { limit: 6, category: "" }),
+        mkBlock("counter", { items: [
+          { value: 10000, label: "Plot Owners" },
+          { value: 3000, label: "Land Investors" },
+          { value: 25, label: "Years Experience" },
+          { value: 30, label: "Land Value Growth %" },
+        ] }),
+        mkBlock("testimonials", { source: "all" }),
+        mkBlock("blog_grid", { limit: 3 }),
+        mkBlock("cta", {
+          title: "Ready to invest in land that lasts?",
+          subtitle: "Talk to our team about ongoing and upcoming township projects.",
+          ctaLabel: "Contact Us",
+          ctaHref: "/contact",
+        }),
+      ];
+    case "/about":
+      return [
+        mkBlock("hero", { title: "About Southeast Landmark", subtitle: "Planned townships, verified land and trusted handover.", image: "", ctaLabel: "", ctaHref: "" }),
+        mkBlock("text", { html: "<p>Southeast Landmark Ltd. is a Dhaka-based land development company delivering residential plots and township projects with strong infrastructure, clean documentation and lasting land value.</p>" }),
+        mkBlock("features", { items: [
+          { title: "Easy Installments", text: "Flexible monthly installment support to make plot ownership accessible." },
+          { title: "Verified Land", text: "Every project is legally cleared, mutation-ready and independently verified." },
+          { title: "Transparent Papers", text: "Full land documentation and approvals accessible for every plot owner." },
+          { title: "Dedicated Support", text: "A dedicated project team supports you from site visit to registration." },
+        ] }),
+        mkBlock("cta", { title: "Book a Consultation", subtitle: "Talk to our team about your plot goals.", ctaLabel: "Contact Us", ctaHref: "/contact" }),
+      ];
+    case "/property":
+      return [
+        mkBlock("hero", { title: "Our Land Projects", subtitle: "Explore ongoing, upcoming and completed township projects.", image: "", ctaLabel: "", ctaHref: "" }),
+        mkBlock("property_grid", { limit: 12, category: "" }),
+        mkBlock("cta", { title: "Interested in a plot?", subtitle: "Get a callback from our sales team.", ctaLabel: "Request Callback", ctaHref: "/contact" }),
+      ];
+    case "/blog":
+      return [
+        mkBlock("hero", { title: "News & Insights", subtitle: "Guides, market updates and stories from Southeast Landmark.", image: "", ctaLabel: "", ctaHref: "" }),
+        mkBlock("blog_grid", { limit: 12 }),
+      ];
+    case "/faq":
+      return [
+        mkBlock("hero", { title: "Frequently Asked Questions", subtitle: "Answers to the questions plot buyers ask us most.", image: "", ctaLabel: "", ctaHref: "" }),
+        mkBlock("faq", { items: [
+          { q: "What areas does Southeast Landmark cover?", a: "We currently focus on Mohammadpur, Adabor, and surrounding zones in Dhaka." },
+          { q: "Do you offer installment plans?", a: "Yes, most properties support flexible installment plans up to 36 months." },
+          { q: "Can I schedule a site visit?", a: "Absolutely — book from any property page or contact our sales team." },
+          { q: "Are the properties ready to move in?", a: "Availability varies. Each listing shows its current status (available, upcoming, sold)." },
+        ] }),
+      ];
+    case "/contact":
+      return [
+        mkBlock("hero", { title: "Get in Touch", subtitle: "Our team is ready to help with your plot and township inquiries.", image: "", ctaLabel: "", ctaHref: "" }),
+        mkBlock("contact", { phone: "+880 1700 000000", email: "info@southeastlandmark.com", address: "Mohammadpur, Dhaka, Bangladesh" }),
+        mkBlock("lead_form", { formId: null, title: "Send us a message" }),
+      ];
+    default:
+      return [];
+  }
+}
+
+/**
+ * Backfill blocks for built-in pages whose block list is currently empty.
+ * Runs once per browser (guarded by a versioned flag) so it never
+ * overwrites edits the admin has already made.
+ */
+function migrateDefaultPageBlocks() {
+  if (typeof window === "undefined") return;
+  try {
+    if (window.localStorage.getItem(LS_PAGES_MIGRATION) === "done") return;
+    const pages = readLS<CmsPage[]>(LS_PAGES, []);
+    let changed = false;
+    const next = pages.map((p) => {
+      const hasBlocks = Array.isArray(p.blocks) && p.blocks.length > 0;
+      if (hasBlocks) return p;
+      const seedBlocks = defaultBlocksForSlug(p.slug);
+      if (seedBlocks.length === 0) return p;
+      changed = true;
+      return { ...p, blocks: seedBlocks, updatedAt: new Date().toISOString() };
+    });
+    if (changed) writeLS(LS_PAGES, next);
+    window.localStorage.setItem(LS_PAGES_MIGRATION, "done");
+  } catch { /* ignore */ }
 }
 
 function readLS<T>(key: string, fallback: T): T {
@@ -62,7 +175,7 @@ function seed() {
       updatedAt: now,
       createdAt: now,
       formId: null,
-      blocks: [],
+      blocks: defaultBlocksForSlug(p.slug),
       showInNav: true,
       template: "standard",
       seoKeywords: "",
@@ -70,7 +183,9 @@ function seed() {
       canonical: "",
     }));
     writeLS(LS_PAGES, built);
+    if (typeof window !== "undefined") window.localStorage.setItem(LS_PAGES_MIGRATION, "done");
   }
+  migrateDefaultPageBlocks();
   if (readLS<Lead[] | null>(LS_LEADS, null) === null) {
     const sources = ["Website", "Facebook", "Google Ads", "Referral", "Walk-in"];
     const names = ["Ayesha Khan", "Rafiq Islam", "Tania Rahman", "Sabbir Ahmed", "Nadia Chowdhury", "Imran Hossain", "Mou Akter", "Jahid Karim"];

@@ -23,7 +23,7 @@ const amenities = [
   "Playground / Park",
 ];
 
-export function PropertyPage() {
+function PropertyPageStatic() {
   return (
     <div>
       <PageHero title="Projects" crumb="Projects" />
@@ -85,5 +85,13 @@ export function PropertyPage() {
         </div>
       </section>
     </div>
+  );
+}
+import { CmsPageContent as _CmsPageContent__PropertyPage } from "@/components/site/CmsPageContent";
+export function PropertyPage() {
+  return (
+    <_CmsPageContent__PropertyPage path="/property">
+      <PropertyPageStatic />
+    </_CmsPageContent__PropertyPage>
   );
 }
