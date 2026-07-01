@@ -10,6 +10,15 @@ const BlogPage = lazy(() => import("@/pages/BlogPage").then((m) => ({ default: m
 const FAQPage = lazy(() => import("@/pages/FAQPage").then((m) => ({ default: m.FAQPage })));
 const ContactPage = lazy(() => import("@/pages/ContactPage").then((m) => ({ default: m.ContactPage })));
 
+// Admin (lazy)
+const AdminLayout = lazy(() => import("@/admin/AdminLayout").then((m) => ({ default: m.AdminLayout })));
+const AdminLogin = lazy(() => import("@/admin/pages/LoginPage").then((m) => ({ default: m.LoginPage })));
+const AdminDashboard = lazy(() => import("@/admin/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
+const AdminPagesList = lazy(() => import("@/admin/pages/PagesListPage").then((m) => ({ default: m.PagesListPage })));
+const AdminPageEditor = lazy(() => import("@/admin/pages/PageEditorPage").then((m) => ({ default: m.PageEditorPage })));
+const AdminLeads = lazy(() => import("@/admin/pages/LeadsPage").then((m) => ({ default: m.LeadsPage })));
+const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
+
 function NotFound() {
   return (
     <div className="mx-auto max-w-md px-4 py-24 text-center">
@@ -22,9 +31,30 @@ function NotFound() {
 
 export default function App() {
   return (
-    <SiteLayout>
-      <Suspense fallback={<div className="min-h-screen" />}>
-        <Routes>
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <Routes>
+        {/* Admin routes (no public layout, no site chrome) */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route
+          path="/admin"
+          element={
+            <RequireAuth>
+              <AdminLayout />
+            </RequireAuth>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="pages" element={<AdminPagesList />} />
+          <Route path="pages/:id" element={<AdminPageEditor />} />
+          <Route path="leads" element={<AdminLeads />} />
+        </Route>
+
+        {/* Public site */}
+        <Route
+          path="/*"
+          element={
+            <SiteLayout>
+              <Routes>
           <Route
             path="/"
             element={
@@ -80,8 +110,11 @@ export default function App() {
             }
           />
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
-    </SiteLayout>
+              </Routes>
+            </SiteLayout>
+          }
+        />
+      </Routes>
+    </Suspense>
   );
 }
