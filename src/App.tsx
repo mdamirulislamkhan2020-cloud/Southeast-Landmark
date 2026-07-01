@@ -19,6 +19,10 @@ const AdminPageEditor = lazy(() => import("@/admin/pages/PageEditorPage").then((
 const AdminLeads = lazy(() => import("@/admin/pages/LeadsPage").then((m) => ({ default: m.LeadsPage })));
 const AdminProperties = lazy(() => import("@/admin/pages/PropertiesListPage").then((m) => ({ default: m.PropertiesListPage })));
 const AdminPropertyEditor = lazy(() => import("@/admin/pages/PropertyEditorPage").then((m) => ({ default: m.PropertyEditorPage })));
+const AdminBlog = lazy(() => import("@/admin/pages/BlogListPage").then((m) => ({ default: m.BlogListPage })));
+const AdminBlogEditor = lazy(() => import("@/admin/pages/BlogEditorPage").then((m) => ({ default: m.BlogEditorPage })));
+const AdminFaqs = lazy(() => import("@/admin/pages/FaqsPage").then((m) => ({ default: m.FaqsPage })));
+const AdminTestimonials = lazy(() => import("@/admin/pages/TestimonialsPage").then((m) => ({ default: m.TestimonialsPage })));
 const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
 
 function NotFound() {
@@ -50,6 +54,10 @@ export default function App() {
           <Route path="pages/:id" element={<AdminPageEditor />} />
           <Route path="properties" element={<AdminProperties />} />
           <Route path="properties/:id" element={<AdminPropertyEditor />} />
+          <Route path="blog" element={<AdminBlog />} />
+          <Route path="blog/:id" element={<AdminBlogEditor />} />
+          <Route path="faqs" element={<AdminFaqs />} />
+          <Route path="testimonials" element={<AdminTestimonials />} />
           <Route path="leads" element={<AdminLeads />} />
         </Route>
 

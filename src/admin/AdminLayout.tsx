@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, FileText, Users, Image, Menu, Palette, LogOut, ExternalLink, Building2 } from "lucide-react";
+import { LayoutDashboard, FileText, Users, Image, Menu, Palette, LogOut, ExternalLink, Building2, Newspaper, HelpCircle, MessageSquareQuote } from "lucide-react";
 import { logout } from "./api/client";
 import { cn } from "@/lib/utils";
 
@@ -7,6 +7,9 @@ const nav = [
   { to: "/admin", end: true, label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/pages", label: "Pages (CMS)", icon: FileText },
   { to: "/admin/properties", label: "Properties", icon: Building2 },
+  { to: "/admin/blog", label: "Blog", icon: Newspaper },
+  { to: "/admin/faqs", label: "FAQs", icon: HelpCircle },
+  { to: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote },
   { to: "/admin/leads", label: "Leads", icon: Users },
   { to: "/admin/media", label: "Media", icon: Image, disabled: true },
   { to: "/admin/menus", label: "Navigation", icon: Menu, disabled: true },
