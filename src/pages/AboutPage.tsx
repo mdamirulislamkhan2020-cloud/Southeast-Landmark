@@ -2,6 +2,7 @@ import { PageHero } from "@/components/site/PageHero";
 import { Wallet, ShieldCheck, FileText, Headphones, Sparkles } from "lucide-react";
 import about from "@/assets/brand/about.jpg";
 import { site } from "@/config/site";
+import { blockData, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
 
 const features = [
   { icon: Wallet, title: "Easy Installments", body: "Flexible monthly installment support to make plot ownership accessible." },
@@ -10,27 +11,48 @@ const features = [
   { icon: Headphones, title: "Dedicated Support", body: "A dedicated project team supports you from site visit to registration." },
 ];
 
-function AboutPageStatic() {
+export function AboutPage() {
+  const blocks = useCmsPageBlocks("/about");
+  const heroBlock = blockData(blocks, "about.hero");
+  const introBlock = blockData(blocks, "about.intro");
+  const featuresBlock = blockData(blocks, "about.features");
+  const storyBlock = blockData(blocks, "about.story");
+  const editableFeatures = cmsList<{ title?: string; body?: string; text?: string }>(
+    featuresBlock,
+    "items",
+    features.map(({ title, body }) => ({ title, body })),
+  ).map((item, index) => ({
+    icon: features[index % features.length].icon,
+    title: item.title || features[index % features.length].title,
+    body: item.body || item.text || features[index % features.length].body,
+  }));
+  const services = cmsList<string>(storyBlock, "services", [
+    "Residential Land Development",
+    "Planned Township Development",
+    "Residential Plot Sales",
+    "Land Investment Advisory",
+    "Site Visit Booking",
+    "Installment Payment Support",
+    "Customer Consultation",
+    "After-Sales Support",
+  ]);
+
   return (
     <div>
-      <PageHero title="About" crumb="About" />
+      <PageHero title={cmsString(heroBlock, "title", "About")} crumb={cmsString(heroBlock, "crumb", "About")} />
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-start">
           <div>
             <h2 className="font-display text-3xl font-semibold sm:text-4xl">
-              Grow the Value of Your Land Portfolio
+              {cmsString(introBlock, "title", "Grow the Value of Your Land Portfolio")}
             </h2>
           </div>
           <p className="text-muted-foreground">
-            Southeast Landmark Ltd. is a land development company on a mission
-            to make planned, secure land ownership accessible. Our teams
-            combine urban planning, civil engineering and land expertise to
-            deliver residential plots and townships that stand out for their
-            infrastructure, clean papers and long-term value.
+            {cmsString(introBlock, "body", "Southeast Landmark Ltd. is a land development company on a mission to make planned, secure land ownership accessible. Our teams combine urban planning, civil engineering and land expertise to deliver residential plots and townships that stand out for their infrastructure, clean papers and long-term value.")}
           </p>
         </div>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map((f) => (
+          {editableFeatures.map((f) => (
             <div key={f.title} className="rounded-2xl border border-border/60 bg-card p-6">
               <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <f.icon className="h-6 w-6" />
@@ -49,27 +71,15 @@ function AboutPageStatic() {
           </div>
           <div>
             <div className="inline-flex items-center gap-2 text-sm font-medium text-primary">
-              <Sparkles className="h-4 w-4" /> Our Story
+              <Sparkles className="h-4 w-4" /> {cmsString(storyBlock, "eyebrow", "Our Story")}
             </div>
-            <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">Welcome to {site.short}</h2>
-            <p className="mt-4 text-muted-foreground">{site.tagline}</p>
+            <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">{cmsString(storyBlock, "title", `Welcome to ${site.short}`)}</h2>
+            <p className="mt-4 text-muted-foreground">{cmsString(storyBlock, "body1", site.tagline)}</p>
             <p className="mt-3 text-muted-foreground">
-              From land acquisition and layout approval to plot registration
-              and handover, we work transparently and on schedule — so that
-              families and land investors alike can trust the plot they book
-              today will stand strong for generations.
+              {cmsString(storyBlock, "body2", "From land acquisition and layout approval to plot registration and handover, we work transparently and on schedule — so that families and land investors alike can trust the plot they book today will stand strong for generations.")}
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              {[
-                "Residential Land Development",
-                "Planned Township Development",
-                "Residential Plot Sales",
-                "Land Investment Advisory",
-                "Site Visit Booking",
-                "Installment Payment Support",
-                "Customer Consultation",
-                "After-Sales Support",
-              ].map((s) => (
+              {services.map((s) => (
                 <div key={s} className="rounded-lg border border-border/60 bg-card px-3 py-2 text-sm text-foreground/85">
                   {s}
                 </div>
@@ -79,13 +89,5 @@ function AboutPageStatic() {
         </div>
       </section>
     </div>
-  );
-}
-import { CmsPageContent as _CmsPageContent__AboutPage } from "@/components/site/CmsPageContent";
-export function AboutPage() {
-  return (
-    <_CmsPageContent__AboutPage path="/about">
-      <AboutPageStatic />
-    </_CmsPageContent__AboutPage>
   );
 }
