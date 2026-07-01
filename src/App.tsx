@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Seo } from "@/components/site/Seo";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 const HomePage = lazy(() => import("@/pages/HomePage").then((m) => ({ default: m.HomePage })));
 const AboutPage = lazy(() => import("@/pages/AboutPage").then((m) => ({ default: m.AboutPage })));
@@ -50,15 +51,16 @@ function NotFound() {
 
 export default function App() {
   return (
-    <Suspense fallback={<div className="min-h-screen" />}>
-      <Routes>
+    <ErrorBoundary scope="app">
+      <Suspense fallback={<div className="min-h-screen" />}>
+        <Routes>
         {/* Admin routes (no public layout, no site chrome) */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route
           path="/admin"
           element={
             <RequireAuth>
-              <AdminLayout />
+              <ErrorBoundary scope="admin"><AdminLayout /></ErrorBoundary>
             </RequireAuth>
           }
         >
@@ -91,7 +93,8 @@ export default function App() {
           path="/*"
           element={
             <SiteLayout>
-              <Routes>
+              <ErrorBoundary scope="site">
+                <Routes>
           <Route
             path="/"
             element={
@@ -148,11 +151,13 @@ export default function App() {
           />
           <Route path="/lead/:slug" element={<PublicLeadPage />} />
           <Route path="*" element={<NotFound />} />
-              </Routes>
+                </Routes>
+              </ErrorBoundary>
             </SiteLayout>
           }
         />
-      </Routes>
-    </Suspense>
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   );
 }

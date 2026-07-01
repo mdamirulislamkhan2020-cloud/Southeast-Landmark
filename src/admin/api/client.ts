@@ -84,12 +84,33 @@ function seed() {
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
-  });
-  if (!res.ok) throw new Error(`API ${res.status}`);
-  return (await res.json()) as T;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    });
+    if (!res.ok) {
+      let detail = "";
+      try { detail = (await res.text()).slice(0, 200); } catch { /* ignore */ }
+      throw new Error(`API ${res.status} ${res.statusText}${detail ? `: ${detail}` : ""}`);
+    }
+    if (res.status === 204) return undefined as unknown as T;
+    return (await res.json()) as T;
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error(`Request timed out: ${path}`);
+    }
+    if (err instanceof TypeError) {
+      // Network failure (offline, CORS, DNS)
+      throw new Error(`Network error while calling ${path}`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 // ---------- Auth ----------
