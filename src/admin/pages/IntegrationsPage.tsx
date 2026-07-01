@@ -15,7 +15,9 @@ import {
   CheckCircle2, XCircle, Zap, Activity, Search, Trash2, RotateCcw, Send,
   ScrollText, Radio, Save, Plug, AlertCircle,
 } from "lucide-react";
-import { INTEGRATION_DEFINITIONS, TRACKING_EVENTS } from "../api/integrations";
+import { INTEGRATION_DEFINITIONS as ALL_DEFS, TRACKING_EVENTS } from "../api/integrations";
+// SMTP is managed exclusively from /admin/smtp — hide it here to keep a single source of truth.
+const INTEGRATION_DEFINITIONS = ALL_DEFS.filter((d) => d.key !== "smtp");
 import type { IntegrationConfig, IntegrationDefinition, IntegrationKey, IntegrationLog, DataLayerEntry } from "../api/integrations";
 import {
   listIntegrations, saveIntegration, testIntegration, deleteIntegration,
