@@ -16,7 +16,8 @@ const AdminLogin = lazy(() => import("@/admin/pages/LoginPage").then((m) => ({ d
 const AdminDashboard = lazy(() => import("@/admin/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const AdminPagesList = lazy(() => import("@/admin/pages/PagesListPage").then((m) => ({ default: m.PagesListPage })));
 const AdminPageEditor = lazy(() => import("@/admin/pages/PageEditorPage").then((m) => ({ default: m.PageEditorPage })));
-const AdminLeads = lazy(() => import("@/admin/pages/LeadsPage").then((m) => ({ default: m.LeadsPage })));
+const AdminLeads = lazy(() => import("@/admin/pages/LeadsCRMPage").then((m) => ({ default: m.LeadsCRMPage })));
+const AdminLeadDetail = lazy(() => import("@/admin/pages/LeadDetailPage").then((m) => ({ default: m.LeadDetailPage })));
 const AdminProperties = lazy(() => import("@/admin/pages/PropertiesListPage").then((m) => ({ default: m.PropertiesListPage })));
 const AdminPropertyEditor = lazy(() => import("@/admin/pages/PropertyEditorPage").then((m) => ({ default: m.PropertyEditorPage })));
 const AdminBlog = lazy(() => import("@/admin/pages/BlogListPage").then((m) => ({ default: m.BlogListPage })));
@@ -68,6 +69,7 @@ export default function App() {
           <Route path="faqs" element={<AdminFaqs />} />
           <Route path="testimonials" element={<AdminTestimonials />} />
           <Route path="leads" element={<AdminLeads />} />
+          <Route path="leads/:id" element={<AdminLeadDetail />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="media" element={<AdminMedia />} />
           <Route path="theme" element={<AdminTheme />} />

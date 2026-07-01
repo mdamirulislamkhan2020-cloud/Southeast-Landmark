@@ -11,6 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import { Star } from "lucide-react";
+import { submitLead } from "../api/crm-client";
+import type { CrmAnalytics } from "../api/crm";
 
 type Values = Record<string, string | string[] | boolean | number>;
 
@@ -57,6 +59,62 @@ export function FormRenderer({ form }: { form: LeadForm }) {
     e.preventDefault();
     if (form.multiStep && step < steps.length - 1) { setStep(step + 1); return; }
     setSubmitted(true);
+    try {
+      const answers: Record<string, unknown> = {};
+      form.fields.forEach((f) => {
+        if (["heading", "paragraph", "divider"].includes(f.type)) return;
+        answers[f.name || f.id] = values[f.name];
+      });
+      let analytics: CrmAnalytics = {};
+      let leadPageSlug: string | null = null;
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        const p = url.searchParams;
+        analytics = {
+          utmSource: p.get("utm_source") ?? undefined,
+          utmMedium: p.get("utm_medium") ?? undefined,
+          utmCampaign: p.get("utm_campaign") ?? undefined,
+          utmContent: p.get("utm_content") ?? undefined,
+          utmTerm: p.get("utm_term") ?? undefined,
+          gclid: p.get("gclid") ?? undefined,
+          fbclid: p.get("fbclid") ?? undefined,
+          landingUrl: window.location.href,
+          referrer: document.referrer || undefined,
+          device: /Mobi|Android/i.test(navigator.userAgent) ? "mobile" : "desktop",
+          campaign: p.get("utm_campaign") ?? undefined,
+        };
+        const m = url.pathname.match(/^\/lead\/([^/]+)/);
+        if (m) {
+          leadPageSlug = m[1];
+          try {
+            const cached = sessionStorage.getItem(`lead:${leadPageSlug}:analytics`);
+            if (cached) {
+              const parsed = JSON.parse(cached) as Record<string, string | undefined>;
+              analytics = {
+                ...analytics,
+                utmSource: analytics.utmSource ?? parsed.utm_source,
+                utmMedium: analytics.utmMedium ?? parsed.utm_medium,
+                utmCampaign: analytics.utmCampaign ?? parsed.utm_campaign,
+                utmContent: analytics.utmContent ?? parsed.utm_content,
+                utmTerm: analytics.utmTerm ?? parsed.utm_term,
+                gclid: analytics.gclid ?? parsed.gclid,
+                fbclid: analytics.fbclid ?? parsed.fbclid,
+                landingUrl: analytics.landingUrl ?? parsed.landing_url,
+                referrer: analytics.referrer ?? parsed.referrer,
+              };
+            }
+          } catch { /* ignore */ }
+        }
+      }
+      void submitLead({
+        formId: form.id,
+        formName: form.name,
+        answers,
+        leadPageSlug,
+        analytics,
+        source: leadPageSlug ? `Lead Page: ${leadPageSlug}` : `Form: ${form.name}`,
+      });
+    } catch { /* non-blocking */ }
   };
 
   const btnRadius = form.design.buttonStyle === "pill" ? "rounded-full" : form.design.buttonStyle === "square" ? "rounded-none" : "rounded-md";
