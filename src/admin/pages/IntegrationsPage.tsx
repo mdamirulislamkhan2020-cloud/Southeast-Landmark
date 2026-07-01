@@ -79,8 +79,12 @@ function IntegrationPanel({ def, cfg, logs, onChange }: { def: IntegrationDefini
   };
   const test = async () => {
     setBusy("test");
-    try { await saveIntegration(def.key, { enabled, values }); const r = await testIntegration(def.key); r.ok ? toast.success(r.message) : toast.error(r.message); onChange(); }
-    finally { setBusy(null); }
+    try {
+      await saveIntegration(def.key, { enabled, values });
+      const r = await testIntegration(def.key);
+      if (r.ok) toast.success(r.message); else toast.error(r.message);
+      onChange();
+    } finally { setBusy(null); }
   };
   const del = async () => {
     if (!confirm(`Reset ${def.name} configuration?`)) return;
@@ -129,7 +133,12 @@ function IntegrationPanel({ def, cfg, logs, onChange }: { def: IntegrationDefini
             <div className="flex gap-2">
               <Input placeholder="recipient@example.com" value={testEmailTo} onChange={(e) => setTestEmailTo(e.target.value)} />
               <Button size="sm" variant="outline" disabled={busy === "email"} onClick={async () => {
-                setBusy("email"); try { const r = await sendTestEmail(testEmailTo); r.ok ? toast.success(r.message) : toast.error(r.message); onChange(); } finally { setBusy(null); }
+                setBusy("email");
+                try {
+                  const r = await sendTestEmail(testEmailTo);
+                  if (r.ok) toast.success(r.message); else toast.error(r.message);
+                  onChange();
+                } finally { setBusy(null); }
               }}><Send className="h-4 w-4 mr-1" />Send</Button>
             </div>
           </div>
@@ -137,7 +146,12 @@ function IntegrationPanel({ def, cfg, logs, onChange }: { def: IntegrationDefini
 
         {def.key === "webhook" && (
           <Button variant="outline" size="sm" disabled={busy === "hook"} onClick={async () => {
-            setBusy("hook"); try { const r = await sendTestWebhook(); r.ok ? toast.success(r.message) : toast.error(r.message); onChange(); } finally { setBusy(null); }
+            setBusy("hook");
+            try {
+              const r = await sendTestWebhook();
+              if (r.ok) toast.success(r.message); else toast.error(r.message);
+              onChange();
+            } finally { setBusy(null); }
           }}><Send className="h-4 w-4 mr-1" />Fire Test Payload</Button>
         )}
 
@@ -279,7 +293,12 @@ export function IntegrationsPage() {
   const refresh = () => { qc.invalidateQueries({ queryKey: ["integrations"] }); setLogsTick((t) => t + 1); };
   const selectedDef = selectedKey ? INTEGRATION_DEFINITIONS.find((d) => d.key === selectedKey) ?? null : null;
   const selectedCfg = selectedKey && data ? data[selectedKey] : null;
-  const selectedLogs = useMemo(() => (selectedKey ? listLogs(selectedKey) : []), [selectedKey, logsTick, data]);
+  // logsTick is intentional — bumps after mutations so we re-read localStorage-backed logs.
+  const selectedLogs = useMemo(
+    () => (selectedKey ? listLogs(selectedKey) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedKey, logsTick],
+  );
 
   const enabledCount = data ? Object.values(data).filter((c) => c.enabled).length : 0;
   const connectedCount = data ? Object.values(data).filter((c) => c.lastTestOk === true).length : 0;
