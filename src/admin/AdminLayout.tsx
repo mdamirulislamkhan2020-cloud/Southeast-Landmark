@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, FileText, Users, Image, Menu, Palette, LogOut, ExternalLink, Building2, Newspaper, HelpCircle, MessageSquareQuote } from "lucide-react";
+import { LayoutDashboard, FileText, Users, Image, Palette, LogOut, ExternalLink, Building2, Newspaper, HelpCircle, MessageSquareQuote, Settings, UserCog } from "lucide-react";
 import { logout } from "./api/client";
 import { cn } from "@/lib/utils";
 
@@ -11,9 +11,10 @@ const nav = [
   { to: "/admin/faqs", label: "FAQs", icon: HelpCircle },
   { to: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote },
   { to: "/admin/leads", label: "Leads", icon: Users },
-  { to: "/admin/media", label: "Media", icon: Image, disabled: true },
-  { to: "/admin/menus", label: "Navigation", icon: Menu, disabled: true },
-  { to: "/admin/theme", label: "Theme", icon: Palette, disabled: true },
+  { to: "/admin/users", label: "Users & Roles", icon: UserCog },
+  { to: "/admin/media", label: "Media Library", icon: Image },
+  { to: "/admin/theme", label: "Theme", icon: Palette },
+  { to: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export function AdminLayout() {
