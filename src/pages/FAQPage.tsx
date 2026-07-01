@@ -9,24 +9,24 @@ import {
 
 const faqs = [
   {
-    q: "Who can invest with Southeast Landmark?",
-    a: "Any adult resident or non-resident Bangladeshi with valid identification and a compliant source of funds is eligible. Our team will guide you through the documentation step by step.",
+    q: "Who can book a plot with Southeast Landmark?",
+    a: "Any adult resident or non-resident Bangladeshi with valid identification and a compliant source of funds can book a residential plot in our projects. Our team will guide you through booking, installments and registration step by step.",
   },
   {
-    q: "Is Southeast Landmark a long-term commitment?",
-    a: "Our residences are designed for long-term ownership. That said, plot owners are free to resell, lease or transfer their units according to their own timelines.",
+    q: "Is a land plot a long-term commitment?",
+    a: "Our residential plots are designed for long-term ownership and land value appreciation. That said, plot owners are free to resell, transfer or gift their plot according to their own timelines.",
   },
   {
-    q: "How does pricing work?",
-    a: "Every project has a transparent price schedule based on unit size, floor level and finishing package. There are no hidden fees — you see the full breakdown before you commit.",
+    q: "How does plot pricing and installment work?",
+    a: "Every project has a transparent per-katha price schedule, along with down-payment and monthly installment options. There are no hidden fees — you see the full breakdown, including registration and utility charges, before you book.",
   },
   {
     q: "What after-sales support do you provide?",
-    a: "For a full year after handover we cover routine maintenance and any construction-related defects. Beyond that, our facility team is available on a service-contract basis.",
+    a: "After plot handover we support mutation, registration follow-up and project infrastructure upkeep such as roads, drainage and boundary walls. Our customer team stays available for any post-booking assistance you need.",
   },
   {
-    q: "Can I visit a project in person?",
-    a: "Absolutely. Schedule a site visit through our contact page or by phone and we will arrange a guided walk-through at a time that suits you.",
+    q: "Can I book a site visit to a project?",
+    a: "Absolutely. Book a site visit through our contact page or by phone and we will arrange a guided project tour, layout walk-through and plot selection at a time that suits you.",
   },
 ];
 
