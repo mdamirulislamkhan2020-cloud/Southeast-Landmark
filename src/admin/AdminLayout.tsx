@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, FileText, Users, Image, Palette, LogOut, ExternalLink, Building2, Newspaper, HelpCircle, MessageSquareQuote, Settings, UserCog, FormInput, LayoutTemplate, BarChart3, Search, Plug, Menu as MenuIcon } from "lucide-react";
+import { LayoutDashboard, FileText, Users, Image, Palette, LogOut, ExternalLink, Building2, Newspaper, HelpCircle, MessageSquareQuote, Settings, UserCog, FormInput, BarChart3, Search, Plug, Menu as MenuIcon } from "lucide-react";
 import { logout } from "./api/client";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +12,6 @@ const nav: NavItem[] = [
   { to: "/admin/faqs", label: "FAQs", icon: HelpCircle },
   { to: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote },
   { to: "/admin/forms", label: "Lead Forms", icon: FormInput },
-  { to: "/admin/lead-pages", label: "Lead Pages", icon: LayoutTemplate },
   { to: "/admin/leads", label: "Leads", icon: Users },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/admin/seo", label: "SEO Manager", icon: Search },
