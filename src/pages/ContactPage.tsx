@@ -1,8 +1,57 @@
 import { PageHero } from "@/components/site/PageHero";
-import { MapPin, Mail, Phone } from "lucide-react";
+import { MapPin, Mail, Phone, Loader2 } from "lucide-react";
 import { site } from "@/config/site";
+import { useState } from "react";
+import { toast } from "sonner";
+import { sendAppEmail } from "@/services/email-service";
 
 export function ContactPage() {
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (submitting) return;
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    const payload = Object.fromEntries(fd.entries()) as Record<string, string>;
+    if (!payload.name || !payload.phone) {
+      toast.error("Please provide your name and mobile number.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await sendAppEmail({
+        to: site.email,
+        subject: `New inquiry from ${payload.name}`,
+        source: "contact_form",
+        replyTo: payload.email || undefined,
+        text: [
+          `Name: ${payload.name}`,
+          `Phone: ${payload.phone}`,
+          `Email: ${payload.email ?? "—"}`,
+          `Project: ${payload.project ?? "—"}`,
+          `Plot size: ${payload.plotSize ?? "—"}`,
+          `Purpose: ${payload.purpose ?? "—"}`,
+          "",
+          payload.message ?? "",
+        ].join("\n"),
+        meta: { source: "contact_page" },
+      });
+      if (!res.ok) {
+        toast.error(res.error ?? "We couldn't submit your inquiry. Please try again.");
+        return;
+      }
+      if (res.data?.simulated) {
+        toast.warning("Inquiry recorded (email backend not connected yet).");
+      } else {
+        toast.success("Thanks — our land consultant will reach out shortly.");
+      }
+      form.reset();
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div>
       <PageHero title="Contact Us" crumb="Contact Us" />
@@ -19,14 +68,14 @@ export function ContactPage() {
           <div className="rounded-2xl border border-border/60 bg-card p-8">
             <h2 className="font-display text-2xl font-semibold text-primary">Book a Site Visit or Project Inquiry</h2>
             <p className="mt-1 text-sm text-muted-foreground">Share your details and our land consultant will get in touch.</p>
-            <form className="mt-6 space-y-4" onSubmit={(e) => e.preventDefault()}>
+            <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
               <div className="grid gap-4 sm:grid-cols-2">
-                <input required placeholder="Full Name" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
-                <input required type="tel" placeholder="Mobile Number" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
+                <input name="name" required placeholder="Full Name" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
+                <input name="phone" required type="tel" placeholder="Mobile Number" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <input type="email" placeholder="Email Address" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
-                <select className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary">
+                <input name="email" type="email" placeholder="Email Address" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
+                <select name="project" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary">
                   <option value="">Interested Project</option>
                   <option>Landmark City — Purbachal</option>
                   <option>Riverside Township — Keraniganj</option>
@@ -35,14 +84,14 @@ export function ContactPage() {
                 </select>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <select className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary">
+                <select name="plotSize" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary">
                   <option value="">Plot Size Interest</option>
                   <option>3 Katha</option>
                   <option>5 Katha</option>
                   <option>7.5 Katha</option>
                   <option>10 Katha or above</option>
                 </select>
-                <select className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary">
+                <select name="purpose" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary">
                   <option value="">Purpose</option>
                   <option>Own Residence</option>
                   <option>Land Investment</option>
@@ -50,9 +99,10 @@ export function ContactPage() {
                   <option>Installment Information</option>
                 </select>
               </div>
-              <textarea placeholder="Message (any specific project or plot requirement)" rows={5} className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
-              <button type="submit" className="w-full rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:brightness-110">
-                Book Your Plot Consultation
+              <textarea name="message" placeholder="Message (any specific project or plot requirement)" rows={5} className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
+              <button type="submit" disabled={submitting} aria-busy={submitting} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:brightness-110 disabled:opacity-70">
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {submitting ? "Sending…" : "Book Your Plot Consultation"}
               </button>
             </form>
           </div>

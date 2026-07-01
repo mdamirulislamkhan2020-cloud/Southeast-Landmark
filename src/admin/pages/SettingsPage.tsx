@@ -28,7 +28,6 @@ export function SettingsPage() {
           <TabsTrigger value="social">Socials</TabsTrigger>
           <TabsTrigger value="seo">SEO / OG</TabsTrigger>
           <TabsTrigger value="map">Map</TabsTrigger>
-          <TabsTrigger value="smtp">SMTP</TabsTrigger>
         </TabsList>
 
         <TabsContent value="company" className="pt-4">
@@ -72,17 +71,6 @@ export function SettingsPage() {
             <div className="space-y-2"><Label>Google Maps Embed HTML / URL</Label>
               <Textarea rows={4} value={s.mapsEmbed} onChange={(e) => set("mapsEmbed", e.target.value)} placeholder='<iframe src="https://www.google.com/maps/embed?..." />' />
             </div>
-          </CardContent></Card>
-        </TabsContent>
-
-        <TabsContent value="smtp" className="pt-4">
-          <Card><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
-            <div className="space-y-2"><Label>SMTP Host</Label><Input value={s.smtp.host} onChange={(e) => set("smtp", { ...s.smtp, host: e.target.value })} /></div>
-            <div className="space-y-2"><Label>SMTP Port</Label><Input value={s.smtp.port} onChange={(e) => set("smtp", { ...s.smtp, port: e.target.value })} /></div>
-            <div className="space-y-2"><Label>Username</Label><Input value={s.smtp.user} onChange={(e) => set("smtp", { ...s.smtp, user: e.target.value })} /></div>
-            <div className="space-y-2"><Label>Password</Label><Input type="password" value={s.smtp.password} onChange={(e) => set("smtp", { ...s.smtp, password: e.target.value })} /></div>
-            <div className="space-y-2"><Label>From Email</Label><Input type="email" value={s.smtp.fromEmail} onChange={(e) => set("smtp", { ...s.smtp, fromEmail: e.target.value })} /></div>
-            <div className="space-y-2"><Label>From Name</Label><Input value={s.smtp.fromName} onChange={(e) => set("smtp", { ...s.smtp, fromName: e.target.value })} /></div>
           </CardContent></Card>
         </TabsContent>
       </Tabs>
