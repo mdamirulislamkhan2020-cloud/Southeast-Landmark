@@ -37,6 +37,7 @@ const AdminLeadPageEditor = lazy(() => import("@/admin/pages/LeadPageEditorPage"
 const AdminAnalytics = lazy(() => import("@/admin/pages/AnalyticsPage").then((m) => ({ default: m.AnalyticsPage })));
 const AdminSeo = lazy(() => import("@/admin/pages/SeoManagerPage").then((m) => ({ default: m.SeoManagerPage })));
 const AdminIntegrations = lazy(() => import("@/admin/pages/IntegrationsPage").then((m) => ({ default: m.IntegrationsPage })));
+const AdminNavigation = lazy(() => import("@/admin/pages/NavigationPage").then((m) => ({ default: m.NavigationPage })));
 const PublicLeadPage = lazy(() => import("@/pages/LeadPage").then((m) => ({ default: m.LeadPage })));
 const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
 
@@ -87,6 +88,7 @@ export default function App() {
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="seo" element={<AdminSeo />} />
           <Route path="integrations" element={<AdminIntegrations />} />
+          <Route path="navigation" element={<AdminNavigation />} />
         </Route>
 
         {/* Public site */}
