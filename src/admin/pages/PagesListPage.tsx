@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Copy, Trash2, Pencil, ExternalLink, Search } from "lucide-react";
 import { toast } from "sonner";
+import { NewPageDialog } from "../components/NewPageDialog";
 
 export function PagesListPage() {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
   const { data = [], isLoading } = useQuery({ queryKey: ["pages"], queryFn: listPages });
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["pages"] });
@@ -35,8 +37,8 @@ export function PagesListPage() {
           <h1 className="font-display text-3xl">Pages</h1>
           <p className="text-sm text-muted-foreground">Create, edit, duplicate, schedule and publish website pages.</p>
         </div>
-        <Button asChild>
-          <Link to="/admin/pages/new"><Plus className="mr-1 h-4 w-4" /> New Page</Link>
+        <Button onClick={() => setCreateOpen(true)}>
+          <Plus className="mr-1 h-4 w-4" /> New Page
         </Button>
       </header>
 
@@ -90,6 +92,8 @@ export function PagesListPage() {
           </div>
         </CardContent>
       </Card>
+
+      <NewPageDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }

@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Save, ExternalLink, Plus, Copy, Trash2, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { toErrorMessage } from "@/lib/error-handler";
+import { PAGE_TEMPLATES } from "../components/NewPageDialog";
 
 function slugify(s: string) {
   const base = s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -239,6 +240,20 @@ export function PageEditorPage() {
                   <p className="text-xs text-muted-foreground">Available to Navigation Manager.</p>
                 </div>
                 <Switch checked={form.showInNav ?? true} onCheckedChange={(v) => set("showInNav", v)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Template</Label>
+                <Select
+                  value={form.template ?? "standard"}
+                  onValueChange={(v) => set("template", v as CmsPage["template"])}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PAGE_TEMPLATES.map((t) => (
+                      <SelectItem key={t.key} value={t.key}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
