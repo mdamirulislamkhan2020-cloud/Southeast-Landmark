@@ -1,4 +1,5 @@
 import type { CmsPage, DashboardStats, Lead, PageStatus } from "./types";
+import type { PageBlock } from "./lead-pages";
 
 /**
  * Admin API client.
@@ -60,6 +61,13 @@ function seed() {
       publishAt: null,
       updatedAt: now,
       createdAt: now,
+      formId: null,
+      blocks: [],
+      showInNav: true,
+      template: "standard",
+      seoKeywords: "",
+      ogImage: null,
+      canonical: "",
     }));
     writeLS(LS_PAGES, built);
   }
@@ -82,6 +90,25 @@ function seed() {
     writeLS(LS_LEADS, leads);
   }
 }
+
+/**
+ * Normalize slug to a leading-slash absolute path (except keep "/" as-is).
+ * Accepts "/about", "about", "/About Us" → "/about", "/about", "/about-us".
+ */
+function normalizeSlug(input: string): string {
+  const raw = (input ?? "").trim();
+  if (!raw) return "";
+  if (raw === "/") return "/";
+  const cleaned = raw
+    .toLowerCase()
+    .replace(/^\/+/, "")
+    .replace(/[^a-z0-9\-/]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `/${cleaned}`;
+}
+
+export { normalizeSlug };
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const controller = new AbortController();
@@ -160,19 +187,38 @@ export async function getPage(id: string): Promise<CmsPage | null> {
 
 export async function createPage(input: Partial<CmsPage>): Promise<CmsPage> {
   const now = new Date().toISOString();
+  const title = (input.title ?? "Untitled").trim() || "Untitled";
+  const slug = normalizeSlug(input.slug || title);
   const page: CmsPage = {
     id: uid(),
-    title: input.title ?? "Untitled",
-    slug: input.slug ?? `/untitled-${Date.now()}`,
+    title,
+    slug: slug || `/untitled-${Date.now().toString(36)}`,
     parentId: input.parentId ?? null,
     status: input.status ?? "draft",
-    seoTitle: input.seoTitle ?? input.title ?? "",
+    seoTitle: input.seoTitle ?? title,
     seoDescription: input.seoDescription ?? "",
     content: input.content ?? "",
     publishAt: input.publishAt ?? null,
     updatedAt: now,
     createdAt: now,
+    formId: input.formId ?? null,
+    blocks: (input.blocks as PageBlock[] | undefined) ?? [],
+    showInNav: input.showInNav ?? true,
+    template: input.template ?? "standard",
+    seoKeywords: input.seoKeywords ?? "",
+    ogImage: input.ogImage ?? null,
+    canonical: input.canonical ?? "",
   };
+  // Guard against duplicate slugs in the mock store
+  if (USE_MOCK) {
+    const all = readLS<CmsPage[]>(LS_PAGES, []);
+    let candidate = page.slug;
+    let i = 2;
+    while (all.some((p) => p.slug === candidate)) {
+      candidate = `${page.slug}-${i++}`;
+    }
+    page.slug = candidate;
+  }
   if (!USE_MOCK) return apiFetch<CmsPage>("/pages", { method: "POST", body: JSON.stringify(page) });
   const all = readLS<CmsPage[]>(LS_PAGES, []);
   all.unshift(page);
@@ -181,11 +227,13 @@ export async function createPage(input: Partial<CmsPage>): Promise<CmsPage> {
 }
 
 export async function updatePage(id: string, patch: Partial<CmsPage>): Promise<CmsPage> {
+  const normalized: Partial<CmsPage> = { ...patch };
+  if (typeof patch.slug === "string") normalized.slug = normalizeSlug(patch.slug) || patch.slug;
   if (!USE_MOCK) return apiFetch<CmsPage>(`/pages/${id}`, { method: "PUT", body: JSON.stringify(patch) });
   const all = readLS<CmsPage[]>(LS_PAGES, []);
   const idx = all.findIndex((p) => p.id === id);
   if (idx < 0) throw new Error("Page not found");
-  all[idx] = { ...all[idx], ...patch, updatedAt: new Date().toISOString() };
+  all[idx] = { ...all[idx], ...normalized, updatedAt: new Date().toISOString() };
   writeLS(LS_PAGES, all);
   return all[idx];
 }
@@ -198,7 +246,17 @@ export async function deletePage(id: string): Promise<void> {
 export async function duplicatePage(id: string): Promise<CmsPage> {
   const src = await getPage(id);
   if (!src) throw new Error("Page not found");
-  return createPage({ ...src, id: undefined, title: `${src.title} (Copy)`, slug: `${src.slug}-copy-${Date.now().toString(36)}`, status: "draft" });
+  const { id: _omitId, createdAt: _c, updatedAt: _u, ...rest } = src;
+  return createPage({ ...rest, title: `${src.title} (Copy)`, slug: `${src.slug}-copy-${Date.now().toString(36)}`, status: "draft" });
+}
+
+/**
+ * Public helper — look up a published page by its URL path (e.g. "/about").
+ */
+export async function getPageByPath(path: string): Promise<CmsPage | null> {
+  const normalized = normalizeSlug(path) || path;
+  const all = await listPages();
+  return all.find((p) => p.slug === normalized && p.status === "published") ?? null;
 }
 
 // ---------- Leads / Dashboard ----------
