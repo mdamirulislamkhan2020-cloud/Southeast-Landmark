@@ -17,6 +17,8 @@ const AdminDashboard = lazy(() => import("@/admin/pages/DashboardPage").then((m)
 const AdminPagesList = lazy(() => import("@/admin/pages/PagesListPage").then((m) => ({ default: m.PagesListPage })));
 const AdminPageEditor = lazy(() => import("@/admin/pages/PageEditorPage").then((m) => ({ default: m.PageEditorPage })));
 const AdminLeads = lazy(() => import("@/admin/pages/LeadsPage").then((m) => ({ default: m.LeadsPage })));
+const AdminProperties = lazy(() => import("@/admin/pages/PropertiesListPage").then((m) => ({ default: m.PropertiesListPage })));
+const AdminPropertyEditor = lazy(() => import("@/admin/pages/PropertyEditorPage").then((m) => ({ default: m.PropertyEditorPage })));
 const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
 
 function NotFound() {
@@ -46,6 +48,8 @@ export default function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="pages" element={<AdminPagesList />} />
           <Route path="pages/:id" element={<AdminPageEditor />} />
+          <Route path="properties" element={<AdminProperties />} />
+          <Route path="properties/:id" element={<AdminPropertyEditor />} />
           <Route path="leads" element={<AdminLeads />} />
         </Route>
 
