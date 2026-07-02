@@ -4,14 +4,24 @@ import logo from "@/assets/brand/logo.png";
 import { site } from "@/config/site";
 import { useFooterSettings, useMenu } from "@/lib/use-navigation";
 import { NewsletterForm } from "./NewsletterForm";
+import { useVisibility } from "@/lib/use-visibility";
+import { decideVisibility } from "@/admin/api/visibility-client";
+import { getSession } from "@/admin/api/client";
 
 export function Footer() {
   const footerSettings = useFooterSettings();
   const footerMenu = useMenu(footerSettings?.footerMenuSlug ?? "footer");
+  const visibility = useVisibility();
+  const isAuthed = !!getSession();
   if (footerSettings && !footerSettings.visible) return null;
 
   const items = (footerMenu?.items ?? [])
     .filter((i) => i.enabled && (i.visibility === "everyone" || i.visibility === "guest") && !i.parentId)
+    .filter((i) => {
+      if (!visibility.hideFromNav) return true;
+      if (/^https?:\/\//i.test(i.url)) return true;
+      return decideVisibility(i.url, visibility, isAuthed).action === "allow";
+    })
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
   const fallback = [
