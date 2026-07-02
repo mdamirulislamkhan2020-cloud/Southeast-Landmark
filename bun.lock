@@ -5,7 +5,9 @@
     "": {
       "name": "tanstack_start_ts",
       "dependencies": {
+        "@fontsource/hind-siliguri": "^5.2.7",
         "@fontsource/inter": "^5.2.8",
+        "@fontsource/noto-sans-bengali": "^5.2.11",
         "@fontsource/playfair-display": "^5.2.8",
         "@hookform/resolvers": "^5.2.2",
         "@radix-ui/react-accordion": "^1.2.12",
@@ -205,7 +207,11 @@
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.11", "", {}, "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="],
 
+    "@fontsource/hind-siliguri": ["@fontsource/hind-siliguri@5.2.7", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@fontsource/hind-siliguri/-/hind-siliguri-5.2.7.tgz", {}, "sha512-U/hVX5jtUbETFWyCxTsW/ZkxRS5xn2GP0IVx+m+eQeK8a/lw0Wp6lU6+Y2cJAd9phLo+eGTzKoG+6ahsYJaPBQ=="],
+
     "@fontsource/inter": ["@fontsource/inter@5.2.8", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@fontsource/inter/-/inter-5.2.8.tgz", {}, "sha512-P6r5WnJoKiNVV+zvW2xM13gNdFhAEpQ9dQJHt3naLvfg+LkF2ldgSLiF4T41lf1SQCM9QmkqPTn4TH568IRagg=="],
+
+    "@fontsource/noto-sans-bengali": ["@fontsource/noto-sans-bengali@5.2.11", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@fontsource/noto-sans-bengali/-/noto-sans-bengali-5.2.11.tgz", {}, "sha512-sDCKgC1u83/7JwulfgyvCDab97OkN375RDeGcXtvmI2Vx9ZY5mAcjb4qBtZbv53sL8i+jLawsWvZQVs4zCNkug=="],
 
     "@fontsource/playfair-display": ["@fontsource/playfair-display@5.2.8", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@fontsource/playfair-display/-/playfair-display-5.2.8.tgz", {}, "sha512-fUEhib70SszNhQVsGbUMSsWJhr7Je0rdeuZdtGpDNu0GKF1xJM8QhpI/y0pckU25GcChXm9TLOmeZupkvvZo2g=="],
 
