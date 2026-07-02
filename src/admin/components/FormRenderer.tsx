@@ -16,6 +16,7 @@ import { Star } from "lucide-react";
 import { submitLead } from "../api/crm-client";
 import type { CrmAnalytics } from "../api/crm";
 import { formatAnswers, notifyAdmin, type EmailSource } from "@/services/email-service";
+import { buildFormCss } from "../api/form-design";
 
 /**
  * Map form purpose → email source. Purpose comes from the LeadForm settings
@@ -189,24 +190,55 @@ export function FormRenderer({ form }: { form: LeadForm }) {
 
   if (submitted) {
     return (
-      <div className="form-typography mx-auto text-center py-10" style={{ maxWidth: form.design.containerWidth }}>
-        <div className="form-title">{form.settings.thankYou || form.design.successMessage}</div>
-        <p className="form-description text-muted-foreground mx-auto">Thank you for reaching out.</p>
+      <div data-form-id={form.id} className="form-typography">
+        <style>{buildFormCss(form)}</style>
+        <div className="form-container mx-auto text-center py-10" style={{ maxWidth: form.design.advanced?.container?.maxWidth ?? form.design.containerWidth }}>
+          <div className="form-title">{form.settings.thankYou || form.design.successMessage}</div>
+          <p className="form-description text-muted-foreground mx-auto">Thank you for reaching out.</p>
+        </div>
       </div>
     );
   }
 
+  const header = form.design.advanced?.header ?? {};
+  const btnCfg = form.design.advanced?.button ?? {};
+  const containerCfg = form.design.advanced?.container ?? {};
+  const progressCfg = form.design.advanced?.progress ?? {};
+  const submitLabel = btnCfg.text?.trim() ||
+    (form.multiStep && step < steps.length - 1 ? "Next" : submitting ? "Sending…" : "Submit");
+
   return (
-    <form onSubmit={submit} className="form-typography mx-auto p-6 rounded-lg border border-border" style={{ maxWidth: form.design.containerWidth, background: form.design.background, borderRadius: form.design.radius }}>
-      {form.multiStep && form.showProgress && steps.length > 1 && (
-        <div className="mb-6">
-          <Progress value={((step + 1) / steps.length) * 100} />
-          <div className="mt-2 text-xs text-muted-foreground">Step {step + 1} of {steps.length}</div>
-          {steps[step]?.title && <div className="form-title mt-3">{steps[step].title}</div>}
-          {steps[step]?.description && <p className="form-description text-muted-foreground">{steps[step].description}</p>}
-        </div>
-      )}
-      <div className="grid grid-cols-12" style={{ gap: form.design.spacing }}>
+    <div data-form-id={form.id} className="form-typography">
+      <style>{buildFormCss(form)}</style>
+      <form
+        onSubmit={submit}
+        className="form-container mx-auto p-6 rounded-lg border border-border"
+        style={{
+          maxWidth: containerCfg.maxWidth ?? form.design.containerWidth,
+          background: containerCfg.background ?? form.design.background,
+          borderRadius: containerCfg.borderRadius ?? form.design.radius,
+        }}
+      >
+        {header.show !== false && (header.title || header.description) && (
+          <div className="form-header mb-6">
+            {header.title && <h2 className="form-title">{header.title}</h2>}
+            {header.description && <p className="form-description text-muted-foreground">{header.description}</p>}
+          </div>
+        )}
+        {form.multiStep && (progressCfg.show ?? form.showProgress) && steps.length > 1 && (
+          <div className="form-progress mb-6">
+            <Progress value={((step + 1) / steps.length) * 100} />
+            {(header.showStepCounter ?? true) && (
+              <div className="mt-2 text-xs text-muted-foreground">
+                Step {step + 1} of {steps.length}
+                {progressCfg.showPercent && ` · ${Math.round(((step + 1) / steps.length) * 100)}%`}
+              </div>
+            )}
+            {steps[step]?.title && <div className="form-title mt-3">{steps[step].title}</div>}
+            {steps[step]?.description && <p className="form-description text-muted-foreground">{steps[step].description}</p>}
+          </div>
+        )}
+        <div className="form-fields grid grid-cols-12" style={{ gap: form.design.spacing }}>
         {stepFields.map((f) => {
           const visible = evalLogic(f.logic, values, fieldsById);
           if (!visible) return null;
@@ -214,7 +246,7 @@ export function FormRenderer({ form }: { form: LeadForm }) {
           const common = (
             <>
               {f.label && f.type !== "heading" && f.type !== "paragraph" && f.type !== "divider" && (
-                <Label className="form-question">{f.label}{f.required && <span className="text-destructive"> *</span>}</Label>
+                <Label className="form-question">{f.label}{f.required && <span className="form-required text-destructive"> *</span>}</Label>
               )}
             </>
           );
@@ -234,7 +266,7 @@ export function FormRenderer({ form }: { form: LeadForm }) {
                 </Select>); break;
             case "multiselect":
               control = (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="form-options-grid grid grid-cols-2 gap-2">
                   {(f.options ?? []).map((o) => {
                     const arr = Array.isArray(val) ? (val as string[]) : [];
                     const checked = arr.includes(o.value);
@@ -293,14 +325,19 @@ export function FormRenderer({ form }: { form: LeadForm }) {
             </div>
           );
         })}
-      </div>
-      <div className="mt-6 flex justify-between">
-        {form.multiStep && step > 0 ? <Button type="button" variant="outline" className={btnRadius} onClick={() => setStep(step - 1)}>Previous</Button> : <span />}
-        <Button type="submit" className={btnRadius} disabled={submitting} aria-busy={submitting}>
-          {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {form.multiStep && step < steps.length - 1 ? "Next" : submitting ? "Sending…" : "Submit"}
-        </Button>
-      </div>
-    </form>
+        </div>
+        <div className="form-actions mt-6 flex justify-between items-center">
+          {form.multiStep && step > 0 ? (
+            <Button type="button" variant="outline" className={btnRadius} onClick={() => setStep(step - 1)}>Previous</Button>
+          ) : (
+            <span />
+          )}
+          <Button type="submit" className={`form-submit ${btnRadius}`} disabled={submitting} aria-busy={submitting}>
+            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {submitLabel}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 }
