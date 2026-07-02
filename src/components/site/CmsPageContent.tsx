@@ -33,7 +33,7 @@ export function CmsPageContent({ path, children }: { path: string; children: Rea
       ))}
       {page?.formId && !blocks.some((b) => b.type === "lead_form") && (
         <BlockRenderer
-          block={{ id: "auto-form", type: "lead_form", data: { formId: page.formId, title: "Get in touch" } }}
+          block={{ id: "auto-form", type: "lead_form", data: { formId: page.formId } }}
           containerWidth={1200}
           pageFormId={page.formId}
         />

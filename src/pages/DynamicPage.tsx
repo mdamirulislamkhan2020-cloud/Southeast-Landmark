@@ -52,7 +52,7 @@ export function DynamicPage() {
       {/* If a form is assigned but there is no lead_form block, auto-render it at the bottom */}
       {page.formId && !blocks.some((b) => b.type === "lead_form") && (
         <BlockRenderer
-          block={{ id: "auto-form", type: "lead_form", data: { formId: page.formId, title: "Get in touch" } }}
+          block={{ id: "auto-form", type: "lead_form", data: { formId: page.formId } }}
           containerWidth={1200}
           pageFormId={page.formId}
         />
