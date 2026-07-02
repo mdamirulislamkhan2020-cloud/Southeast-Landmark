@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { getForm, newField, updateForm } from "../api/forms-client";
 import { FIELD_TYPE_GROUPS, FIELD_TYPE_LABELS, type FieldType, type FormField, type LeadForm, type LogicGroup, type LogicOperator } from "../api/forms";
 import { FormRenderer } from "../components/FormRenderer";
+import { FormDesignPanel } from "../components/FormDesignPanel";
 
 function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
 
@@ -207,32 +208,46 @@ export function FormBuilderPage() {
         </TabsContent>
 
         <TabsContent value="design" className="pt-4">
-          <Card><CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
-            <div className="space-y-2"><Label>Background</Label><Input type="color" value={form.design.background} onChange={(e) => update({ design: { ...form.design, background: e.target.value } })} /></div>
-            <div className="space-y-2"><Label>Container Width: {form.design.containerWidth}px</Label><Slider min={360} max={1200} step={20} value={[form.design.containerWidth]} onValueChange={(v) => update({ design: { ...form.design, containerWidth: v[0] } })} /></div>
-            <div className="space-y-2"><Label>Input Style</Label>
-              <Select value={form.design.inputStyle} onValueChange={(v) => update({ design: { ...form.design, inputStyle: v as LeadForm["design"]["inputStyle"] } })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="outline">Outline</SelectItem><SelectItem value="filled">Filled</SelectItem><SelectItem value="underline">Underline</SelectItem></SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2"><Label>Label Position</Label>
-              <Select value={form.design.labelPosition} onValueChange={(v) => update({ design: { ...form.design, labelPosition: v as LeadForm["design"]["labelPosition"] } })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="top">Top</SelectItem><SelectItem value="left">Left</SelectItem><SelectItem value="floating">Floating</SelectItem></SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2"><Label>Button Style</Label>
-              <Select value={form.design.buttonStyle} onValueChange={(v) => update({ design: { ...form.design, buttonStyle: v as LeadForm["design"]["buttonStyle"] } })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="rounded">Rounded</SelectItem><SelectItem value="square">Square</SelectItem><SelectItem value="pill">Pill</SelectItem></SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2"><Label>Border Radius: {form.design.radius}px</Label><Slider min={0} max={24} step={1} value={[form.design.radius]} onValueChange={(v) => update({ design: { ...form.design, radius: v[0] } })} /></div>
-            <div className="space-y-2"><Label>Spacing: {form.design.spacing}px</Label><Slider min={4} max={40} step={2} value={[form.design.spacing]} onValueChange={(v) => update({ design: { ...form.design, spacing: v[0] } })} /></div>
-            <div className="space-y-2 md:col-span-2"><Label>Success Screen Message</Label><Textarea rows={2} value={form.design.successMessage} onChange={(e) => update({ design: { ...form.design, successMessage: e.target.value } })} /></div>
-            <div className="space-y-2 md:col-span-2"><Label>Error Screen Message</Label><Textarea rows={2} value={form.design.errorMessage} onChange={(e) => update({ design: { ...form.design, errorMessage: e.target.value } })} /></div>
-          </CardContent></Card>
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+            <Card className="xl:col-span-3">
+              <CardHeader><CardTitle className="text-sm">Design Controls</CardTitle></CardHeader>
+              <CardContent className="p-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2"><Label>Legacy Background</Label><Input type="color" value={form.design.background} onChange={(e) => update({ design: { ...form.design, background: e.target.value } })} /></div>
+                  <div className="space-y-2"><Label>Legacy Container Width: {form.design.containerWidth}px</Label><Slider min={360} max={1200} step={20} value={[form.design.containerWidth]} onValueChange={(v) => update({ design: { ...form.design, containerWidth: v[0] } })} /></div>
+                  <div className="space-y-2"><Label>Input Style</Label>
+                    <Select value={form.design.inputStyle} onValueChange={(v) => update({ design: { ...form.design, inputStyle: v as LeadForm["design"]["inputStyle"] } })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent><SelectItem value="outline">Outline</SelectItem><SelectItem value="filled">Filled</SelectItem><SelectItem value="underline">Underline</SelectItem></SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2"><Label>Label Position</Label>
+                    <Select value={form.design.labelPosition} onValueChange={(v) => update({ design: { ...form.design, labelPosition: v as LeadForm["design"]["labelPosition"] } })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent><SelectItem value="top">Top</SelectItem><SelectItem value="left">Left</SelectItem><SelectItem value="floating">Floating</SelectItem></SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2"><Label>Button Style</Label>
+                    <Select value={form.design.buttonStyle} onValueChange={(v) => update({ design: { ...form.design, buttonStyle: v as LeadForm["design"]["buttonStyle"] } })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent><SelectItem value="rounded">Rounded</SelectItem><SelectItem value="square">Square</SelectItem><SelectItem value="pill">Pill</SelectItem></SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2"><Label>Border Radius: {form.design.radius}px</Label><Slider min={0} max={24} step={1} value={[form.design.radius]} onValueChange={(v) => update({ design: { ...form.design, radius: v[0] } })} /></div>
+                  <div className="space-y-2"><Label>Spacing: {form.design.spacing}px</Label><Slider min={4} max={40} step={2} value={[form.design.spacing]} onValueChange={(v) => update({ design: { ...form.design, spacing: v[0] } })} /></div>
+                  <div className="space-y-2 md:col-span-2"><Label>Success Screen Message</Label><Textarea rows={2} value={form.design.successMessage} onChange={(e) => update({ design: { ...form.design, successMessage: e.target.value } })} /></div>
+                  <div className="space-y-2 md:col-span-2"><Label>Error Screen Message</Label><Textarea rows={2} value={form.design.errorMessage} onChange={(e) => update({ design: { ...form.design, errorMessage: e.target.value } })} /></div>
+                </div>
+                <FormDesignPanel form={form} onChange={update} />
+              </CardContent>
+            </Card>
+            <Card className="xl:col-span-2 xl:sticky xl:top-4 h-fit">
+              <CardHeader><CardTitle className="text-sm">Live Preview</CardTitle></CardHeader>
+              <CardContent className="p-4 bg-secondary/40">
+                <FormRenderer form={form} />
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="settings" className="pt-4">
