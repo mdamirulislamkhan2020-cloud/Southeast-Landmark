@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Seo } from "@/components/site/Seo";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { VisibilityGate } from "@/components/site/VisibilityGate";
 
 const HomePage = lazy(() => import("@/pages/HomePage").then((m) => ({ default: m.HomePage })));
 const AboutPage = lazy(() => import("@/pages/AboutPage").then((m) => ({ default: m.AboutPage })));
@@ -36,6 +37,7 @@ const AdminSeo = lazy(() => import("@/admin/pages/SeoManagerPage").then((m) => (
 const AdminIntegrations = lazy(() => import("@/admin/pages/IntegrationsPage").then((m) => ({ default: m.IntegrationsPage })));
 const AdminNavigation = lazy(() => import("@/admin/pages/NavigationPage").then((m) => ({ default: m.NavigationPage })));
 const AdminSmtp = lazy(() => import("@/admin/pages/SmtpPage").then((m) => ({ default: m.SmtpPage })));
+const AdminVisibility = lazy(() => import("@/admin/pages/VisibilityPage").then((m) => ({ default: m.VisibilityPage })));
 const AdminForgotPassword = lazy(() => import("@/admin/pages/ForgotPasswordPage").then((m) => ({ default: m.ForgotPasswordPage })));
 const PublicLeadPage = lazy(() => import("@/pages/LeadPage").then((m) => ({ default: m.LeadPage })));
 const DynamicPage = lazy(() => import("@/pages/DynamicPage").then((m) => ({ default: m.DynamicPage })));
@@ -79,6 +81,7 @@ export default function App() {
           <Route path="integrations" element={<AdminIntegrations />} />
           <Route path="navigation" element={<AdminNavigation />} />
           <Route path="smtp" element={<AdminSmtp />} />
+          <Route path="visibility" element={<AdminVisibility />} />
         </Route>
 
         {/* Public site */}
@@ -87,6 +90,7 @@ export default function App() {
           element={
             <SiteLayout>
               <ErrorBoundary scope="site">
+                <VisibilityGate>
                 <Routes>
           <Route
             path="/"
@@ -145,6 +149,7 @@ export default function App() {
           <Route path="/lead/:slug" element={<PublicLeadPage />} />
           <Route path="*" element={<DynamicPage />} />
                 </Routes>
+                </VisibilityGate>
               </ErrorBoundary>
             </SiteLayout>
           }

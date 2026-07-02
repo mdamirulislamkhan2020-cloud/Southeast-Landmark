@@ -3,6 +3,10 @@ import { getDashboard } from "../api/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, FileText, Home, Newspaper, Eye, TrendingUp, CalendarDays, Layers } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from "recharts";
+import { Link } from "react-router-dom";
+import { useVisibility } from "@/lib/use-visibility";
+import { MODE_LABELS } from "../api/visibility";
+import { Badge } from "@/components/ui/badge";
 
 const stat = (label: string, value: string | number, Icon: React.ComponentType<{ className?: string }>, sub?: string) => (
   <Card>
@@ -25,6 +29,7 @@ const PIE_COLORS = ["#D4AF37", "#EBD07A", "#9C7A1A", "#F5EAC2", "#6B4E0E", "#B89
 
 export function DashboardPage() {
   const { data, isLoading } = useQuery({ queryKey: ["dashboard"], queryFn: getDashboard });
+  const visibility = useVisibility();
 
   if (isLoading || !data) {
     return <div className="text-muted-foreground">Loading dashboard...</div>;
@@ -37,6 +42,19 @@ export function DashboardPage() {
           <h1 className="font-display text-3xl">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Overview of your website performance.</p>
         </div>
+        <Link to="/admin/visibility" className="no-underline">
+          <div className="rounded-lg border border-border bg-card px-4 py-3 shadow-sm hover:border-primary/50 transition">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+              <Eye className="h-3.5 w-3.5" />Website Mode
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="text-lg font-semibold">{MODE_LABELS[visibility.mode]}</span>
+              <Badge variant={visibility.mode === "normal" ? "outline" : "default"} className={visibility.mode === "normal" ? "" : "bg-primary text-primary-foreground"}>
+                {visibility.mode === "normal" ? "Live" : "Restricted"}
+              </Badge>
+            </div>
+          </div>
+        </Link>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

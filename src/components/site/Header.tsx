@@ -7,6 +7,9 @@ import { cn } from "@/lib/utils";
 import { useHeaderSettings, useMenu, useMobileMenuSettings } from "@/lib/use-navigation";
 import { buildTree } from "@/admin/api/navigation-client";
 import type { MenuItem } from "@/admin/api/navigation";
+import { useVisibility } from "@/lib/use-visibility";
+import { decideVisibility } from "@/admin/api/visibility-client";
+import { getSession } from "@/admin/api/client";
 
 function visibleItems(items: MenuItem[] | undefined) {
   if (!items) return [] as MenuItem[];
@@ -19,9 +22,20 @@ export function Header() {
   const mobileSettings = useMobileMenuSettings();
   const headerMenu = useMenu(headerSettings?.headerMenuSlug ?? "header");
   const mobileMenu = useMenu(mobileSettings?.mobileMenuSlug ?? headerSettings?.headerMenuSlug ?? "mobile");
+  const visibility = useVisibility();
+  const isAuthed = !!getSession();
 
-  const desktopTree = useMemo(() => buildTree(visibleItems(headerMenu?.items)), [headerMenu]);
-  const mobileTree = useMemo(() => buildTree(visibleItems(mobileMenu?.items ?? headerMenu?.items)), [mobileMenu, headerMenu]);
+  const filterByVisibility = (items: MenuItem[]) => {
+    if (!visibility.hideFromNav) return items;
+    return items.filter((it) => {
+      if (/^https?:\/\//i.test(it.url)) return true;
+      const d = decideVisibility(it.url, visibility, isAuthed);
+      return d.action === "allow";
+    });
+  };
+
+  const desktopTree = useMemo(() => buildTree(filterByVisibility(visibleItems(headerMenu?.items))), [headerMenu, visibility, isAuthed]);
+  const mobileTree = useMemo(() => buildTree(filterByVisibility(visibleItems(mobileMenu?.items ?? headerMenu?.items))), [mobileMenu, headerMenu, visibility, isAuthed]);
 
   const fallbackNav = site.nav.map((n) => ({ id: n.to, label: n.label, url: n.to, newTab: false, children: [] as { id: string; label: string; url: string; newTab: boolean }[] }));
   const desktopItems = desktopTree.length > 0
