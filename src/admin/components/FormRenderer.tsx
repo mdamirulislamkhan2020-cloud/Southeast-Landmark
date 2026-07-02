@@ -189,21 +189,21 @@ export function FormRenderer({ form }: { form: LeadForm }) {
 
   if (submitted) {
     return (
-      <div className="mx-auto text-center py-10" style={{ maxWidth: form.design.containerWidth }}>
-        <div className="text-2xl font-semibold mb-2">{form.settings.thankYou || form.design.successMessage}</div>
-        <div className="text-sm text-muted-foreground">Thank you for reaching out.</div>
+      <div className="form-typography mx-auto text-center py-10" style={{ maxWidth: form.design.containerWidth }}>
+        <div className="form-title">{form.settings.thankYou || form.design.successMessage}</div>
+        <p className="form-description text-muted-foreground mx-auto">Thank you for reaching out.</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={submit} className="mx-auto p-6 rounded-lg border border-border" style={{ maxWidth: form.design.containerWidth, background: form.design.background, borderRadius: form.design.radius }}>
+    <form onSubmit={submit} className="form-typography mx-auto p-6 rounded-lg border border-border" style={{ maxWidth: form.design.containerWidth, background: form.design.background, borderRadius: form.design.radius }}>
       {form.multiStep && form.showProgress && steps.length > 1 && (
         <div className="mb-6">
           <Progress value={((step + 1) / steps.length) * 100} />
           <div className="mt-2 text-xs text-muted-foreground">Step {step + 1} of {steps.length}</div>
-          {steps[step]?.title && <div className="mt-3 text-lg font-semibold">{steps[step].title}</div>}
-          {steps[step]?.description && <div className="text-sm text-muted-foreground">{steps[step].description}</div>}
+          {steps[step]?.title && <div className="form-title mt-3">{steps[step].title}</div>}
+          {steps[step]?.description && <p className="form-description text-muted-foreground">{steps[step].description}</p>}
         </div>
       )}
       <div className="grid grid-cols-12" style={{ gap: form.design.spacing }}>
@@ -214,7 +214,7 @@ export function FormRenderer({ form }: { form: LeadForm }) {
           const common = (
             <>
               {f.label && f.type !== "heading" && f.type !== "paragraph" && f.type !== "divider" && (
-                <Label className="mb-1 inline-block">{f.label}{f.required && <span className="text-destructive"> *</span>}</Label>
+                <Label className="form-question">{f.label}{f.required && <span className="text-destructive"> *</span>}</Label>
               )}
             </>
           );
@@ -239,8 +239,8 @@ export function FormRenderer({ form }: { form: LeadForm }) {
                     const arr = Array.isArray(val) ? (val as string[]) : [];
                     const checked = arr.includes(o.value);
                     return (
-                      <label key={o.value} className="flex items-center gap-2 text-sm">
-                        <Checkbox checked={checked} onCheckedChange={(c) => set(f.name, c ? [...arr, o.value] : arr.filter((x) => x !== o.value))} /> {o.label}
+                      <label key={o.value} className="form-option">
+                        <Checkbox checked={checked} onCheckedChange={(c) => set(f.name, c ? [...arr, o.value] : arr.filter((x) => x !== o.value))} /> <span>{o.label}</span>
                       </label>
                     );
                   })}
@@ -248,10 +248,10 @@ export function FormRenderer({ form }: { form: LeadForm }) {
             case "radio":
               control = (
                 <RadioGroup value={String(val ?? "")} onValueChange={(v) => set(f.name, v)}>
-                  {(f.options ?? []).map((o) => (<div key={o.value} className="flex items-center gap-2"><RadioGroupItem value={o.value} id={`${f.id}-${o.value}`} /><Label htmlFor={`${f.id}-${o.value}`}>{o.label}</Label></div>))}
+                  {(f.options ?? []).map((o) => (<div key={o.value} className="form-option"><RadioGroupItem value={o.value} id={`${f.id}-${o.value}`} /><Label htmlFor={`${f.id}-${o.value}`} className="!mb-0 !font-normal">{o.label}</Label></div>))}
                 </RadioGroup>); break;
             case "checkbox":
-              control = (<div className="flex items-center gap-2"><Checkbox checked={!!val} onCheckedChange={(c) => set(f.name, !!c)} /><span className="text-sm">{f.placeholder ?? "Check this"}</span></div>); break;
+              control = (<div className="form-option"><Checkbox checked={!!val} onCheckedChange={(c) => set(f.name, !!c)} /><span>{f.placeholder ?? "Check this"}</span></div>); break;
             case "toggle":
               control = (<Switch checked={!!val} onCheckedChange={(c) => set(f.name, c)} />); break;
             case "date":
@@ -279,17 +279,17 @@ export function FormRenderer({ form }: { form: LeadForm }) {
             case "hidden":
               return <input key={f.id} type="hidden" name={f.name} value={f.defaultValue ?? ""} />;
             case "heading":
-              return <div key={f.id} className={`col-span-12 ${widthClass(f.width)} ${f.cssClass ?? ""}`}><h3 className="text-xl font-semibold">{f.label}</h3></div>;
+              return <div key={f.id} className={`col-span-12 ${widthClass(f.width)} ${f.cssClass ?? ""}`}><h3 className="form-title" style={{ fontSize: "clamp(24px,3vw,32px)" }}>{f.label}</h3></div>;
             case "paragraph":
-              return <div key={f.id} className={`col-span-12 ${widthClass(f.width)} ${f.cssClass ?? ""}`}><p className="text-sm text-muted-foreground">{f.label}</p></div>;
+              return <div key={f.id} className={`col-span-12 ${widthClass(f.width)} ${f.cssClass ?? ""}`}><p className="form-description text-muted-foreground">{f.label}</p></div>;
             case "divider":
               return <div key={f.id} className="col-span-12"><hr className="border-border" /></div>;
           }
           return (
-            <div key={f.id} className={`col-span-12 ${widthClass(f.width)} ${f.cssClass ?? ""}`}>
+            <div key={f.id} className={`form-field col-span-12 ${widthClass(f.width)} ${f.cssClass ?? ""}`}>
               {common}
               {control}
-              {f.helpText && <p className="mt-1 text-xs text-muted-foreground">{f.helpText}</p>}
+              {f.helpText && <p className="form-help text-muted-foreground">{f.helpText}</p>}
             </div>
           );
         })}
