@@ -7,7 +7,6 @@ import { Link } from "react-router-dom";
 import { useVisibility } from "@/lib/use-visibility";
 import { MODE_LABELS } from "../api/visibility";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 const stat = (label: string, value: string | number, Icon: React.ComponentType<{ className?: string }>, sub?: string) => (
   <Card>
