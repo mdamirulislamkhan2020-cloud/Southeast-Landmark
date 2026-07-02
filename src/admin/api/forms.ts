@@ -52,7 +52,164 @@ export interface FormDesign {
   spacing: number;
   successMessage: string;
   errorMessage: string;
+  /** Optional advanced design tokens (added by the Enterprise Form Designer). */
+  advanced?: AdvancedDesign;
 }
+
+// ---------------------------------------------------------------------------
+// Advanced Design tokens — every property is optional. When absent, the
+// renderer falls back to the existing defaults so legacy forms keep working.
+// ---------------------------------------------------------------------------
+
+export type Align = "left" | "center" | "right" | "justify";
+export type TextTransform = "none" | "uppercase" | "lowercase" | "capitalize";
+export type FontStyle = "normal" | "italic";
+
+export interface TypographyToken {
+  fontFamily?: string;
+  fontSize?: number;
+  fontWeight?: number;
+  fontStyle?: FontStyle;
+  textTransform?: TextTransform;
+  letterSpacing?: number;
+  lineHeight?: number;
+  color?: string;
+}
+
+export interface HeaderConfig {
+  show?: boolean;
+  title?: string;
+  description?: string;
+  showProgress?: boolean;
+  showStepCounter?: boolean;
+}
+
+export interface TitleBlock extends TypographyToken {
+  align?: Align;
+  marginTop?: number;
+  marginBottom?: number;
+  maxWidth?: number;
+}
+
+export interface DescriptionBlock extends TypographyToken {
+  align?: Align;
+  maxWidth?: number;
+  marginBottom?: number;
+}
+
+export interface QuestionBlock extends TypographyToken {
+  align?: Align;
+  marginTop?: number;
+  marginBottom?: number;
+  requiredColor?: string;
+  requiredSize?: number;
+}
+
+export interface OptionBlock extends TypographyToken {
+  align?: Align;
+  verticalGap?: number;
+  horizontalGap?: number;
+  radioGap?: number;
+  checkboxGap?: number;
+  labelGap?: number;
+}
+
+export interface InputBlock {
+  width?: string;
+  height?: number;
+  borderRadius?: number;
+  borderWidth?: number;
+  borderColor?: string;
+  background?: string;
+  color?: string;
+  placeholderColor?: string;
+  focusColor?: string;
+  paddingX?: number;
+  paddingY?: number;
+}
+
+export interface ButtonBlock {
+  text?: string;
+  align?: "left" | "center" | "right";
+  width?: "auto" | "full" | "custom";
+  widthPct?: number;
+  height?: number;
+  borderRadius?: number;
+  fontFamily?: string;
+  fontSize?: number;
+  fontWeight?: number;
+  color?: string;
+  background?: string;
+  hoverBackground?: string;
+  borderColor?: string;
+  shadow?: string;
+}
+
+export interface ContainerBlock {
+  maxWidth?: number;
+  width?: string;
+  paddingX?: number;
+  paddingY?: number;
+  marginY?: number;
+  background?: string;
+  borderColor?: string;
+  borderWidth?: number;
+  borderRadius?: number;
+  shadow?: string;
+}
+
+export interface SpacingBlock {
+  questionGap?: number;
+  optionGap?: number;
+  fieldGap?: number;
+  sectionGap?: number;
+  buttonGap?: number;
+  headerGap?: number;
+}
+
+export interface ColorsBlock {
+  primary?: string;
+  secondary?: string;
+  accent?: string;
+  requiredStar?: string;
+  border?: string;
+  background?: string;
+  hover?: string;
+}
+
+export interface ProgressBlock {
+  show?: boolean;
+  height?: number;
+  borderRadius?: number;
+  activeColor?: string;
+  inactiveColor?: string;
+  showPercent?: boolean;
+}
+
+export interface AdvancedDesign {
+  fontFamily?: string;
+  header?: HeaderConfig;
+  title?: TitleBlock;
+  description?: DescriptionBlock;
+  question?: QuestionBlock;
+  option?: OptionBlock;
+  input?: InputBlock;
+  button?: ButtonBlock;
+  container?: ContainerBlock;
+  spacing?: SpacingBlock;
+  colors?: ColorsBlock;
+  progress?: ProgressBlock;
+}
+
+export const FORM_FONT_FAMILIES: { label: string; value: string }[] = [
+  { label: "Hind Siliguri", value: "'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif" },
+  { label: "Noto Sans Bengali", value: "'Noto Sans Bengali', 'Hind Siliguri', system-ui, sans-serif" },
+  { label: "Inter", value: "'Inter', system-ui, sans-serif" },
+  { label: "Poppins", value: "'Poppins', system-ui, sans-serif" },
+  { label: "Roboto", value: "'Roboto', system-ui, sans-serif" },
+  { label: "Montserrat", value: "'Montserrat', system-ui, sans-serif" },
+  { label: "Open Sans", value: "'Open Sans', system-ui, sans-serif" },
+];
 
 export interface FormSettings {
   slug: string;
