@@ -368,6 +368,13 @@ export function PageEditorPage() {
                 {blocks.map((b) => (
                   <BlockRenderer key={b.id} block={b} containerWidth={1200} pageFormId={form.formId ?? null} />
                 ))}
+                {form.formId && !blocks.some((b) => b.type === "lead_form") && (
+                  <BlockRenderer
+                    block={{ id: "preview-assigned-form", type: "lead_form", data: { formId: form.formId } }}
+                    containerWidth={1200}
+                    pageFormId={form.formId}
+                  />
+                )}
               </>
             )}
           </div>
