@@ -2,7 +2,7 @@ import { PageHero } from "@/components/site/PageHero";
 import { Wallet, ShieldCheck, FileText, Headphones, Sparkles } from "lucide-react";
 import about from "@/assets/brand/about.jpg";
 import { site } from "@/config/site";
-import { blockData, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
+import { blockData, CmsAssignedLeadForm, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
 
 const features = [
   { icon: Wallet, title: "Easy Installments", body: "Flexible monthly installment support to make plot ownership accessible." },
@@ -88,6 +88,7 @@ export function AboutPage() {
           </div>
         </div>
       </section>
+      <CmsAssignedLeadForm path="/about" />
     </div>
   );
 }

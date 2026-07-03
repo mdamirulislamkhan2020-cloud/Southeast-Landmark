@@ -22,7 +22,7 @@ import about from "@/assets/brand/about.jpg";
 import p1 from "@/assets/brand/property-1.jpg";
 import p2 from "@/assets/brand/property-2.jpg";
 import p3 from "@/assets/brand/property-3.jpg";
-import { blockData, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
+import { blockData, CmsAssignedLeadForm, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
 
 const features = [
   { icon: Wallet, title: "Easy Installments", body: "Flexible monthly installment facilities to make land ownership accessible." },
@@ -334,6 +334,7 @@ export function HomePage() {
           ))}
         </div>
       </section>
+      <CmsAssignedLeadForm path="/" />
     </div>
   );
 }

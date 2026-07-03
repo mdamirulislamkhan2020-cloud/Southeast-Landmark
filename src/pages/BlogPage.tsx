@@ -3,7 +3,7 @@ import { User, Calendar } from "lucide-react";
 import p1 from "@/assets/brand/property-1.jpg";
 import p2 from "@/assets/brand/property-2.jpg";
 import p3 from "@/assets/brand/property-3.jpg";
-import { blockData, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
+import { blockData, CmsAssignedLeadForm, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
 
 const posts = [
   { title: "A Practical Guide to Land Investment in Bangladesh", date: "12/02/2026", img: p1 },
@@ -51,6 +51,7 @@ export function BlogPage() {
           ))}
         </div>
       </section>
+      <CmsAssignedLeadForm path="/blog" />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createPage, getPage, listPages, updatePage } from "../api/client";
@@ -52,14 +52,17 @@ export function PageEditorPage() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const lastHydratedPageId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (existing) {
+    if (existing && existing.id !== lastHydratedPageId.current) {
       setForm({
         blocks: [], showInNav: true, template: "standard",
         formId: null, seoKeywords: "", ogImage: null, canonical: "",
         ...existing,
       });
+      lastHydratedPageId.current = existing.id;
       setAutoSlug(false);
     }
   }, [existing]);
@@ -100,23 +103,32 @@ export function PageEditorPage() {
   const selectedBlock = blocks.find((b) => b.id === selectedBlockId) ?? null;
 
   const save = async (status?: PageStatus) => {
+    if (saving) return;
     try {
+      setSaving(true);
       const payload = { ...form, ...(status ? { status } : {}) };
       if (!payload.title) return toast.error("Title is required");
       if (!payload.slug) return toast.error("Slug is required");
       if (isNew) {
         const created = await createPage(payload);
+        setForm(created);
+        lastHydratedPageId.current = created.id;
         toast.success("Page created");
         qc.invalidateQueries({ queryKey: ["pages"] });
         nav(`/admin/pages/${created.id}`, { replace: true });
       } else {
-        await updatePage(id!, payload);
+        const saved = await updatePage(id!, payload);
+        setForm(saved);
+        lastHydratedPageId.current = saved.id;
         toast.success("Page saved");
+        qc.setQueryData(["page", id], saved);
         qc.invalidateQueries({ queryKey: ["pages"] });
         qc.invalidateQueries({ queryKey: ["page", id] });
       }
     } catch (e) {
       toast.error(toErrorMessage(e));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -133,8 +145,8 @@ export function PageEditorPage() {
           {!isNew && form.slug && (
             <Button asChild variant="outline" size="sm"><a href={form.slug} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 mr-1" /> Preview</a></Button>
           )}
-          <Button variant="outline" onClick={() => save("draft")}>Save Draft</Button>
-          <Button onClick={() => save("published")}><Save className="h-4 w-4 mr-1" /> Publish</Button>
+          <Button variant="outline" onClick={() => save("draft")} disabled={saving}>{saving ? "Saving…" : "Save Draft"}</Button>
+          <Button onClick={() => save("published")} disabled={saving}><Save className="h-4 w-4 mr-1" /> {saving ? "Saving…" : "Publish"}</Button>
         </div>
       </div>
 
@@ -356,6 +368,13 @@ export function PageEditorPage() {
                 {blocks.map((b) => (
                   <BlockRenderer key={b.id} block={b} containerWidth={1200} pageFormId={form.formId ?? null} />
                 ))}
+                {form.formId && !blocks.some((b) => b.type === "lead_form") && (
+                  <BlockRenderer
+                    block={{ id: "preview-assigned-form", type: "lead_form", data: { formId: form.formId } }}
+                    containerWidth={1200}
+                    pageFormId={form.formId}
+                  />
+                )}
               </>
             )}
           </div>

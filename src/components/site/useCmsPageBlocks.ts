@@ -1,26 +1,41 @@
-import { useEffect, useState } from "react";
+import { createElement, useEffect, useState } from "react";
 import { getPageByPath } from "@/admin/api/client";
-import type { PageBlock } from "@/admin/api/types";
+import type { CmsPage, PageBlock } from "@/admin/api/types";
+import { BlockRenderer } from "@/admin/components/BlockRenderer";
 
-export function useCmsPageBlocks(path: string) {
-  const [blocks, setBlocks] = useState<PageBlock[]>([]);
+export function useCmsPage(path: string) {
+  const [page, setPage] = useState<CmsPage | null>(null);
 
   useEffect(() => {
     let alive = true;
     getPageByPath(path)
-      .then((page) => {
-        if (!alive) return;
-        setBlocks(Array.isArray(page?.blocks) ? page.blocks : []);
+      .then((nextPage) => {
+        if (alive) setPage(nextPage ?? null);
       })
       .catch(() => {
-        if (alive) setBlocks([]);
+        if (alive) setPage(null);
       });
     return () => {
       alive = false;
     };
   }, [path]);
 
-  return blocks;
+  return page;
+}
+
+export function useCmsPageBlocks(path: string) {
+  const page = useCmsPage(path);
+  return Array.isArray(page?.blocks) ? page.blocks : [];
+}
+
+export function CmsAssignedLeadForm({ path }: { path: string }) {
+  const page = useCmsPage(path);
+  if (!page?.formId) return null;
+  return createElement(BlockRenderer, {
+    block: { id: `${page.id}-assigned-form`, type: "lead_form", data: { formId: page.formId } },
+    containerWidth: 1200,
+    pageFormId: page.formId,
+  });
 }
 
 export function blockData(blocks: PageBlock[], key: string) {

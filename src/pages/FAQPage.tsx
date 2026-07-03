@@ -6,7 +6,7 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
-import { blockData, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
+import { blockData, CmsAssignedLeadForm, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
 
 const faqs = [
   {
@@ -67,6 +67,7 @@ export function FAQPage() {
           </Accordion>
         </div>
       </section>
+      <CmsAssignedLeadForm path="/faq" />
     </div>
   );
 }

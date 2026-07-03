@@ -4,7 +4,7 @@ import { site } from "@/config/site";
 import { useState } from "react";
 import { toast } from "sonner";
 import { sendAppEmail } from "@/services/email-service";
-import { blockData, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
+import { blockData, CmsAssignedLeadForm, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
 
 export function ContactPage() {
   const blocks = useCmsPageBlocks("/contact");
@@ -130,6 +130,7 @@ export function ContactPage() {
           ))}
         </div>
       </section>
+      <CmsAssignedLeadForm path="/contact" />
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { MapPin, LandPlot, Layers, Ruler, Search } from "lucide-react";
 import p1 from "@/assets/brand/property-1.jpg";
 import p2 from "@/assets/brand/property-2.jpg";
 import p3 from "@/assets/brand/property-3.jpg";
-import { blockData, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
+import { blockData, CmsAssignedLeadForm, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
 
 const items = [
   { img: p1, title: "Landmark City — Phase 1", location: "Purbachal, Dhaka", price: "৳ 18 Lac/katha", katha: 3, blocks: "A–D", status: "Ongoing" },
@@ -90,6 +90,7 @@ export function PropertyPage() {
           ))}
         </div>
       </section>
+      <CmsAssignedLeadForm path="/property" />
     </div>
   );
 }
