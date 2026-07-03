@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, Link, useBlocker } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createPage, getPage, listPages, updatePage } from "../api/client";
 import type { CmsPage, PageStatus } from "../api/types";
@@ -16,10 +16,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, ExternalLink, Plus, Copy, Trash2, GripVertical } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, Plus, Copy, Trash2, GripVertical, Send, RotateCcw, Archive, ArchiveRestore, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { toErrorMessage } from "@/lib/error-handler";
 import { PAGE_TEMPLATES } from "../components/NewPageDialog";
+import { PageStatusBadge } from "../components/PageStatusBadge";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+function formatWhen(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const diff = Date.now() - d.getTime();
+  const abs = Math.abs(diff);
+  const min = 60_000, hr = 60 * min, day = 24 * hr;
+  const rel =
+    abs < min ? "just now" :
+    abs < hr  ? `${Math.round(abs / min)}m ago` :
+    abs < day ? `${Math.round(abs / hr)}h ago` :
+    abs < 7 * day ? `${Math.round(abs / day)}d ago` :
+    d.toLocaleDateString();
+  return `${rel} · ${d.toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}`;
+}
 
 function slugify(s: string) {
   const base = s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -54,18 +75,63 @@ export function PageEditorPage() {
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const lastHydratedPageId = useRef<string | null>(null);
+  const [baseline, setBaseline] = useState<string>("");
+  const [confirmPublishOpen, setConfirmPublishOpen] = useState(false);
+  const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
+  const [justPublishedAt, setJustPublishedAt] = useState<string | null>(null);
+  const bypassGuardRef = useRef(false);
+
+  // Snapshot the meaningful fields we care about for dirty tracking.
+  const snapshotOf = useCallback((f: Partial<CmsPage>) => JSON.stringify({
+    title: f.title ?? "", slug: f.slug ?? "", parentId: f.parentId ?? null,
+    status: f.status ?? "draft", seoTitle: f.seoTitle ?? "", seoDescription: f.seoDescription ?? "",
+    seoKeywords: f.seoKeywords ?? "", canonical: f.canonical ?? "", ogImage: f.ogImage ?? null,
+    content: f.content ?? "", publishAt: f.publishAt ?? null, formId: f.formId ?? null,
+    blocks: f.blocks ?? [], showInNav: f.showInNav ?? true, template: f.template ?? "standard",
+  }), []);
+
+  const isDirty = useMemo(() => baseline !== "" && snapshotOf(form) !== baseline, [form, baseline, snapshotOf]);
 
   useEffect(() => {
     if (existing && existing.id !== lastHydratedPageId.current) {
-      setForm({
+      const hydrated: Partial<CmsPage> = {
         blocks: [], showInNav: true, template: "standard",
         formId: null, seoKeywords: "", ogImage: null, canonical: "",
         ...existing,
-      });
+      };
+      setForm(hydrated);
+      setBaseline(snapshotOf(hydrated));
       lastHydratedPageId.current = existing.id;
       setAutoSlug(false);
     }
-  }, [existing]);
+  }, [existing, snapshotOf]);
+
+  // Establish a baseline for a fresh "new" page so isDirty stays false until the user types.
+  useEffect(() => {
+    if (isNew && baseline === "") setBaseline(snapshotOf(form));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNew]);
+
+  // Warn on tab close / reload when there are unsaved changes.
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
+  // Block in-app route changes when dirty.
+  const blocker = useBlocker(({ currentLocation, nextLocation }) =>
+    isDirty && !bypassGuardRef.current && currentLocation.pathname !== nextLocation.pathname,
+  );
+  useEffect(() => {
+    if (blocker.state !== "blocked") return;
+    const ok = window.confirm("You have unsaved changes. Leave without saving?");
+    if (ok) blocker.proceed(); else blocker.reset();
+  }, [blocker]);
 
   useEffect(() => {
     if (autoSlug && form.title) {
@@ -102,53 +168,139 @@ export function PageEditorPage() {
     setBlocks(blocks.map((b) => (b.id === bid ? { ...b, data: { ...b.data, ...patch } } : b)));
   const selectedBlock = blocks.find((b) => b.id === selectedBlockId) ?? null;
 
-  const save = async (status?: PageStatus) => {
+  const save = async (status?: PageStatus, opts?: { silent?: boolean; successMessage?: string }) => {
     if (saving) return;
     try {
       setSaving(true);
       const payload = { ...form, ...(status ? { status } : {}) };
-      if (!payload.title) return toast.error("Title is required");
-      if (!payload.slug) return toast.error("Slug is required");
+      if (!payload.title) { toast.error("Title is required"); return null; }
+      if (!payload.slug) { toast.error("Slug is required"); return null; }
       if (isNew) {
         const created = await createPage(payload);
         setForm(created);
+        setBaseline(snapshotOf(created));
         lastHydratedPageId.current = created.id;
-        toast.success("Page created");
+        toast.success(opts?.successMessage ?? "Page created");
+        if (created.status === "published") setJustPublishedAt(created.publishedAt ?? new Date().toISOString());
         qc.invalidateQueries({ queryKey: ["pages"] });
+        bypassGuardRef.current = true;
         nav(`/admin/pages/${created.id}`, { replace: true });
+        return created;
       } else {
         const saved = await updatePage(id!, payload);
         setForm(saved);
+        setBaseline(snapshotOf(saved));
         lastHydratedPageId.current = saved.id;
-        toast.success("Page saved");
+        if (opts?.successMessage) toast.success(opts.successMessage);
+        else if (!opts?.silent) toast.success("Page saved");
+        if (status === "published" && saved.status === "published") {
+          setJustPublishedAt(saved.publishedAt ?? new Date().toISOString());
+        }
         qc.setQueryData(["page", id], saved);
         qc.invalidateQueries({ queryKey: ["pages"] });
         qc.invalidateQueries({ queryKey: ["page", id] });
+        return saved;
       }
     } catch (e) {
       toast.error(toErrorMessage(e));
+      return null;
     } finally {
       setSaving(false);
     }
+  };
+
+  const doPublish = async () => {
+    setConfirmPublishOpen(false);
+    const saved = await save("published", { successMessage: "Page published — now live 🎉" });
+    if (saved && saved.status === "published") setJustPublishedAt(saved.publishedAt ?? new Date().toISOString());
+  };
+  const doUnpublish = async () => {
+    await save("draft", { successMessage: "Reverted to Draft" });
+    setJustPublishedAt(null);
+  };
+  const doArchive = async () => {
+    setConfirmArchiveOpen(false);
+    await save("archived", { successMessage: "Page archived" });
+  };
+  const doRestore = async () => {
+    await save("draft", { successMessage: "Page restored to Draft" });
   };
 
   const set = <K extends keyof CmsPage>(k: K, v: CmsPage[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <Button asChild size="sm" variant="ghost"><Link to="/admin/pages"><ArrowLeft className="h-4 w-4 mr-1" /> Back</Link></Button>
-          <h1 className="font-display text-2xl">{isNew ? "New Page" : "Edit Page"}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="font-display text-2xl">{isNew ? "New Page" : "Edit Page"}</h1>
+            {!isNew && <PageStatusBadge status={(form.status ?? "draft") as PageStatus} />}
+            {isDirty && <span className="text-[11px] uppercase tracking-wide text-amber-500">● Unsaved changes</span>}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {!isNew && form.slug && (
             <Button asChild variant="outline" size="sm"><a href={form.slug} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 mr-1" /> Preview</a></Button>
           )}
-          <Button variant="outline" onClick={() => save("draft")} disabled={saving}>{saving ? "Saving…" : "Save Draft"}</Button>
-          <Button onClick={() => save("published")} disabled={saving}><Save className="h-4 w-4 mr-1" /> {saving ? "Saving…" : "Publish"}</Button>
+          {!isNew && form.status === "published" && form.slug && (
+            <Button asChild variant="outline" size="sm" className="border-emerald-500/40 text-emerald-500 hover:text-emerald-400">
+              <a href={form.slug} target="_blank" rel="noreferrer"><Globe className="h-4 w-4 mr-1" /> View Live Page</a>
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => save("draft")} disabled={saving}>
+            <Save className="h-4 w-4 mr-1" /> {saving ? "Saving…" : "Save Draft"}
+          </Button>
+          {form.status === "published" ? (
+            <Button variant="outline" onClick={doUnpublish} disabled={saving}>
+              <RotateCcw className="h-4 w-4 mr-1" /> Unpublish
+            </Button>
+          ) : (
+            <Button
+              onClick={() => setConfirmPublishOpen(true)}
+              disabled={saving}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20"
+            >
+              <Send className="h-4 w-4 mr-1" /> {saving ? "Publishing…" : "Publish"}
+            </Button>
+          )}
         </div>
       </div>
+
+      {!isNew && (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 rounded-md border border-border bg-secondary/30 px-4 py-2 text-xs text-muted-foreground">
+          <span><span className="uppercase tracking-wide">Last saved:</span> <span className="text-foreground/80">{formatWhen(form.updatedAt)}</span></span>
+          <span><span className="uppercase tracking-wide">Last published:</span> <span className="text-foreground/80">{formatWhen(form.publishedAt)}</span></span>
+          {form.status === "scheduled" && form.publishAt && (
+            <span><span className="uppercase tracking-wide">Scheduled for:</span> <span className="text-foreground/80">{new Date(form.publishAt).toLocaleString()}</span></span>
+          )}
+          {form.status === "archived" && form.archivedAt && (
+            <span><span className="uppercase tracking-wide">Archived:</span> <span className="text-foreground/80">{formatWhen(form.archivedAt)}</span></span>
+          )}
+          <span className="ml-auto flex items-center gap-2">
+            {form.status === "archived" ? (
+              <Button size="sm" variant="outline" onClick={doRestore} disabled={saving}>
+                <ArchiveRestore className="h-3.5 w-3.5 mr-1" /> Restore
+              </Button>
+            ) : (
+              <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive" onClick={() => setConfirmArchiveOpen(true)} disabled={saving}>
+                <Archive className="h-3.5 w-3.5 mr-1" /> Archive
+              </Button>
+            )}
+          </span>
+        </div>
+      )}
+
+      {justPublishedAt && form.status === "published" && form.slug && (
+        <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 flex items-center gap-3">
+          <div className="text-sm text-emerald-500 font-medium">
+            🎉 Your page is now live at <code className="font-mono">{form.slug}</code>
+          </div>
+          <Button asChild size="sm" className="ml-auto bg-emerald-600 hover:bg-emerald-500 text-white">
+            <a href={form.slug} target="_blank" rel="noreferrer"><Globe className="h-4 w-4 mr-1" /> View Live Page</a>
+          </Button>
+        </div>
+      )}
 
       <Tabs defaultValue="content">
         <TabsList>
@@ -225,6 +377,7 @@ export function PageEditorPage() {
                     <SelectItem value="draft">Draft</SelectItem>
                     <SelectItem value="published">Published</SelectItem>
                     <SelectItem value="scheduled">Scheduled</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
