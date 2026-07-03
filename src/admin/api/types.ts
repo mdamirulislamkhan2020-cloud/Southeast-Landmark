@@ -1,4 +1,4 @@
-export type PageStatus = "draft" | "published" | "scheduled";
+export type PageStatus = "draft" | "published" | "scheduled" | "archived";
 
 // Re-export block types from the page-builder module so the CMS page can carry
 // visual-builder blocks natively (Lead Pages is merged into the main Pages CMS).
@@ -17,6 +17,8 @@ export interface CmsPage {
   publishAt: string | null;
   updatedAt: string;
   createdAt: string;
+  publishedAt?: string | null;   // last time the page was set to "published"
+  archivedAt?: string | null;    // last time the page was archived
   // Extended CMS fields (all optional — legacy pages still work).
   formId?: string | null;         // assigned Lead Form for the page (auto-rendered)
   blocks?: PageBlock[];           // visual page-builder blocks
