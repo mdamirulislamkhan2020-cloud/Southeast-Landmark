@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { createElement, useEffect, useState } from "react";
 import { getPageByPath } from "@/admin/api/client";
 import type { CmsPage, PageBlock } from "@/admin/api/types";
 import { BlockRenderer } from "@/admin/components/BlockRenderer";
@@ -31,13 +31,11 @@ export function useCmsPageBlocks(path: string) {
 export function CmsAssignedLeadForm({ path }: { path: string }) {
   const page = useCmsPage(path);
   if (!page?.formId) return null;
-  return (
-    <BlockRenderer
-      block={{ id: `${page.id}-assigned-form`, type: "lead_form", data: { formId: page.formId } }}
-      containerWidth={1200}
-      pageFormId={page.formId}
-    />
-  );
+  return createElement(BlockRenderer, {
+    block: { id: `${page.id}-assigned-form`, type: "lead_form", data: { formId: page.formId } },
+    containerWidth: 1200,
+    pageFormId: page.formId,
+  });
 }
 
 export function blockData(blocks: PageBlock[], key: string) {
