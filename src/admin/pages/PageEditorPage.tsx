@@ -533,6 +533,38 @@ export function PageEditorPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={confirmPublishOpen} onOpenChange={setConfirmPublishOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Publish this page?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will make <b>{form.title || "Untitled"}</b> publicly accessible at <code className="font-mono">{form.slug}</code>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={doPublish} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+              <Send className="h-4 w-4 mr-1" /> Publish now
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmArchiveOpen} onOpenChange={setConfirmArchiveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive this page?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Archived pages are hidden from the public site and navigation but kept in the CMS. You can restore them later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={doArchive}>Archive</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createPage, listPages } from "../api/client";
-import type { CmsPage, PageStatus } from "../api/types";
+import type { CmsPage } from "../api/types";
 import type { BlockType, PageBlock } from "../api/lead-pages";
 import { newBlock } from "../api/lead-pages-client";
 import { listForms } from "../api/forms-client";
@@ -63,7 +63,6 @@ export function NewPageDialog({ open, onOpenChange }: Props) {
   const [autoSlug, setAutoSlug] = useState(true);
   const [template, setTemplate] = useState<TemplateKey>("standard");
   const [parentId, setParentId] = useState<string | "none">("none");
-  const [status, setStatus] = useState<PageStatus>("draft");
   const [showInNav, setShowInNav] = useState(true);
   const [formId, setFormId] = useState<string | "none">("none");
   const [seoTitle, setSeoTitle] = useState("");
@@ -73,7 +72,7 @@ export function NewPageDialog({ open, onOpenChange }: Props) {
   useEffect(() => {
     if (!open) return;
     setTitle(""); setSlug(""); setAutoSlug(true);
-    setTemplate("standard"); setParentId("none"); setStatus("draft");
+    setTemplate("standard"); setParentId("none");
     setShowInNav(true); setFormId("none"); setSeoTitle(""); setSeoDescription("");
   }, [open]);
 
@@ -95,14 +94,14 @@ export function NewPageDialog({ open, onOpenChange }: Props) {
         slug: slug || slugify(title),
         template,
         parentId: parentId === "none" ? null : parentId,
-        status,
+        status: "draft",
         showInNav,
         formId: formId === "none" ? null : formId,
         seoTitle: seoTitle.trim() || title.trim(),
         seoDescription: seoDescription.trim(),
         blocks: blocksForTemplate(template),
       });
-      toast.success("Page created");
+      toast.success("Draft created — publish it when you're ready");
       qc.invalidateQueries({ queryKey: ["pages"] });
       onOpenChange(false);
       nav(`/admin/pages/${created.id}`);
@@ -171,14 +170,10 @@ export function NewPageDialog({ open, onOpenChange }: Props) {
 
           <div className="space-y-2">
             <Label>Publish status</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as PageStatus)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-                <SelectItem value="scheduled">Scheduled</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2 rounded-md border border-input bg-secondary/40 px-3 py-2 text-sm">
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground border border-border">Draft</span>
+              <span className="text-xs text-muted-foreground">New pages are saved as drafts. Publish from the editor when ready.</span>
+            </div>
           </div>
 
           <div className="space-y-2">
