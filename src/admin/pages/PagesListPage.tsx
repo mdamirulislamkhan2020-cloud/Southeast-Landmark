@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Copy, Trash2, Pencil, ExternalLink, Search } from "lucide-react";
+import { PageStatusBadge } from "../components/PageStatusBadge";
 import { toast } from "sonner";
 import { NewPageDialog } from "../components/NewPageDialog";
 
@@ -67,13 +68,7 @@ export function PagesListPage() {
                   <tr key={p.id} className="border-t border-border">
                     <td className="px-4 py-3 font-medium">{p.title}</td>
                     <td className="px-4 py-3 text-muted-foreground">{p.slug}</td>
-                    <td className="px-4 py-3">
-                      <span className={
-                        p.status === "published" ? "text-xs rounded-full px-2 py-0.5 bg-primary/15 text-primary" :
-                        p.status === "scheduled" ? "text-xs rounded-full px-2 py-0.5 bg-accent/20 text-accent-foreground" :
-                        "text-xs rounded-full px-2 py-0.5 bg-secondary text-muted-foreground"
-                      }>{p.status}</span>
-                    </td>
+                    <td className="px-4 py-3"><PageStatusBadge status={p.status} /></td>
                     <td className="px-4 py-3 text-muted-foreground">{new Date(p.updatedAt).toLocaleDateString()}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">

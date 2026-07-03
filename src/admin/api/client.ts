@@ -320,6 +320,8 @@ export async function createPage(input: Partial<CmsPage>): Promise<CmsPage> {
     publishAt: input.publishAt ?? null,
     updatedAt: now,
     createdAt: now,
+    publishedAt: input.status === "published" ? (input.publishedAt ?? now) : (input.publishedAt ?? null),
+    archivedAt: input.status === "archived" ? (input.archivedAt ?? now) : null,
     formId: input.formId ?? null,
     blocks: (input.blocks as PageBlock[] | undefined) ?? [],
     showInNav: input.showInNav ?? true,
@@ -352,7 +354,22 @@ export async function updatePage(id: string, patch: Partial<CmsPage>): Promise<C
   const all = readLS<CmsPage[]>(LS_PAGES, []);
   const idx = all.findIndex((p) => p.id === id);
   if (idx < 0) throw new Error("Page not found");
-  all[idx] = { ...all[idx], ...normalized, updatedAt: new Date().toISOString() };
+  const now = new Date().toISOString();
+  const prev = all[idx];
+  const nextStatus = (normalized.status ?? prev.status) as CmsPage["status"];
+  const publishedAt =
+    nextStatus === "published" && prev.status !== "published"
+      ? now
+      : normalized.publishedAt !== undefined
+        ? normalized.publishedAt
+        : prev.publishedAt ?? null;
+  const archivedAt =
+    nextStatus === "archived" && prev.status !== "archived"
+      ? now
+      : normalized.archivedAt !== undefined
+        ? normalized.archivedAt
+        : prev.archivedAt ?? null;
+  all[idx] = { ...prev, ...normalized, updatedAt: now, publishedAt, archivedAt };
   writeLS(LS_PAGES, all);
   return all[idx];
 }
