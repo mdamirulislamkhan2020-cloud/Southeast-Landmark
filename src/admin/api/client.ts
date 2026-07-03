@@ -116,8 +116,9 @@ export function defaultBlocksForSlug(slug: string): PageBlock[] {
 
 /**
  * Backfill blocks for built-in pages whose block list is currently empty.
- * Runs once per browser (guarded by a versioned flag) so it never
- * overwrites edits the admin has already made.
+ * Runs once per browser (guarded by a versioned flag) and never touches pages
+ * that already have any builder blocks, because block data can contain user
+ * choices such as assigned Lead Forms.
  */
 function migrateDefaultPageBlocks() {
   if (typeof window === "undefined") return;
@@ -127,8 +128,7 @@ function migrateDefaultPageBlocks() {
     let changed = false;
     const next = pages.map((p) => {
       const hasBlocks = Array.isArray(p.blocks) && p.blocks.length > 0;
-      const hasCmsSectionKeys = hasBlocks && p.blocks!.some((block) => typeof block.data?.key === "string");
-      if (hasCmsSectionKeys) return p;
+      if (hasBlocks) return p;
       const seedBlocks = defaultBlocksForSlug(p.slug);
       if (seedBlocks.length === 0) return p;
       changed = true;
@@ -348,7 +348,7 @@ export async function createPage(input: Partial<CmsPage>): Promise<CmsPage> {
 export async function updatePage(id: string, patch: Partial<CmsPage>): Promise<CmsPage> {
   const normalized: Partial<CmsPage> = { ...patch };
   if (typeof patch.slug === "string") normalized.slug = normalizeSlug(patch.slug) || patch.slug;
-  if (!USE_MOCK) return apiFetch<CmsPage>(`/pages/${id}`, { method: "PUT", body: JSON.stringify(patch) });
+  if (!USE_MOCK) return apiFetch<CmsPage>(`/pages/${id}`, { method: "PUT", body: JSON.stringify(normalized) });
   const all = readLS<CmsPage[]>(LS_PAGES, []);
   const idx = all.findIndex((p) => p.id === id);
   if (idx < 0) throw new Error("Page not found");
