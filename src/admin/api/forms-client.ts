@@ -1,5 +1,8 @@
 import type { FieldType, FormField, LeadForm } from "./forms";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
+
+const asJson = <T,>(v: T): Json => v as unknown as Json;
 
 function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
 
@@ -132,10 +135,10 @@ async function seedIfEmpty(): Promise<void> {
     status: contact.settings.status,
     multi_step: contact.multiStep,
     show_progress: contact.showProgress,
-    steps: contact.steps,
-    fields: contact.fields,
-    design: contact.design,
-    settings: contact.settings,
+    steps: asJson(contact.steps),
+    fields: asJson(contact.fields),
+    design: asJson(contact.design),
+    settings: asJson(contact.settings),
   });
 }
 
@@ -171,8 +174,10 @@ export async function createForm(name = "Untitled Form"): Promise<LeadForm> {
   };
   const { data, error } = await supabase.from("forms").insert({
     name, slug, status: "draft", multi_step: false, show_progress: true,
-    steps: [{ id: stepId, title: "Step 1", description: "" }],
-    fields: [], design, settings,
+    steps: asJson([{ id: stepId, title: "Step 1", description: "" }]),
+    fields: asJson([]),
+    design: asJson(design),
+    settings: asJson(settings),
   }).select("*").single();
   if (error) throw error;
   return rowToForm(data as FormRow);
@@ -181,7 +186,7 @@ export async function createForm(name = "Untitled Form"): Promise<LeadForm> {
 export async function updateForm(id: string, patch: Partial<LeadForm>): Promise<LeadForm> {
   const row = formToRow(patch);
   if (row.slug) row.slug = await uniqueSlug(String(row.slug), id);
-  const { data, error } = await supabase.from("forms").update(row).eq("id", id).select("*").single();
+  const { data, error } = await supabase.from("forms").update(row as never).eq("id", id).select("*").single();
   if (error) throw error;
   return rowToForm(data as FormRow);
 }
@@ -202,10 +207,10 @@ export async function duplicateForm(id: string): Promise<LeadForm> {
     status: "draft",
     multi_step: src.multiStep,
     show_progress: src.showProgress,
-    steps: src.steps,
-    fields: src.fields,
-    design: src.design,
-    settings,
+    steps: asJson(src.steps),
+    fields: asJson(src.fields),
+    design: asJson(src.design),
+    settings: asJson(settings),
   }).select("*").single();
   if (error) throw error;
   return rowToForm(data as FormRow);
