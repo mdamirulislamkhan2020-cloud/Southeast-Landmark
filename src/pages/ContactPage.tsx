@@ -4,6 +4,8 @@ import { site } from "@/config/site";
 import { useState } from "react";
 import { toast } from "sonner";
 import { sendAppEmail } from "@/services/email-service";
+import { submitLead } from "@/admin/api/crm-client";
+import type { CrmAnalytics } from "@/admin/api/crm";
 import { blockData, CmsAssignedLeadForm, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
 import { useGlobalSettings, usePublishedProperties } from "@/components/site/useCmsData";
 
@@ -31,6 +33,33 @@ export function ContactPage() {
     }
     setSubmitting(true);
     try {
+      // 1. Record the lead in the CRM so it lands in the pipeline exactly like form submissions.
+      let analytics: CrmAnalytics = {};
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        const p = url.searchParams;
+        analytics = {
+          utmSource: p.get("utm_source") ?? undefined,
+          utmMedium: p.get("utm_medium") ?? undefined,
+          utmCampaign: p.get("utm_campaign") ?? undefined,
+          utmContent: p.get("utm_content") ?? undefined,
+          utmTerm: p.get("utm_term") ?? undefined,
+          gclid: p.get("gclid") ?? undefined,
+          fbclid: p.get("fbclid") ?? undefined,
+          landingUrl: window.location.href,
+          referrer: document.referrer || undefined,
+          device: /Mobi|Android/i.test(navigator.userAgent) ? "mobile" : "desktop",
+        };
+      }
+      try {
+        await submitLead({
+          formName: "Contact Page",
+          answers: payload,
+          analytics,
+          source: "Contact Page",
+        });
+      } catch { /* CRM failure shouldn't block the email path */ }
+
       const res = await sendAppEmail({
         to: email,
         subject: `New inquiry from ${payload.name}`,
