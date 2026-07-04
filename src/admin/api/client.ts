@@ -249,100 +249,145 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 export { signIn as login, signOut as logout, getSessionSnapshot as getSession } from "./auth";
 export type { AppRole } from "./auth";
 
-// ---------- Pages ----------
+// ---------- Pages (Supabase-backed) ----------
+
+type PageRow = Database["public"]["Tables"]["pages"]["Row"];
+type PageInsert = Database["public"]["Tables"]["pages"]["Insert"];
+type PageUpdate = Database["public"]["Tables"]["pages"]["Update"];
+
+function rowToPage(r: PageRow): CmsPage {
+  return {
+    id: r.id,
+    title: r.title,
+    slug: r.slug,
+    parentId: r.parent_id,
+    status: r.status as PageStatus,
+    seoTitle: r.seo_title ?? "",
+    seoDescription: r.seo_description ?? "",
+    content: r.content ?? "",
+    publishAt: r.publish_at,
+    updatedAt: r.updated_at,
+    createdAt: r.created_at,
+    publishedAt: r.published_at ?? null,
+    archivedAt: r.archived_at ?? null,
+    formId: r.form_id,
+    blocks: (Array.isArray(r.blocks) ? (r.blocks as unknown as PageBlock[]) : []),
+    showInNav: r.show_in_nav,
+    template: r.template as CmsPage["template"],
+    seoKeywords: r.seo_keywords ?? "",
+    ogImage: r.og_image,
+    canonical: r.canonical ?? "",
+  };
+}
+
+function pageToDbPatch(p: Partial<CmsPage>): PageUpdate {
+  const out: PageUpdate = {};
+  if (p.title !== undefined) out.title = p.title;
+  if (p.slug !== undefined) out.slug = p.slug;
+  if (p.parentId !== undefined) out.parent_id = p.parentId;
+  if (p.status !== undefined) out.status = p.status;
+  if (p.seoTitle !== undefined) out.seo_title = p.seoTitle;
+  if (p.seoDescription !== undefined) out.seo_description = p.seoDescription;
+  if (p.content !== undefined) out.content = p.content;
+  if (p.publishAt !== undefined) out.publish_at = p.publishAt;
+  if (p.publishedAt !== undefined) out.published_at = p.publishedAt;
+  if (p.archivedAt !== undefined) out.archived_at = p.archivedAt;
+  if (p.formId !== undefined) out.form_id = p.formId;
+  if (p.blocks !== undefined) out.blocks = p.blocks as unknown as Json;
+  if (p.showInNav !== undefined) out.show_in_nav = p.showInNav;
+  if (p.template !== undefined) out.template = p.template;
+  if (p.seoKeywords !== undefined) out.seo_keywords = p.seoKeywords;
+  if (p.ogImage !== undefined) out.og_image = p.ogImage;
+  if (p.canonical !== undefined) out.canonical = p.canonical;
+  return out;
+}
 
 export async function listPages(): Promise<CmsPage[]> {
-  if (!USE_MOCK) return apiFetch<CmsPage[]>("/pages");
-  seed();
-  return readLS<CmsPage[]>(LS_PAGES, []);
+  await seedBuiltInPagesIfEmpty();
+  const { data, error } = await supabase
+    .from("pages")
+    .select("*")
+    .order("updated_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(rowToPage);
 }
 
 export async function getPage(id: string): Promise<CmsPage | null> {
-  if (!USE_MOCK) return apiFetch<CmsPage>(`/pages/${id}`);
-  seed();
-  return readLS<CmsPage[]>(LS_PAGES, []).find((p) => p.id === id) ?? null;
+  const { data, error } = await supabase.from("pages").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? rowToPage(data) : null;
+}
+
+/**
+ * Make a slug unique by appending -2, -3, … if the target slug already exists.
+ * Case-insensitive on `pages.slug` (which itself is stored lowercased).
+ */
+async function ensureUniqueSlug(base: string, ignoreId?: string): Promise<string> {
+  const query = supabase.from("pages").select("id, slug");
+  const { data } = await query;
+  const taken = new Set((data ?? []).filter((r) => r.id !== ignoreId).map((r) => r.slug));
+  if (!taken.has(base)) return base;
+  let i = 2;
+  while (taken.has(`${base}-${i}`)) i++;
+  return `${base}-${i}`;
 }
 
 export async function createPage(input: Partial<CmsPage>): Promise<CmsPage> {
-  const now = new Date().toISOString();
   const title = (input.title ?? "Untitled").trim() || "Untitled";
-  const slug = normalizeSlug(input.slug || title);
-  const page: CmsPage = {
-    id: uid(),
+  const baseSlug = normalizeSlug(input.slug || title) || `/untitled-${Date.now().toString(36)}`;
+  const slug = await ensureUniqueSlug(baseSlug);
+  const status: PageStatus = input.status ?? "draft";
+  const { data: { session } } = await supabase.auth.getSession();
+  const row: PageInsert = {
     title,
-    slug: slug || `/untitled-${Date.now().toString(36)}`,
-    parentId: input.parentId ?? null,
-    status: input.status ?? "draft",
-    seoTitle: input.seoTitle ?? title,
-    seoDescription: input.seoDescription ?? "",
+    slug,
+    parent_id: input.parentId ?? null,
+    status,
+    seo_title: input.seoTitle ?? title,
+    seo_description: input.seoDescription ?? "",
     content: input.content ?? "",
-    publishAt: input.publishAt ?? null,
-    updatedAt: now,
-    createdAt: now,
-    publishedAt: input.status === "published" ? (input.publishedAt ?? now) : (input.publishedAt ?? null),
-    archivedAt: input.status === "archived" ? (input.archivedAt ?? now) : null,
-    formId: input.formId ?? null,
-    blocks: (input.blocks as PageBlock[] | undefined) ?? [],
-    showInNav: input.showInNav ?? true,
+    publish_at: input.publishAt ?? null,
+    form_id: input.formId ?? null,
+    blocks: (input.blocks ?? []) as unknown as Json,
+    show_in_nav: input.showInNav ?? true,
     template: input.template ?? "standard",
-    seoKeywords: input.seoKeywords ?? "",
-    ogImage: input.ogImage ?? null,
+    seo_keywords: input.seoKeywords ?? "",
+    og_image: input.ogImage ?? null,
     canonical: input.canonical ?? "",
+    created_by: session?.user.id ?? null,
   };
-  // Guard against duplicate slugs in the mock store
-  if (USE_MOCK) {
-    const all = readLS<CmsPage[]>(LS_PAGES, []);
-    let candidate = page.slug;
-    let i = 2;
-    while (all.some((p) => p.slug === candidate)) {
-      candidate = `${page.slug}-${i++}`;
-    }
-    page.slug = candidate;
-  }
-  if (!USE_MOCK) return apiFetch<CmsPage>("/pages", { method: "POST", body: JSON.stringify(page) });
-  const all = readLS<CmsPage[]>(LS_PAGES, []);
-  all.unshift(page);
-  writeLS(LS_PAGES, all);
-  return page;
+  const { data, error } = await supabase.from("pages").insert(row).select("*").single();
+  if (error) throw new Error(error.message);
+  return rowToPage(data);
 }
 
 export async function updatePage(id: string, patch: Partial<CmsPage>): Promise<CmsPage> {
   const normalized: Partial<CmsPage> = { ...patch };
-  if (typeof patch.slug === "string") normalized.slug = normalizeSlug(patch.slug) || patch.slug;
-  if (!USE_MOCK) return apiFetch<CmsPage>(`/pages/${id}`, { method: "PUT", body: JSON.stringify(normalized) });
-  const all = readLS<CmsPage[]>(LS_PAGES, []);
-  const idx = all.findIndex((p) => p.id === id);
-  if (idx < 0) throw new Error("Page not found");
-  const now = new Date().toISOString();
-  const prev = all[idx];
-  const nextStatus = (normalized.status ?? prev.status) as CmsPage["status"];
-  const publishedAt =
-    nextStatus === "published" && prev.status !== "published"
-      ? now
-      : normalized.publishedAt !== undefined
-        ? normalized.publishedAt
-        : prev.publishedAt ?? null;
-  const archivedAt =
-    nextStatus === "archived" && prev.status !== "archived"
-      ? now
-      : normalized.archivedAt !== undefined
-        ? normalized.archivedAt
-        : prev.archivedAt ?? null;
-  all[idx] = { ...prev, ...normalized, updatedAt: now, publishedAt, archivedAt };
-  writeLS(LS_PAGES, all);
-  return all[idx];
+  if (typeof patch.slug === "string") {
+    const base = normalizeSlug(patch.slug) || patch.slug;
+    normalized.slug = await ensureUniqueSlug(base, id);
+  }
+  const dbPatch = pageToDbPatch(normalized);
+  const { data, error } = await supabase.from("pages").update(dbPatch).eq("id", id).select("*").single();
+  if (error) throw new Error(error.message);
+  return rowToPage(data);
 }
 
 export async function deletePage(id: string): Promise<void> {
-  if (!USE_MOCK) return apiFetch<void>(`/pages/${id}`, { method: "DELETE" });
-  writeLS(LS_PAGES, readLS<CmsPage[]>(LS_PAGES, []).filter((p) => p.id !== id));
+  const { error } = await supabase.from("pages").delete().eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export async function duplicatePage(id: string): Promise<CmsPage> {
   const src = await getPage(id);
   if (!src) throw new Error("Page not found");
-  const { id: _omitId, createdAt: _c, updatedAt: _u, ...rest } = src;
-  return createPage({ ...rest, title: `${src.title} (Copy)`, slug: `${src.slug}-copy-${Date.now().toString(36)}`, status: "draft" });
+  const { id: _omitId, createdAt: _c, updatedAt: _u, publishedAt: _p, archivedAt: _a, ...rest } = src;
+  return createPage({
+    ...rest,
+    title: `${src.title} (Copy)`,
+    slug: `${src.slug}-copy-${Date.now().toString(36)}`,
+    status: "draft",
+  });
 }
 
 /**
@@ -350,23 +395,29 @@ export async function duplicatePage(id: string): Promise<CmsPage> {
  */
 export async function getPageByPath(path: string): Promise<CmsPage | null> {
   const normalized = normalizeSlug(path) || path;
-  const all = await listPages();
-  return all.find((p) => p.slug === normalized && p.status === "published") ?? null;
+  const { data, error } = await supabase
+    .from("pages")
+    .select("*")
+    .eq("slug", normalized)
+    .eq("status", "published")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? rowToPage(data) : null;
 }
 
 // ---------- Leads / Dashboard ----------
 
 export async function listLeads(): Promise<Lead[]> {
   if (!USE_MOCK) return apiFetch<Lead[]>("/leads");
-  seed();
+  seedLeadsIfEmpty();
   return readLS<Lead[]>(LS_LEADS, []);
 }
 
 export async function getDashboard(): Promise<DashboardStats> {
   if (!USE_MOCK) return apiFetch<DashboardStats>("/dashboard");
-  seed();
+  seedLeadsIfEmpty();
   const leads = readLS<Lead[]>(LS_LEADS, []);
-  const pages = readLS<CmsPage[]>(LS_PAGES, []);
+  const pages = await listPages();
   const today = new Date();
   const isSameDay = (d: Date) => d.toDateString() === today.toDateString();
   const isSameMonth = (d: Date) => d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
