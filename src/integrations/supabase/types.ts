@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          created_at: string
+          entity: string | null
+          entity_id: string | null
+          id: string
+          message: string
+          metadata: Json
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          created_at?: string
+          entity?: string | null
+          entity_id?: string | null
+          id?: string
+          message?: string
+          metadata?: Json
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          created_at?: string
+          entity?: string | null
+          entity_id?: string | null
+          id?: string
+          message?: string
+          metadata?: Json
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           created_at: string
@@ -433,6 +469,7 @@ export type Database = {
           id: string
           last_login: string | null
           name: string
+          permissions: Json
           phone: string | null
           updated_at: string
         }
@@ -444,6 +481,7 @@ export type Database = {
           id: string
           last_login?: string | null
           name?: string
+          permissions?: Json
           phone?: string | null
           updated_at?: string
         }
@@ -455,6 +493,7 @@ export type Database = {
           id?: string
           last_login?: string | null
           name?: string
+          permissions?: Json
           phone?: string | null
           updated_at?: string
         }

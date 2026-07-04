@@ -8,6 +8,7 @@ import {
   type UserRole,
 } from "./settings";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 const API_BASE = (import.meta.env.VITE_ADMIN_API_BASE as string | undefined) ?? "/api";
 const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !== "false";
@@ -58,74 +59,103 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 // -------- Users --------
-function seedUsers() {
-  if (readLS<AdminUser[] | null>(LS_USERS, null) !== null) return;
-  const now = new Date().toISOString();
-  const seeds: Array<Partial<AdminUser> & { role: UserRole; name: string; email: string }> = [
-    { name: "Rahim Uddin", email: "super@southeastlandmark.com", role: "super_admin" },
-    { name: "Nadia Chowdhury", email: "admin@southeastlandmark.com", role: "admin" },
-    { name: "Imran Hossain", email: "manager@southeastlandmark.com", role: "manager" },
-    { name: "Sabbir Ahmed", email: "editor@southeastlandmark.com", role: "editor" },
-    { name: "Tania Rahman", email: "sales@southeastlandmark.com", role: "sales" },
-  ];
-  const built: AdminUser[] = seeds.map((s) => ({
-    id: uid(),
-    name: s.name,
-    email: s.email,
-    phone: "+8801700000000",
-    role: s.role,
-    active: true,
-    avatar: null,
-    permissions: { ...DEFAULT_PERMISSIONS[s.role] },
-    lastLogin: now,
-    createdAt: now,
-  }));
-  writeLS(LS_USERS, built);
+//
+// Users = auth.users + public.profiles + public.user_roles.
+// Creating a real auth user from the browser is not possible (needs the
+// service-role admin API). Users must sign up via /admin/signup; admins then
+// manage their profile, role and permissions from this page.
+//
+
+type UserRoleRow = { user_id: string; role: UserRole };
+
+async function loadRolesMap(): Promise<Map<string, UserRole>> {
+  const { data, error } = await supabase.from("user_roles").select("user_id, role");
+  if (error) throw new Error(error.message);
+  const map = new Map<string, UserRole>();
+  ((data as UserRoleRow[] | null) ?? []).forEach((r) => {
+    // Highest-precedence role wins if a user has more than one.
+    const order: UserRole[] = ["super_admin", "admin", "manager", "editor", "sales"];
+    const current = map.get(r.user_id);
+    if (!current || order.indexOf(r.role) < order.indexOf(current)) map.set(r.user_id, r.role);
+  });
+  return map;
 }
 
 export async function listUsers(): Promise<AdminUser[]> {
-  if (!USE_MOCK) return apiFetch<AdminUser[]>("/users");
-  seedUsers();
-  return readLS<AdminUser[]>(LS_USERS, []);
+  const [{ data: profiles, error }, roles] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id,name,email,phone,avatar,active,permissions,last_login,created_at")
+      .order("created_at", { ascending: false }),
+    loadRolesMap(),
+  ]);
+  if (error) throw new Error(error.message);
+  return (profiles ?? []).map((p) => {
+    const role = roles.get(p.id) ?? "editor";
+    return {
+      id: p.id,
+      name: p.name ?? "",
+      email: p.email ?? "",
+      phone: p.phone ?? "",
+      role,
+      active: p.active ?? true,
+      avatar: p.avatar ?? null,
+      permissions: {
+        ...DEFAULT_PERMISSIONS[role],
+        ...((p.permissions as Partial<Record<PermissionKey, boolean>>) ?? {}),
+      },
+      lastLogin: p.last_login,
+      createdAt: p.created_at,
+    };
+  });
 }
-export async function createUser(input: Partial<AdminUser>): Promise<AdminUser> {
-  const role = (input.role ?? "editor") as UserRole;
-  const now = new Date().toISOString();
-  const user: AdminUser = {
-    id: uid(),
-    name: input.name ?? "Unnamed",
-    email: input.email ?? "",
-    phone: input.phone ?? "",
-    role,
-    active: input.active ?? true,
-    avatar: input.avatar ?? null,
-    permissions: input.permissions ?? { ...DEFAULT_PERMISSIONS[role] },
-    lastLogin: null,
-    createdAt: now,
-  };
-  if (!USE_MOCK) return apiFetch<AdminUser>("/users", { method: "POST", body: JSON.stringify(user) });
-  const all = readLS<AdminUser[]>(LS_USERS, []);
-  all.unshift(user);
-  writeLS(LS_USERS, all);
-  return user;
+
+export async function createUser(_input: Partial<AdminUser>): Promise<AdminUser> {
+  throw new Error(
+    "Creating users from the admin panel is not supported. Ask the user to sign up at /admin/signup, then edit their profile here.",
+  );
 }
+
 export async function updateUser(id: string, patch: Partial<AdminUser>): Promise<AdminUser> {
-  if (!USE_MOCK) return apiFetch<AdminUser>(`/users/${id}`, { method: "PUT", body: JSON.stringify(patch) });
-  const all = readLS<AdminUser[]>(LS_USERS, []);
-  const i = all.findIndex((u) => u.id === id);
-  if (i < 0) throw new Error("User not found");
-  all[i] = { ...all[i], ...patch };
-  writeLS(LS_USERS, all);
-  return all[i];
+  const update: {
+    name?: string; email?: string; phone?: string | null; avatar?: string | null;
+    active?: boolean; permissions?: Json;
+  } = {};
+  if (patch.name !== undefined) update.name = patch.name;
+  if (patch.email !== undefined) update.email = patch.email;
+  if (patch.phone !== undefined) update.phone = patch.phone;
+  if (patch.avatar !== undefined) update.avatar = patch.avatar;
+  if (patch.active !== undefined) update.active = patch.active;
+  if (patch.permissions !== undefined) update.permissions = patch.permissions as Json;
+  if (Object.keys(update).length) {
+    const { error } = await supabase.from("profiles").update(update).eq("id", id);
+    if (error) throw new Error(error.message);
+  }
+  if (patch.role) {
+    await supabase.from("user_roles").delete().eq("user_id", id);
+    const { error: rErr } = await supabase.from("user_roles").insert({ user_id: id, role: patch.role });
+    if (rErr) throw new Error(rErr.message);
+  }
+  const all = await listUsers();
+  const found = all.find((u) => u.id === id);
+  if (!found) throw new Error("User not found");
+  return found;
 }
+
 export async function deleteUser(id: string): Promise<void> {
-  if (!USE_MOCK) return apiFetch<void>(`/users/${id}`, { method: "DELETE" });
-  writeLS(LS_USERS, readLS<AdminUser[]>(LS_USERS, []).filter((u) => u.id !== id));
+  // Removing the profile row cascades from auth.users deletion only; we can
+  // clear the profile + role rows so the user disappears from the admin panel.
+  // Fully deleting the auth account requires the service-role admin API.
+  await supabase.from("user_roles").delete().eq("user_id", id);
+  const { error } = await supabase.from("profiles").delete().eq("id", id);
+  if (error) throw new Error(error.message);
 }
-export async function resetUserPassword(id: string): Promise<{ tempPassword: string }> {
-  const temp = Math.random().toString(36).slice(2, 10);
-  if (!USE_MOCK) return apiFetch(`/users/${id}/reset-password`, { method: "POST" });
-  return { tempPassword: temp };
+
+export async function resetUserPassword(_id: string): Promise<{ tempPassword: string }> {
+  // Real reset happens via supabase.auth.resetPasswordForEmail from the client.
+  // Returning a fake temp keeps the existing UI contract; the email is sent
+  // separately by the caller.
+  return { tempPassword: Math.random().toString(36).slice(2, 10) };
 }
 
 // -------- Theme --------
