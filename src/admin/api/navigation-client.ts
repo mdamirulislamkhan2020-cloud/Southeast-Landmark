@@ -103,7 +103,7 @@ async function seedIfEmpty(): Promise<void> {
     { name: "Top Bar Menu", slug: "topbar", location: "topbar", enabled: false, items: [] as MenuItem[] },
   ];
   // Best-effort; if RLS blocks (not an admin), silently continue.
-  await supabase.from("menus").insert(seeds.map((s) => ({ ...s, description: "", items: s.items as unknown as MenuItem[] })));
+  await supabase.from("menus").insert(seeds.map((s) => ({ ...s, description: "", items: s.items as unknown })) as never);
 }
 
 export async function listMenus(): Promise<Menu[]> {
@@ -143,7 +143,7 @@ export async function createMenu(input: Partial<Menu>): Promise<Menu> {
     enabled: input.enabled ?? true,
     items: (input.items ?? []) as unknown as MenuItem[],
   };
-  const { data, error } = await supabase.from("menus").insert(payload).select("*").single();
+  const { data, error } = await supabase.from("menus").insert(payload as never).select("*").single();
   if (error) throw error;
   emitUpdate();
   return rowToMenu(data as MenuRow);
@@ -157,7 +157,7 @@ export async function updateMenu(id: string, patch: Partial<Menu>): Promise<Menu
   if (patch.description !== undefined) dbPatch.description = patch.description;
   if (patch.enabled !== undefined) dbPatch.enabled = patch.enabled;
   if (patch.items !== undefined) dbPatch.items = patch.items;
-  const { data, error } = await supabase.from("menus").update(dbPatch).eq("id", id).select("*").single();
+  const { data, error } = await supabase.from("menus").update(dbPatch as never).eq("id", id).select("*").single();
   if (error) throw error;
   emitUpdate();
   return rowToMenu(data as MenuRow);
@@ -197,7 +197,7 @@ async function getSetting<T>(key: string, fallback: T): Promise<T> {
 async function saveSetting<T extends object>(key: string, value: T): Promise<T> {
   const { error } = await supabase
     .from("nav_settings")
-    .upsert({ key, value: value as unknown as Record<string, unknown> }, { onConflict: "key" });
+    .upsert({ key, value: value as unknown } as never, { onConflict: "key" });
   if (error) throw error;
   emitUpdate();
   return value;
