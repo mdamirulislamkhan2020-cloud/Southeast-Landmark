@@ -189,7 +189,7 @@ export async function findDuplicates(phone: string, email: string, excludeId?: s
   if (!p && !e) return [];
   const filters: string[] = [];
   if (p) filters.push(`phone.ilike.%${p.slice(-9)}%`);
-  if (e) filters.push(`email.eq.${e}`);
+  if (e) filters.push(`email.ilike.${e}`);
   const { data, error } = await supabase
     .from("leads")
     .select("*")
