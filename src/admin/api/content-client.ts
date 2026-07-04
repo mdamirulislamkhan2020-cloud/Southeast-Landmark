@@ -1,9 +1,12 @@
 import type { BlogPost, BlogStatus, Faq, Testimonial } from "./content";
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
+
+const asJson = <T,>(v: T): Json => v as unknown as Json;
 
 const API_BASE = (import.meta.env.VITE_ADMIN_API_BASE as string | undefined) ?? "/api";
 const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !== "false";
 
-const LS_BLOG = "sel_admin_blog_v1";
 const LS_FAQ = "sel_admin_faq_v1";
 const LS_TESTIMONIALS = "sel_admin_testimonials_v1";
 
@@ -40,43 +43,7 @@ function estimateReadingTime(html: string) {
 
 // ---------- Seeds ----------
 
-const BLOG_IMG = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=70";
-const BLOG_IMG2 = "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=1200&q=70";
-const BLOG_IMG3 = "https://images.unsplash.com/photo-1449844908441-8829872d2607?w=1200&q=70";
 const AVATAR = "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=70";
-
-function seedBlog() {
-  if (readLS<BlogPost[] | null>(LS_BLOG, null) !== null) return;
-  const now = new Date().toISOString();
-  const samples: Partial<BlogPost>[] = [
-    { title: "Investing in Dhaka Real Estate 2026", categories: ["Investment"], tags: ["Dhaka", "ROI"], featuredImage: BLOG_IMG, status: "published" },
-    { title: "Choosing the Right Plot in Mohammadpur", categories: ["Guides"], tags: ["Plot", "Buying"], featuredImage: BLOG_IMG2, status: "published" },
-    { title: "Interior Trends for Modern Apartments", categories: ["Design"], tags: ["Interior"], featuredImage: BLOG_IMG3, status: "draft" },
-  ];
-  const built: BlogPost[] = samples.map((s) => {
-    const content = `<p>${s.title} — a Southeast Landmark editorial covering everything a buyer needs to know before making a decision.</p><p>Continue reading for the full breakdown.</p>`;
-    return {
-      id: uid(),
-      title: s.title!,
-      slug: s.title!.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-      excerpt: `${s.title} — quick insights and expert view.`,
-      content,
-      featuredImage: s.featuredImage ?? null,
-      author: "Editorial Team",
-      categories: s.categories ?? [],
-      tags: s.tags ?? [],
-      status: (s.status ?? "draft") as BlogStatus,
-      readingTime: estimateReadingTime(content),
-      publishAt: null,
-      publishedAt: s.status === "published" ? now : null,
-      seo: { title: s.title!, description: "", keywords: (s.tags ?? []).join(", ") },
-      og: { title: s.title!, description: "", image: s.featuredImage ?? null },
-      createdAt: now,
-      updatedAt: now,
-    };
-  });
-  writeLS(LS_BLOG, built);
-}
 
 function seedFaq() {
   if (readLS<Faq[] | null>(LS_FAQ, null) !== null) return;
