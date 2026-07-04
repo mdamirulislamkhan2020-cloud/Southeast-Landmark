@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { LayoutDashboard, FileText, Users, Image, Palette, LogOut, ExternalLink, Building2, Newspaper, HelpCircle, MessageSquareQuote, Settings, UserCog, FormInput, BarChart3, Search, Plug, Menu as MenuIcon, Mail, Eye } from "lucide-react";
-import { logout } from "./api/client";
+import { signOut } from "./api/auth";
 import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; end?: boolean; label: string; icon: typeof LayoutDashboard; disabled?: boolean };
@@ -59,7 +59,7 @@ export function AdminLayout() {
             <ExternalLink className="h-4 w-4" /> View site
           </a>
           <button
-            onClick={() => { logout(); navigate("/admin/login"); }}
+            onClick={async () => { await signOut(); navigate("/admin/login"); }}
             className="w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary"
           >
             <LogOut className="h-4 w-4" /> Sign out
