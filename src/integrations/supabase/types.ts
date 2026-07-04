@@ -101,6 +101,39 @@ export type Database = {
         }
         Relationships: []
       }
+      faqs: {
+        Row: {
+          active: boolean
+          answer: string
+          category: string
+          created_at: string
+          id: string
+          question: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          answer?: string
+          category?: string
+          created_at?: string
+          id?: string
+          question: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          answer?: string
+          category?: string
+          created_at?: string
+          id?: string
+          question?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       forms: {
         Row: {
           created_at: string
@@ -480,6 +513,48 @@ export type Database = {
           status?: string
           title?: string
           type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          active: boolean
+          company: string
+          created_at: string
+          id: string
+          image: string | null
+          name: string
+          position: string
+          rating: number
+          review: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          company?: string
+          created_at?: string
+          id?: string
+          image?: string | null
+          name: string
+          position?: string
+          rating?: number
+          review?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          company?: string
+          created_at?: string
+          id?: string
+          image?: string | null
+          name?: string
+          position?: string
+          rating?: number
+          review?: string
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []
