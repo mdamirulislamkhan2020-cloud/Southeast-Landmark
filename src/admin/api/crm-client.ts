@@ -3,6 +3,7 @@ import type {
 } from "./crm";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { logActivity } from "./activity-log-client";
 
 type Json = Database["public"]["Tables"]["leads"]["Row"]["analytics"];
 type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
@@ -167,7 +168,69 @@ export async function submitLead(input: LeadSubmissionInput): Promise<CrmLead> {
     timeline: asJson(timeline),
   }).select("*").single();
   if (error) throw error;
-  return rowToLead(data);
+  const lead = rowToLead(data);
+  logActivity({
+    action: "lead_submitted",
+    entity: "lead",
+    entityId: lead.id,
+    message: `Lead ${lead.code} captured from ${source}`,
+    metadata: { name, email, phone, source, formId: input.formId ?? null, leadPageSlug: input.leadPageSlug ?? null },
+  });
+  return lead;
+}
+
+/**
+ * Duplicate detection — matches on normalised phone or lowercased email.
+ * Returns any existing leads sharing either identifier (excluding `excludeId`).
+ */
+export async function findDuplicates(phone: string, email: string, excludeId?: string): Promise<CrmLead[]> {
+  const p = (phone ?? "").replace(/[^\d]/g, "");
+  const e = (email ?? "").trim().toLowerCase();
+  if (!p && !e) return [];
+  const filters: string[] = [];
+  if (p) filters.push(`phone.ilike.%${p.slice(-9)}%`);
+  if (e) filters.push(`email.eq.${e}`);
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .or(filters.join(","))
+    .order("created_at", { ascending: false })
+    .limit(20);
+  if (error) return [];
+  return (data ?? []).filter((r) => r.id !== excludeId).map(rowToLead);
+}
+
+/** Merge `secondaryId` into `primaryId`: combine notes, tasks, attachments, timeline, then delete the secondary. */
+export async function mergeLeads(primaryId: string, secondaryId: string, actor?: string): Promise<CrmLead> {
+  if (primaryId === secondaryId) return fetchLead(primaryId);
+  const [primary, secondary] = await Promise.all([fetchLead(primaryId), fetchLead(secondaryId)]);
+  primary.notes = [...secondary.notes, ...primary.notes];
+  primary.tasks = [...secondary.tasks, ...primary.tasks];
+  primary.attachments = [...secondary.attachments, ...primary.attachments];
+  primary.communications = [...secondary.communications, ...primary.communications];
+  primary.answers = { ...secondary.answers, ...primary.answers };
+  pushTimeline(primary, "custom", `Merged duplicate lead ${secondary.code}`, { mergedFrom: secondary.id }, actor);
+  const persisted = await persist(primary);
+  await supabase.from("leads").delete().eq("id", secondaryId);
+  logActivity({
+    action: "lead_merged",
+    entity: "lead",
+    entityId: primaryId,
+    message: `Merged ${secondary.code} → ${primary.code}`,
+    metadata: { primaryId, secondaryId },
+  });
+  return persisted;
+}
+
+/** Append an "email_sent" timeline event to the lead. Best-effort; never throws. */
+export async function recordEmailSent(leadId: string, subject: string, to?: string): Promise<void> {
+  try {
+    const l = await fetchLead(leadId);
+    pushTimeline(l, "custom", `Email sent: ${subject}${to ? ` → ${to}` : ""}`, { to, subject });
+    await persist(l);
+  } catch {
+    /* ignore */
+  }
 }
 
 export async function updateLeadStatus(id: string, status: LeadStatus, actor?: string): Promise<CrmLead> {
