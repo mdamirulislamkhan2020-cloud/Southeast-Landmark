@@ -116,13 +116,16 @@ export async function createUser(_input: Partial<AdminUser>): Promise<AdminUser>
 }
 
 export async function updateUser(id: string, patch: Partial<AdminUser>): Promise<AdminUser> {
-  const update: Record<string, unknown> = {};
+  const update: {
+    name?: string; email?: string; phone?: string | null; avatar?: string | null;
+    active?: boolean; permissions?: Json;
+  } = {};
   if (patch.name !== undefined) update.name = patch.name;
   if (patch.email !== undefined) update.email = patch.email;
   if (patch.phone !== undefined) update.phone = patch.phone;
   if (patch.avatar !== undefined) update.avatar = patch.avatar;
   if (patch.active !== undefined) update.active = patch.active;
-  if (patch.permissions !== undefined) update.permissions = patch.permissions;
+  if (patch.permissions !== undefined) update.permissions = patch.permissions as Json;
   if (Object.keys(update).length) {
     const { error } = await supabase.from("profiles").update(update).eq("id", id);
     if (error) throw new Error(error.message);
