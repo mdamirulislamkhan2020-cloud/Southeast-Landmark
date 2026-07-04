@@ -307,4 +307,3 @@ export function downloadFile(name: string, content: string, mime: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-}
