@@ -261,7 +261,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 // ---------- Auth ----------
 // Auth has moved to `./auth.ts` (Supabase-backed). This re-export keeps
 // legacy imports working during the phased migration.
-export { signIn as login, signOut as logout } from "./auth";
+export { signIn as login, signOut as logout, getSessionSnapshot as getSession } from "./auth";
 export type { AppRole } from "./auth";
 
 // ---------- Pages ----------
