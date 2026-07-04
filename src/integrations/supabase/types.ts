@@ -346,6 +346,84 @@ export type Database = {
         }
         Relationships: []
       }
+      properties: {
+        Row: {
+          amenities: Json
+          brochure_url: string | null
+          category: string
+          created_at: string
+          description: string
+          details: Json
+          featured: boolean
+          featured_image: string | null
+          floor_plan: string | null
+          gallery: Json
+          id: string
+          investment: Json
+          lead_form_id: string | null
+          listing_status: string
+          location: Json
+          pricing: Json
+          published_at: string | null
+          seo: Json
+          slug: string
+          status: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amenities?: Json
+          brochure_url?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          details?: Json
+          featured?: boolean
+          featured_image?: string | null
+          floor_plan?: string | null
+          gallery?: Json
+          id?: string
+          investment?: Json
+          lead_form_id?: string | null
+          listing_status?: string
+          location?: Json
+          pricing?: Json
+          published_at?: string | null
+          seo?: Json
+          slug: string
+          status?: string
+          title: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          amenities?: Json
+          brochure_url?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          details?: Json
+          featured?: boolean
+          featured_image?: string | null
+          floor_plan?: string | null
+          gallery?: Json
+          id?: string
+          investment?: Json
+          lead_form_id?: string | null
+          listing_status?: string
+          location?: Json
+          pricing?: Json
+          published_at?: string | null
+          seo?: Json
+          slug?: string
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
