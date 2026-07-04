@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      menus: {
+        Row: {
+          created_at: string
+          description: string
+          enabled: boolean
+          id: string
+          items: Json
+          location: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          enabled?: boolean
+          id?: string
+          items?: Json
+          location?: string
+          name?: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          enabled?: boolean
+          id?: string
+          items?: Json
+          location?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      nav_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       pages: {
         Row: {
           archived_at: string | null
