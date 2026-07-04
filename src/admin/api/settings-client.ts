@@ -13,7 +13,8 @@ const API_BASE = (import.meta.env.VITE_ADMIN_API_BASE as string | undefined) ?? 
 const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !== "false";
 
 const LS_USERS = "sel_admin_users_v1";
-const LS_MEDIA = "sel_admin_media_v1";
+const MEDIA_BUCKET = "media";
+const SIGNED_URL_TTL = 60 * 60; // 1 hour
 
 // ---------- Supabase-backed app_settings helper ----------
 async function readSetting<T>(key: string, fallback: T): Promise<T> {
@@ -158,45 +159,93 @@ export async function updateTheme(patch: Partial<ThemeSettings>): Promise<ThemeS
 }
 
 // -------- Media --------
-export async function listMedia(): Promise<MediaFile[]> {
-  if (!USE_MOCK) return apiFetch<MediaFile[]>("/media");
-  return readLS<MediaFile[]>(LS_MEDIA, []);
+//
+// Media Library is backed by Supabase Storage (private `media` bucket).
+// The MediaFile.id is the storage path (e.g. "root/logo.png"); the URL is a
+// short-lived signed URL suitable for previews and copy-to-clipboard.
+//
+
+async function signUrl(path: string): Promise<string> {
+  const { data } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, SIGNED_URL_TTL);
+  return data?.signedUrl ?? "";
 }
-export async function uploadMedia(file: File, folder = "root"): Promise<MediaFile> {
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result));
-    r.onerror = reject;
-    r.readAsDataURL(file);
+
+async function listFolderRecursive(prefix: string): Promise<MediaFile[]> {
+  const { data, error } = await supabase.storage.from(MEDIA_BUCKET).list(prefix, {
+    limit: 1000,
+    sortBy: { column: "created_at", order: "desc" },
   });
-  const m: MediaFile = {
-    id: uid(),
+  if (error) throw new Error(error.message);
+  const files: MediaFile[] = [];
+  for (const entry of data ?? []) {
+    // Storage marks folders with id === null
+    if (entry.id === null) {
+      const nested = await listFolderRecursive(prefix ? `${prefix}/${entry.name}` : entry.name);
+      files.push(...nested);
+      continue;
+    }
+    const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const folder = prefix || "root";
+    const meta = entry.metadata ?? {};
+    files.push({
+      id: path,
+      name: entry.name,
+      folder,
+      url: await signUrl(path),
+      mime: (meta as { mimetype?: string }).mimetype ?? "application/octet-stream",
+      size: Number((meta as { size?: number }).size ?? 0),
+      createdAt: entry.created_at ?? new Date().toISOString(),
+    });
+  }
+  return files;
+}
+
+export async function listMedia(): Promise<MediaFile[]> {
+  return listFolderRecursive("");
+}
+
+export async function uploadMedia(file: File, folder = "root"): Promise<MediaFile> {
+  const safeFolder = folder && folder !== "all" ? folder : "root";
+  const path = `${safeFolder}/${Date.now()}-${file.name}`.replace(/^\/+/, "");
+  const { error } = await supabase.storage.from(MEDIA_BUCKET).upload(path, file, {
+    contentType: file.type || "application/octet-stream",
+    upsert: false,
+  });
+  if (error) throw new Error(error.message);
+  return {
+    id: path,
     name: file.name,
-    folder,
-    url: dataUrl,
+    folder: safeFolder,
+    url: await signUrl(path),
     mime: file.type || "application/octet-stream",
     size: file.size,
     createdAt: new Date().toISOString(),
   };
-  if (!USE_MOCK) return apiFetch<MediaFile>("/media", { method: "POST", body: JSON.stringify(m) });
-  const all = readLS<MediaFile[]>(LS_MEDIA, []);
-  all.unshift(m);
-  writeLS(LS_MEDIA, all);
-  return m;
 }
+
 export async function renameMedia(id: string, name: string): Promise<MediaFile> {
-  if (!USE_MOCK) return apiFetch(`/media/${id}`, { method: "PUT", body: JSON.stringify({ name }) });
-  const all = readLS<MediaFile[]>(LS_MEDIA, []);
-  const i = all.findIndex((m) => m.id === id);
-  if (i < 0) throw new Error("Not found");
-  all[i] = { ...all[i], name };
-  writeLS(LS_MEDIA, all);
-  return all[i];
+  const parts = id.split("/");
+  parts[parts.length - 1] = name;
+  const nextPath = parts.join("/");
+  const { error } = await supabase.storage.from(MEDIA_BUCKET).move(id, nextPath);
+  if (error) throw new Error(error.message);
+  const folder = parts.length > 1 ? parts.slice(0, -1).join("/") : "root";
+  return {
+    id: nextPath,
+    name,
+    folder,
+    url: await signUrl(nextPath),
+    mime: "application/octet-stream",
+    size: 0,
+    createdAt: new Date().toISOString(),
+  };
 }
+
 export async function deleteMedia(id: string): Promise<void> {
-  if (!USE_MOCK) return apiFetch(`/media/${id}`, { method: "DELETE" });
-  writeLS(LS_MEDIA, readLS<MediaFile[]>(LS_MEDIA, []).filter((m) => m.id !== id));
+  const { error } = await supabase.storage.from(MEDIA_BUCKET).remove([id]);
+  if (error) throw new Error(error.message);
 }
+
 export async function listMediaFolders(): Promise<string[]> {
   const files = await listMedia();
   return Array.from(new Set(["root", ...files.map((f) => f.folder)]));
