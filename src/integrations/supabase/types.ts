@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      forms: {
+        Row: {
+          created_at: string
+          design: Json
+          fields: Json
+          id: string
+          multi_step: boolean
+          name: string
+          settings: Json
+          show_progress: boolean
+          slug: string
+          status: string
+          steps: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          design?: Json
+          fields?: Json
+          id?: string
+          multi_step?: boolean
+          name?: string
+          settings?: Json
+          show_progress?: boolean
+          slug: string
+          status?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          design?: Json
+          fields?: Json
+          id?: string
+          multi_step?: boolean
+          name?: string
+          settings?: Json
+          show_progress?: boolean
+          slug?: string
+          status?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       menus: {
         Row: {
           created_at: string
