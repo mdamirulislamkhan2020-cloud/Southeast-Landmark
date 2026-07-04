@@ -7,35 +7,16 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 import { blockData, CmsAssignedLeadForm, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
-
-const faqs = [
-  {
-    q: "Who can book a plot with Southeast Landmark?",
-    a: "Any adult resident or non-resident Bangladeshi with valid identification and a compliant source of funds can book a residential plot in our projects. Our team will guide you through booking, installments and registration step by step.",
-  },
-  {
-    q: "Is a land plot a long-term commitment?",
-    a: "Our residential plots are designed for long-term ownership and land value appreciation. That said, plot owners are free to resell, transfer or gift their plot according to their own timelines.",
-  },
-  {
-    q: "How does plot pricing and installment work?",
-    a: "Every project has a transparent per-katha price schedule, along with down-payment and monthly installment options. There are no hidden fees — you see the full breakdown, including registration and utility charges, before you book.",
-  },
-  {
-    q: "What after-sales support do you provide?",
-    a: "After plot handover we support mutation, registration follow-up and project infrastructure upkeep such as roads, drainage and boundary walls. Our customer team stays available for any post-booking assistance you need.",
-  },
-  {
-    q: "Can I book a site visit to a project?",
-    a: "Absolutely. Book a site visit through our contact page or by phone and we will arrange a guided project tour, layout walk-through and plot selection at a time that suits you.",
-  },
-];
+import { useActiveFaqs } from "@/components/site/useCmsData";
 
 export function FAQPage() {
   const blocks = useCmsPageBlocks("/faq");
   const heroBlock = blockData(blocks, "faq.hero");
   const faqBlock = blockData(blocks, "faq.content");
-  const editableFaqs = cmsList<{ q: string; a: string }>(faqBlock, "items", faqs);
+  const { items: dbFaqs, loading } = useActiveFaqs();
+  const dbList = dbFaqs.map((f) => ({ q: f.question, a: f.answer }));
+  // Manual block override wins; otherwise fall back to the FAQ table.
+  const editableFaqs = cmsList<{ q: string; a: string }>(faqBlock, "items", dbList);
 
   return (
     <div>
@@ -53,18 +34,24 @@ export function FAQPage() {
               {cmsString(faqBlock, "subtitle", "If you can’t find what you’re looking for below, our team is happy to help — reach out through the contact page and we’ll get back within one business day.")}
             </p>
           </div>
-          <Accordion type="single" collapsible defaultValue="q-0" className="space-y-3">
-            {editableFaqs.map((f, i) => (
-              <AccordionItem key={i} value={`q-${i}`} className="rounded-2xl border border-border/60 bg-card px-5">
-                <AccordionTrigger className="text-left font-display text-base font-semibold text-primary hover:no-underline">
-                  {f.q}
-                </AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  {f.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          {loading && editableFaqs.length === 0 ? (
+            <div className="rounded-2xl border border-border/60 bg-card p-8 text-sm text-muted-foreground">Loading questions…</div>
+          ) : editableFaqs.length === 0 ? (
+            <div className="rounded-2xl border border-border/60 bg-card p-8 text-sm text-muted-foreground">No questions have been published yet.</div>
+          ) : (
+            <Accordion type="single" collapsible defaultValue="q-0" className="space-y-3">
+              {editableFaqs.map((f, i) => (
+                <AccordionItem key={i} value={`q-${i}`} className="rounded-2xl border border-border/60 bg-card px-5">
+                  <AccordionTrigger className="text-left font-display text-base font-semibold text-primary hover:no-underline">
+                    {f.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground">
+                    {f.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          )}
         </div>
       </section>
       <CmsAssignedLeadForm path="/faq" />

@@ -139,6 +139,17 @@ export async function getBlogPost(id: string): Promise<BlogPost | null> {
   return data ? rowToBlog(data as BlogRow) : null;
 }
 
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .maybeSingle();
+  if (error) throw error;
+  return data ? rowToBlog(data as BlogRow) : null;
+}
+
 export async function createBlogPost(input: Partial<BlogPost>): Promise<BlogPost> {
   const readingTime = estimateReadingTime(input.content ?? "");
   const slug = await uniqueBlogSlug(input.slug || input.title || "post");

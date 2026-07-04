@@ -7,12 +7,14 @@ import { NewsletterForm } from "./NewsletterForm";
 import { useVisibility } from "@/lib/use-visibility";
 import { decideVisibility } from "@/admin/api/visibility-client";
 import { getSession } from "@/admin/api/client";
+import { useGlobalSettings } from "./useCmsData";
 
 export function Footer() {
   const footerSettings = useFooterSettings();
   const footerMenu = useMenu(footerSettings?.footerMenuSlug ?? "footer");
   const visibility = useVisibility();
   const isAuthed = !!getSession();
+  const global = useGlobalSettings();
   if (footerSettings && !footerSettings.visible) return null;
 
   const items = (footerMenu?.items ?? [])
@@ -78,10 +80,10 @@ export function Footer() {
             Get in touch
           </h4>
           <ul className="space-y-3 text-sm text-muted-foreground">
-            <li className="flex gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span>{site.address}</span></li>
-            <li className="flex gap-3"><Phone className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><a href={`tel:${site.phone}`} className="hover:text-primary">{site.phone}</a></li>
-            <li className="flex gap-3"><Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><a href={`mailto:${site.email}`} className="hover:text-primary">{site.email}</a></li>
-            <li className="flex gap-3"><Clock className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span>{site.hours}</span></li>
+            <li className="flex gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span>{global.address || site.address}</span></li>
+            <li className="flex gap-3"><Phone className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><a href={`tel:${global.phone || site.phone}`} className="hover:text-primary">{global.phone || site.phone}</a></li>
+            <li className="flex gap-3"><Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><a href={`mailto:${global.email || site.email}`} className="hover:text-primary">{global.email || site.email}</a></li>
+            <li className="flex gap-3"><Clock className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span>{global.officeHours || site.hours}</span></li>
           </ul>
           <div className="mt-6">
             <div className="text-xs font-semibold uppercase tracking-wider text-primary">Newsletter</div>
@@ -92,7 +94,7 @@ export function Footer() {
       </div>
       <div className="border-t border-border/60">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
-          <p>{footerSettings?.copyright || `© ${new Date().getFullYear()} ${site.name}. All rights reserved.`}</p>
+          <p>{footerSettings?.copyright || global.copyright || `© ${new Date().getFullYear()} ${global.companyName || site.name}. All rights reserved.`}</p>
           <p>Crafted with care.</p>
         </div>
       </div>

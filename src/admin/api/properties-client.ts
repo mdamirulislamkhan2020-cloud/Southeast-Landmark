@@ -186,6 +186,17 @@ export async function getProperty(id: string): Promise<Property | null> {
   return data ? rowToProperty(data as PropertyRow) : null;
 }
 
+export async function getPropertyBySlug(slug: string): Promise<Property | null> {
+  const { data, error } = await supabase
+    .from("properties")
+    .select("*")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .maybeSingle();
+  if (error) throw error;
+  return data ? rowToProperty(data as PropertyRow) : null;
+}
+
 export async function createProperty(input: Partial<Property>): Promise<Property> {
   const slug = await uniqueSlug(input.slug || input.title || "property");
   const row = propertyToRow({ ...input, slug });

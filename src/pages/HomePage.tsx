@@ -23,6 +23,8 @@ import p1 from "@/assets/brand/property-1.jpg";
 import p2 from "@/assets/brand/property-2.jpg";
 import p3 from "@/assets/brand/property-3.jpg";
 import { blockData, CmsAssignedLeadForm, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
+import { usePublishedBlogPosts, usePublishedProperties, useActiveTestimonials } from "@/components/site/useCmsData";
+import { formatBdtShort, formatShortDate } from "@/lib/format";
 
 const features = [
   { icon: Wallet, title: "Easy Installments", body: "Flexible monthly installment facilities to make land ownership accessible." },
@@ -38,24 +40,7 @@ const stats = [
   { icon: TrendingUp, label: "Land Value Growth", value: "30%" },
 ];
 
-const properties = [
-  { img: p1, title: "Landmark City — Phase 1", location: "Purbachal, Dhaka", price: "৳ 18 Lac/katha", status: "Ongoing", katha: 3, blocks: "A–D" },
-  { img: p2, title: "Riverside Township", location: "Keraniganj, Dhaka", price: "৳ 24 Lac/katha", status: "Upcoming", katha: 5, blocks: "A–F" },
-  { img: p3, title: "Skyline Green Enclave", location: "Savar, Dhaka", price: "৳ 12 Lac/katha", status: "Completed", katha: 3, blocks: "A–C" },
-];
-
-const testimonials = [
-  { name: "Rafiq Ahmed", role: "Business Owner", body: "Southeast Landmark guided me through every step of my plot booking. Documentation and handover were smooth and honest." },
-  { name: "Nasrin Kabir", role: "Architect", body: "Their township planning and road layout are exceptional. I recommend their projects to every client seeking long-term land value." },
-  { name: "Imran Hossain", role: "Land Investor", body: "Clear papers, honest timelines and real appreciation on my plot. Exactly what a modern land development partner should be." },
-  { name: "Sadia Rahman", role: "Plot Owner", body: "From site visit to registration, the team was responsive and transparent. My family is proud of the land we own." },
-];
-
-const blogs = [
-  { title: "A Practical Guide to Land Investment in Bangladesh 2026", author: "Editorial", date: "12 Feb 2026" },
-  { title: "Ten Tips Before Booking Your First Residential Plot", author: "Editorial", date: "05 Feb 2026" },
-  { title: "How to Evaluate a Planned Township Project", author: "Editorial", date: "22 Jan 2026" },
-];
+const fallbackBlogImages = [p1, p2, p3];
 
 const heroStats = [
   { k: "8k+", v: "Plot Owners" },
@@ -86,6 +71,9 @@ export function HomePage() {
   const testimonialsBlock = blockData(blocks, "home.testimonials");
   const statsBlock = blockData(blocks, "home.stats");
   const blogBlock = blockData(blocks, "home.blog");
+  const { items: propertyItems } = usePublishedProperties(3);
+  const { items: testimonialItems } = useActiveTestimonials();
+  const { items: blogItems } = usePublishedBlogPosts(3);
 
   const editableFeatures = cmsList<{ title?: string; body?: string; text?: string }>(
     featuresBlock,
@@ -97,7 +85,8 @@ export function HomePage() {
     body: item.body || item.text || features[index % features.length].body,
   }));
   const editableHeroStats = cmsList<{ k: string; v: string }>(heroBlock, "stats", heroStats);
-  const editableTestimonials = cmsList<{ name: string; role: string; body: string }>(testimonialsBlock, "items", testimonials);
+  const dbTestimonials = testimonialItems.slice(0, 4).map((t) => ({ name: t.name, role: [t.position, t.company].filter(Boolean).join(" · "), body: t.review }));
+  const editableTestimonials = cmsList<{ name: string; role: string; body: string }>(testimonialsBlock, "items", dbTestimonials);
   const editableStats = cmsList<{ value: string; label: string }>(
     statsBlock,
     "items",
@@ -220,32 +209,45 @@ export function HomePage() {
             {cmsString(projectsBlock, "ctaLabel", "Explore all projects →")}
           </Link>
         </div>
-        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {properties.map((p) => (
-            <article key={p.title} className="group overflow-hidden rounded-2xl border border-border/60 bg-card transition hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10">
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img src={p.img} alt={p.title} loading="lazy" width={1024} height={768} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-                <div className="absolute left-4 top-4 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                  {p.price}
-                </div>
-                <div className="absolute right-4 top-4 rounded-full bg-background/85 px-3 py-1 text-xs font-semibold text-primary">
-                  {p.status}
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="font-display text-lg font-semibold">{p.title}</h3>
-                <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4 text-primary" /> {p.location}
-                </p>
-                <div className="mt-4 flex items-center gap-4 border-t border-border/60 pt-4 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5"><LandPlot className="h-4 w-4 text-primary" /> {p.katha} katha</span>
-                  <span className="inline-flex items-center gap-1.5"><Layers className="h-4 w-4 text-primary" /> Blocks {p.blocks}</span>
-                  <span className="inline-flex items-center gap-1.5"><Ruler className="h-4 w-4 text-primary" /> Planned</span>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
+        {propertyItems.length > 0 && (
+          <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {propertyItems.map((p, i) => {
+              const img = p.featuredImage || [p1, p2, p3][i % 3];
+              const loc = [p.location.area, p.location.city].filter(Boolean).join(", ");
+              const price = formatBdtShort(p.pricing.price, p.pricing.currency);
+              return (
+                <Link
+                  key={p.id}
+                  to={`/property/${p.slug}`}
+                  className="group overflow-hidden rounded-2xl border border-border/60 bg-card transition hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10"
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <img src={img} alt={p.title} loading="lazy" width={1024} height={768} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                    {price && (
+                      <div className="absolute left-4 top-4 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
+                        {price}
+                      </div>
+                    )}
+                    <div className="absolute right-4 top-4 rounded-full bg-background/85 px-3 py-1 text-xs font-semibold text-primary capitalize">
+                      {p.listingStatus}
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="font-display text-lg font-semibold">{p.title}</h3>
+                    <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4 text-primary" /> {loc || "—"}
+                    </p>
+                    <div className="mt-4 flex items-center gap-4 border-t border-border/60 pt-4 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5"><LandPlot className="h-4 w-4 text-primary" /> {p.details.areaSqft || 0} sqft</span>
+                      <span className="inline-flex items-center gap-1.5"><Layers className="h-4 w-4 text-primary" /> {p.category}</span>
+                      <span className="inline-flex items-center gap-1.5"><Ruler className="h-4 w-4 text-primary" /> {p.type}</span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* Testimonials */}
@@ -317,22 +319,28 @@ export function HomePage() {
           </div>
           <Link to="/blog" className="text-sm font-semibold text-primary hover:underline">{cmsString(blogBlock, "ctaLabel", "View all posts →")}</Link>
         </div>
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {blogs.map((b, i) => (
-            <article key={b.title} className="group overflow-hidden rounded-2xl border border-border/60 bg-card transition hover:border-primary/50">
-              <div className="aspect-[16/10] overflow-hidden">
-                <img src={[p1, p2, p3][i]} alt="" loading="lazy" width={1024} height={640} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-              </div>
-              <div className="p-6">
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>By {b.author}</span>
-                  <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {b.date}</span>
-                </div>
-                <h3 className="mt-3 font-display text-lg font-semibold group-hover:text-primary">{b.title}</h3>
-              </div>
-            </article>
-          ))}
-        </div>
+        {blogItems.length > 0 && (
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {blogItems.map((b, i) => {
+              const img = b.featuredImage || fallbackBlogImages[i % fallbackBlogImages.length];
+              const date = formatShortDate(b.publishedAt || b.publishAt || b.updatedAt);
+              return (
+                <Link key={b.id} to={`/blog/${b.slug}`} className="group overflow-hidden rounded-2xl border border-border/60 bg-card transition hover:border-primary/50">
+                  <div className="aspect-[16/10] overflow-hidden">
+                    <img src={img} alt="" loading="lazy" width={1024} height={640} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span>By {b.author || "Editorial"}</span>
+                      <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {date}</span>
+                    </div>
+                    <h3 className="mt-3 font-display text-lg font-semibold group-hover:text-primary">{b.title}</h3>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </section>
       <CmsAssignedLeadForm path="/" />
     </div>

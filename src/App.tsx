@@ -1,14 +1,16 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { Seo } from "@/components/site/Seo";
+import { CmsSeo } from "@/components/site/Seo";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { VisibilityGate } from "@/components/site/VisibilityGate";
 
 const HomePage = lazy(() => import("@/pages/HomePage").then((m) => ({ default: m.HomePage })));
 const AboutPage = lazy(() => import("@/pages/AboutPage").then((m) => ({ default: m.AboutPage })));
 const PropertyPage = lazy(() => import("@/pages/PropertyPage").then((m) => ({ default: m.PropertyPage })));
+const PropertyDetailPage = lazy(() => import("@/pages/PropertyDetailPage").then((m) => ({ default: m.PropertyDetailPage })));
 const BlogPage = lazy(() => import("@/pages/BlogPage").then((m) => ({ default: m.BlogPage })));
+const BlogDetailPage = lazy(() => import("@/pages/BlogDetailPage").then((m) => ({ default: m.BlogDetailPage })));
 const FAQPage = lazy(() => import("@/pages/FAQPage").then((m) => ({ default: m.FAQPage })));
 const ContactPage = lazy(() => import("@/pages/ContactPage").then((m) => ({ default: m.ContactPage })));
 
@@ -100,7 +102,7 @@ export default function App() {
             path="/"
             element={
               <>
-                <Seo title="Southeast Landmark Ltd — Planned Residential Plots & Township Development" description="Southeast Landmark Ltd is a Dhaka-based land development company offering planned residential plots, township projects and secure land investment." path="/" />
+                <CmsSeo slug="/" defaultTitle="Southeast Landmark Ltd — Planned Residential Plots & Township Development" defaultDescription="Southeast Landmark Ltd is a Dhaka-based land development company offering planned residential plots, township projects and secure land investment." />
                 <HomePage />
               </>
             }
@@ -109,7 +111,7 @@ export default function App() {
             path="/about"
             element={
               <>
-                <Seo title="About — Southeast Landmark Ltd" description="Learn about Southeast Landmark Ltd, a Dhaka-based land development company delivering planned residential plots and township projects." path="/about" />
+                <CmsSeo slug="/about" defaultTitle="About — Southeast Landmark Ltd" defaultDescription="Learn about Southeast Landmark Ltd, a Dhaka-based land development company delivering planned residential plots and township projects." />
                 <AboutPage />
               </>
             }
@@ -118,25 +120,27 @@ export default function App() {
             path="/property"
             element={
               <>
-                <Seo title="Projects — Southeast Landmark Ltd" description="Explore ongoing, upcoming and completed land development and residential plot projects by Southeast Landmark across Bangladesh." path="/property" />
+                <CmsSeo slug="/property" defaultTitle="Projects — Southeast Landmark Ltd" defaultDescription="Explore ongoing, upcoming and completed land development and residential plot projects by Southeast Landmark across Bangladesh." />
                 <PropertyPage />
               </>
             }
           />
+          <Route path="/property/:slug" element={<PropertyDetailPage />} />
           <Route
             path="/blog"
             element={
               <>
-                <Seo title="Blog — Southeast Landmark Ltd" description="Land investment insights, township updates and news from Southeast Landmark." path="/blog" />
+                <CmsSeo slug="/blog" defaultTitle="Blog — Southeast Landmark Ltd" defaultDescription="Land investment insights, township updates and news from Southeast Landmark." />
                 <BlogPage />
               </>
             }
           />
+          <Route path="/blog/:slug" element={<BlogDetailPage />} />
           <Route
             path="/faq"
             element={
               <>
-                <Seo title="FAQ — Southeast Landmark Ltd" description="Answers to common questions about our residential plots, land projects, booking and installment facilities." path="/faq" />
+                <CmsSeo slug="/faq" defaultTitle="FAQ — Southeast Landmark Ltd" defaultDescription="Answers to common questions about our residential plots, land projects, booking and installment facilities." />
                 <FAQPage />
               </>
             }
@@ -145,7 +149,7 @@ export default function App() {
             path="/contact"
             element={
               <>
-                <Seo title="Contact — Southeast Landmark Ltd" description="Book a site visit or request project details from the Southeast Landmark land development team in Mohammadpur, Dhaka." path="/contact" />
+                <CmsSeo slug="/contact" defaultTitle="Contact — Southeast Landmark Ltd" defaultDescription="Book a site visit or request project details from the Southeast Landmark land development team in Mohammadpur, Dhaka." />
                 <ContactPage />
               </>
             }
