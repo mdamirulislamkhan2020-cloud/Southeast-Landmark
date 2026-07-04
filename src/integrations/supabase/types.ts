@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          author: string
+          categories: Json
+          content: string
+          created_at: string
+          excerpt: string
+          featured_image: string | null
+          id: string
+          og: Json
+          publish_at: string | null
+          published_at: string | null
+          reading_time: number
+          seo: Json
+          slug: string
+          status: string
+          tags: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string
+          categories?: Json
+          content?: string
+          created_at?: string
+          excerpt?: string
+          featured_image?: string | null
+          id?: string
+          og?: Json
+          publish_at?: string | null
+          published_at?: string | null
+          reading_time?: number
+          seo?: Json
+          slug: string
+          status?: string
+          tags?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          categories?: Json
+          content?: string
+          created_at?: string
+          excerpt?: string
+          featured_image?: string | null
+          id?: string
+          og?: Json
+          publish_at?: string | null
+          published_at?: string | null
+          reading_time?: number
+          seo?: Json
+          slug?: string
+          status?: string
+          tags?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crm_assignees: {
         Row: {
           created_at: string
