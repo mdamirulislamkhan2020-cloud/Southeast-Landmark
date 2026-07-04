@@ -39,6 +39,8 @@ const AdminNavigation = lazy(() => import("@/admin/pages/NavigationPage").then((
 const AdminSmtp = lazy(() => import("@/admin/pages/SmtpPage").then((m) => ({ default: m.SmtpPage })));
 const AdminVisibility = lazy(() => import("@/admin/pages/VisibilityPage").then((m) => ({ default: m.VisibilityPage })));
 const AdminForgotPassword = lazy(() => import("@/admin/pages/ForgotPasswordPage").then((m) => ({ default: m.ForgotPasswordPage })));
+const AdminSignup = lazy(() => import("@/admin/pages/SignupPage").then((m) => ({ default: m.SignupPage })));
+const AdminResetPassword = lazy(() => import("@/admin/pages/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })));
 const PublicLeadPage = lazy(() => import("@/pages/LeadPage").then((m) => ({ default: m.LeadPage })));
 const DynamicPage = lazy(() => import("@/pages/DynamicPage").then((m) => ({ default: m.DynamicPage })));
 const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
@@ -51,6 +53,8 @@ export default function App() {
         {/* Admin routes (no public layout, no site chrome) */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
+        <Route path="/admin/signup" element={<AdminSignup />} />
+        <Route path="/admin/reset-password" element={<AdminResetPassword />} />
         <Route
           path="/admin"
           element={
