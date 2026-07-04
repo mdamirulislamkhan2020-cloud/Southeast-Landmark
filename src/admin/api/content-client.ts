@@ -1,9 +1,12 @@
 import type { BlogPost, BlogStatus, Faq, Testimonial } from "./content";
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
+
+const asJson = <T,>(v: T): Json => v as unknown as Json;
 
 const API_BASE = (import.meta.env.VITE_ADMIN_API_BASE as string | undefined) ?? "/api";
 const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !== "false";
 
-const LS_BLOG = "sel_admin_blog_v1";
 const LS_FAQ = "sel_admin_faq_v1";
 const LS_TESTIMONIALS = "sel_admin_testimonials_v1";
 
@@ -40,43 +43,7 @@ function estimateReadingTime(html: string) {
 
 // ---------- Seeds ----------
 
-const BLOG_IMG = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=70";
-const BLOG_IMG2 = "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=1200&q=70";
-const BLOG_IMG3 = "https://images.unsplash.com/photo-1449844908441-8829872d2607?w=1200&q=70";
 const AVATAR = "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=70";
-
-function seedBlog() {
-  if (readLS<BlogPost[] | null>(LS_BLOG, null) !== null) return;
-  const now = new Date().toISOString();
-  const samples: Partial<BlogPost>[] = [
-    { title: "Investing in Dhaka Real Estate 2026", categories: ["Investment"], tags: ["Dhaka", "ROI"], featuredImage: BLOG_IMG, status: "published" },
-    { title: "Choosing the Right Plot in Mohammadpur", categories: ["Guides"], tags: ["Plot", "Buying"], featuredImage: BLOG_IMG2, status: "published" },
-    { title: "Interior Trends for Modern Apartments", categories: ["Design"], tags: ["Interior"], featuredImage: BLOG_IMG3, status: "draft" },
-  ];
-  const built: BlogPost[] = samples.map((s) => {
-    const content = `<p>${s.title} — a Southeast Landmark editorial covering everything a buyer needs to know before making a decision.</p><p>Continue reading for the full breakdown.</p>`;
-    return {
-      id: uid(),
-      title: s.title!,
-      slug: s.title!.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-      excerpt: `${s.title} — quick insights and expert view.`,
-      content,
-      featuredImage: s.featuredImage ?? null,
-      author: "Editorial Team",
-      categories: s.categories ?? [],
-      tags: s.tags ?? [],
-      status: (s.status ?? "draft") as BlogStatus,
-      readingTime: estimateReadingTime(content),
-      publishAt: null,
-      publishedAt: s.status === "published" ? now : null,
-      seo: { title: s.title!, description: "", keywords: (s.tags ?? []).join(", ") },
-      og: { title: s.title!, description: "", image: s.featuredImage ?? null },
-      createdAt: now,
-      updatedAt: now,
-    };
-  });
-  writeLS(LS_BLOG, built);
-}
 
 function seedFaq() {
   if (readLS<Faq[] | null>(LS_FAQ, null) !== null) return;
@@ -142,96 +109,154 @@ export interface ListBlogResult {
   perPage: number;
 }
 
-export async function listBlogPosts(q: ListBlogQuery = {}): Promise<ListBlogResult> {
-  if (!USE_MOCK) {
-    const params = new URLSearchParams();
-    Object.entries(q).forEach(([k, v]) => v != null && v !== "all" && params.set(k, String(v)));
-    return apiFetch<ListBlogResult>(`/blog?${params.toString()}`);
-  }
-  seedBlog();
-  let items = readLS<BlogPost[]>(LS_BLOG, []);
-  if (q.search) {
-    const s = q.search.toLowerCase();
-    items = items.filter((p) =>
-      (p.title + p.excerpt + p.author + p.tags.join(" ") + p.categories.join(" ")).toLowerCase().includes(s),
-    );
-  }
-  if (q.status && q.status !== "all") items = items.filter((p) => p.status === q.status);
-  if (q.category && q.category !== "all") items = items.filter((p) => p.categories.includes(q.category!));
-  if (q.tag && q.tag !== "all") items = items.filter((p) => p.tags.includes(q.tag!));
-  items = [...items].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  const page = q.page ?? 1;
-  const perPage = q.perPage ?? 8;
-  const total = items.length;
-  const paged = items.slice((page - 1) * perPage, page * perPage);
-  return { items: paged, total, page, perPage };
-}
+type BlogRow = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  featured_image: string | null;
+  author: string;
+  categories: unknown;
+  tags: unknown;
+  status: string;
+  reading_time: number;
+  publish_at: string | null;
+  published_at: string | null;
+  seo: unknown;
+  og: unknown;
+  created_at: string;
+  updated_at: string;
+};
 
-export async function getBlogPost(id: string): Promise<BlogPost | null> {
-  if (!USE_MOCK) return apiFetch<BlogPost>(`/blog/${id}`);
-  seedBlog();
-  return readLS<BlogPost[]>(LS_BLOG, []).find((p) => p.id === id) ?? null;
-}
-
-function blankBlogPost(): BlogPost {
-  const now = new Date().toISOString();
+function rowToBlog(r: BlogRow): BlogPost {
+  const seo = (r.seo ?? {}) as Partial<BlogPost["seo"]>;
+  const og = (r.og ?? {}) as Partial<BlogPost["og"]>;
   return {
-    id: uid(),
-    title: "Untitled Post",
-    slug: `untitled-${Date.now().toString(36)}`,
-    excerpt: "",
-    content: "",
-    featuredImage: null,
-    author: "Editorial Team",
-    categories: [],
-    tags: [],
-    status: "draft",
-    readingTime: 1,
-    publishAt: null,
-    publishedAt: null,
-    seo: { title: "", description: "", keywords: "" },
-    og: { title: "", description: "", image: null },
-    createdAt: now,
-    updatedAt: now,
+    id: r.id,
+    title: r.title,
+    slug: r.slug,
+    excerpt: r.excerpt,
+    content: r.content,
+    featuredImage: r.featured_image,
+    author: r.author,
+    categories: (r.categories ?? []) as string[],
+    tags: (r.tags ?? []) as string[],
+    status: r.status as BlogStatus,
+    readingTime: r.reading_time,
+    publishAt: r.publish_at,
+    publishedAt: r.published_at,
+    seo: { title: seo.title ?? "", description: seo.description ?? "", keywords: seo.keywords ?? "" },
+    og: { title: og.title ?? "", description: og.description ?? "", image: og.image ?? null },
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
   };
 }
 
+function blogToRow(p: Partial<BlogPost>): Record<string, unknown> {
+  const row: Record<string, unknown> = {};
+  if (p.title !== undefined) row.title = p.title;
+  if (p.slug !== undefined) row.slug = p.slug;
+  if (p.excerpt !== undefined) row.excerpt = p.excerpt;
+  if (p.content !== undefined) row.content = p.content;
+  if (p.featuredImage !== undefined) row.featured_image = p.featuredImage;
+  if (p.author !== undefined) row.author = p.author;
+  if (p.categories !== undefined) row.categories = asJson(p.categories);
+  if (p.tags !== undefined) row.tags = asJson(p.tags);
+  if (p.status !== undefined) row.status = p.status;
+  if (p.readingTime !== undefined) row.reading_time = p.readingTime;
+  if (p.publishAt !== undefined) row.publish_at = p.publishAt;
+  if (p.publishedAt !== undefined) row.published_at = p.publishedAt;
+  if (p.seo !== undefined) row.seo = asJson(p.seo);
+  if (p.og !== undefined) row.og = asJson(p.og);
+  return row;
+}
+
+function slugify(s: string) {
+  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+async function uniqueBlogSlug(base: string, ignoreId?: string): Promise<string> {
+  const clean = slugify(base) || `post-${Date.now().toString(36)}`;
+  let candidate = clean;
+  let n = 1;
+  while (true) {
+    let q = supabase.from("blog_posts").select("id").eq("slug", candidate).limit(1);
+    if (ignoreId) q = q.neq("id", ignoreId);
+    const { data } = await q;
+    if (!data || data.length === 0) return candidate;
+    n += 1;
+    candidate = `${clean}-${n}`;
+  }
+}
+
+export async function listBlogPosts(q: ListBlogQuery = {}): Promise<ListBlogResult> {
+  const page = q.page ?? 1;
+  const perPage = q.perPage ?? 8;
+  const from = (page - 1) * perPage;
+  const to = from + perPage - 1;
+
+  let query = supabase.from("blog_posts").select("*", { count: "exact" }).order("updated_at", { ascending: false });
+  if (q.status && q.status !== "all") query = query.eq("status", q.status);
+  if (q.category && q.category !== "all") query = query.contains("categories", [q.category]);
+  if (q.tag && q.tag !== "all") query = query.contains("tags", [q.tag]);
+  if (q.search) {
+    const s = q.search.replace(/[%,]/g, " ").trim();
+    if (s) query = query.or(`title.ilike.%${s}%,excerpt.ilike.%${s}%,author.ilike.%${s}%`);
+  }
+  const { data, count, error } = await query.range(from, to);
+  if (error) throw error;
+  return {
+    items: (data ?? []).map((r) => rowToBlog(r as BlogRow)),
+    total: count ?? 0,
+    page,
+    perPage,
+  };
+}
+
+export async function getBlogPost(id: string): Promise<BlogPost | null> {
+  const { data, error } = await supabase.from("blog_posts").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data ? rowToBlog(data as BlogRow) : null;
+}
+
 export async function createBlogPost(input: Partial<BlogPost>): Promise<BlogPost> {
-  const merged: BlogPost = { ...blankBlogPost(), ...input };
-  merged.readingTime = estimateReadingTime(merged.content || "");
-  if (merged.status === "published" && !merged.publishedAt) merged.publishedAt = new Date().toISOString();
-  merged.updatedAt = new Date().toISOString();
-  if (!USE_MOCK) return apiFetch<BlogPost>("/blog", { method: "POST", body: JSON.stringify(merged) });
-  const all = readLS<BlogPost[]>(LS_BLOG, []);
-  all.unshift(merged);
-  writeLS(LS_BLOG, all);
-  return merged;
+  const readingTime = estimateReadingTime(input.content ?? "");
+  const slug = await uniqueBlogSlug(input.slug || input.title || "post");
+  const publishedAt = input.status === "published" ? (input.publishedAt ?? new Date().toISOString()) : (input.publishedAt ?? null);
+  const row = blogToRow({ ...input, slug, readingTime, publishedAt });
+  if (row.title === undefined) row.title = "Untitled Post";
+  const { data, error } = await supabase.from("blog_posts").insert(row as never).select("*").single();
+  if (error) throw error;
+  return rowToBlog(data as BlogRow);
 }
 
 export async function updateBlogPost(id: string, patch: Partial<BlogPost>): Promise<BlogPost> {
-  if (!USE_MOCK) return apiFetch<BlogPost>(`/blog/${id}`, { method: "PUT", body: JSON.stringify(patch) });
-  const all = readLS<BlogPost[]>(LS_BLOG, []);
-  const idx = all.findIndex((p) => p.id === id);
-  if (idx < 0) throw new Error("Not found");
-  const next: BlogPost = { ...all[idx], ...patch, updatedAt: new Date().toISOString() };
-  if (patch.content !== undefined) next.readingTime = estimateReadingTime(next.content);
-  if (next.status === "published" && !next.publishedAt) next.publishedAt = new Date().toISOString();
-  all[idx] = next;
-  writeLS(LS_BLOG, all);
-  return next;
+  const next: Partial<BlogPost> = { ...patch };
+  if (patch.content !== undefined) next.readingTime = estimateReadingTime(patch.content);
+  if (patch.status === "published" && patch.publishedAt === undefined) {
+    const existing = await getBlogPost(id);
+    if (existing && !existing.publishedAt) next.publishedAt = new Date().toISOString();
+  }
+  const row = blogToRow(next);
+  if (patch.slug !== undefined) row.slug = await uniqueBlogSlug(patch.slug, id);
+  const { data, error } = await supabase.from("blog_posts").update(row as never).eq("id", id).select("*").single();
+  if (error) throw error;
+  return rowToBlog(data as BlogRow);
 }
 
 export async function deleteBlogPost(id: string): Promise<void> {
-  if (!USE_MOCK) return apiFetch<void>(`/blog/${id}`, { method: "DELETE" });
-  writeLS(LS_BLOG, readLS<BlogPost[]>(LS_BLOG, []).filter((p) => p.id !== id));
+  const { error } = await supabase.from("blog_posts").delete().eq("id", id);
+  if (error) throw error;
 }
 
 export async function duplicateBlogPost(id: string): Promise<BlogPost> {
   const src = await getBlogPost(id);
   if (!src) throw new Error("Not found");
+  const { id: _oldId, createdAt: _c, updatedAt: _u, ...rest } = src;
+  void _oldId; void _c; void _u;
   return createBlogPost({
-    ...src,
-    id: undefined,
+    ...rest,
     title: `${src.title} (Copy)`,
     slug: `${src.slug}-copy-${Date.now().toString(36)}`,
     status: "draft",
@@ -240,15 +265,19 @@ export async function duplicateBlogPost(id: string): Promise<BlogPost> {
 }
 
 export async function listBlogCategories(): Promise<string[]> {
-  seedBlog();
-  const items = readLS<BlogPost[]>(LS_BLOG, []);
-  return Array.from(new Set(["Investment", "Guides", "Design", "News", ...items.flatMap((i) => i.categories)]));
+  const { data, error } = await supabase.from("blog_posts").select("categories");
+  if (error) throw error;
+  const cats = new Set<string>(["Investment", "Guides", "Design", "News"]);
+  for (const r of data ?? []) for (const c of ((r.categories ?? []) as string[])) cats.add(c);
+  return Array.from(cats);
 }
 
 export async function listBlogTags(): Promise<string[]> {
-  seedBlog();
-  const items = readLS<BlogPost[]>(LS_BLOG, []);
-  return Array.from(new Set(items.flatMap((i) => i.tags)));
+  const { data, error } = await supabase.from("blog_posts").select("tags");
+  if (error) throw error;
+  const tags = new Set<string>();
+  for (const r of data ?? []) for (const t of ((r.tags ?? []) as string[])) tags.add(t);
+  return Array.from(tags);
 }
 
 // ---------- FAQ ----------
