@@ -114,30 +114,7 @@ export function defaultBlocksForSlug(slug: string): PageBlock[] {
   }
 }
 
-/**
- * Backfill blocks for built-in pages whose block list is currently empty.
- * Runs once per browser (guarded by a versioned flag) and never touches pages
- * that already have any builder blocks, because block data can contain user
- * choices such as assigned Lead Forms.
- */
-function migrateDefaultPageBlocks() {
-  if (typeof window === "undefined") return;
-  try {
-    if (window.localStorage.getItem(LS_PAGES_MIGRATION) === "done") return;
-    const pages = readLS<CmsPage[]>(LS_PAGES, []);
-    let changed = false;
-    const next = pages.map((p) => {
-      const hasBlocks = Array.isArray(p.blocks) && p.blocks.length > 0;
-      if (hasBlocks) return p;
-      const seedBlocks = defaultBlocksForSlug(p.slug);
-      if (seedBlocks.length === 0) return p;
-      changed = true;
-      return { ...p, blocks: seedBlocks, updatedAt: new Date().toISOString() };
-    });
-    if (changed) writeLS(LS_PAGES, next);
-    window.localStorage.setItem(LS_PAGES_MIGRATION, "done");
-  } catch { /* ignore */ }
-}
+// Legacy migrateDefaultPageBlocks() was removed — pages now live in Supabase.
 
 function readLS<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
