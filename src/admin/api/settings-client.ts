@@ -7,14 +7,31 @@ import {
   type ThemeSettings,
   type UserRole,
 } from "./settings";
+import { supabase } from "@/integrations/supabase/client";
 
 const API_BASE = (import.meta.env.VITE_ADMIN_API_BASE as string | undefined) ?? "/api";
 const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !== "false";
 
 const LS_USERS = "sel_admin_users_v1";
-const LS_THEME = "sel_admin_theme_v1";
 const LS_MEDIA = "sel_admin_media_v1";
-const LS_GLOBAL = "sel_admin_global_v1";
+
+// ---------- Supabase-backed app_settings helper ----------
+async function readSetting<T>(key: string, fallback: T): Promise<T> {
+  const { data, error } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", key)
+    .maybeSingle();
+  if (error || !data) return fallback;
+  return { ...(fallback as object), ...((data.value as object) ?? {}) } as T;
+}
+async function writeSetting<T extends object>(key: string, value: T): Promise<T> {
+  const { error } = await supabase
+    .from("app_settings")
+    .upsert({ key, value: value as never }, { onConflict: "key" });
+  if (error) throw new Error(error.message);
+  return value;
+}
 
 function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -129,14 +146,14 @@ export const DEFAULT_THEME: ThemeSettings = {
 };
 
 export async function getTheme(): Promise<ThemeSettings> {
-  if (!USE_MOCK) return apiFetch<ThemeSettings>("/theme");
-  return { ...DEFAULT_THEME, ...readLS<Partial<ThemeSettings>>(LS_THEME, {}) };
+  return readSetting<ThemeSettings>("theme", DEFAULT_THEME);
 }
 export async function updateTheme(patch: Partial<ThemeSettings>): Promise<ThemeSettings> {
   const next = { ...(await getTheme()), ...patch };
-  if (!USE_MOCK) return apiFetch<ThemeSettings>("/theme", { method: "PUT", body: JSON.stringify(next) });
-  writeLS(LS_THEME, next);
-  window.dispatchEvent(new CustomEvent("sel:theme-updated", { detail: next }));
+  await writeSetting("theme", next);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("sel:theme-updated", { detail: next }));
+  }
   return next;
 }
 
@@ -202,13 +219,11 @@ export const DEFAULT_GLOBAL: GlobalSettings = {
 };
 
 export async function getGlobalSettings(): Promise<GlobalSettings> {
-  if (!USE_MOCK) return apiFetch<GlobalSettings>("/settings/global");
-  return { ...DEFAULT_GLOBAL, ...readLS<Partial<GlobalSettings>>(LS_GLOBAL, {}) };
+  return readSetting<GlobalSettings>("global", DEFAULT_GLOBAL);
 }
 export async function updateGlobalSettings(patch: Partial<GlobalSettings>): Promise<GlobalSettings> {
   const next = { ...(await getGlobalSettings()), ...patch };
-  if (!USE_MOCK) return apiFetch<GlobalSettings>("/settings/global", { method: "PUT", body: JSON.stringify(next) });
-  writeLS(LS_GLOBAL, next);
+  await writeSetting("global", next);
   return next;
 }
 

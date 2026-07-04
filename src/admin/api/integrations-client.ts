@@ -1,13 +1,14 @@
 import type { IntegrationConfig, IntegrationKey, IntegrationLog, DataLayerEntry, TrackingEvent } from "./integrations";
 import { INTEGRATION_DEFINITIONS } from "./integrations";
+import { supabase } from "@/integrations/supabase/client";
 
 const API_BASE = (import.meta.env.VITE_ADMIN_API_BASE as string | undefined) ?? "/api";
 const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !== "false";
-const LS = "sel_admin_integrations_v1";
 const LS_LOGS = "sel_admin_integrations_logs_v1";
 const LS_DL = "sel_admin_integrations_datalayer_v1";
 const MAX_LOGS = 200;
 const MAX_DL = 100;
+const SETTINGS_KEY = "integrations";
 
 function readLS<T>(k: string, f: T): T { if (typeof window === "undefined") return f; try { const r = window.localStorage.getItem(k); return r ? (JSON.parse(r) as T) : f; } catch { return f; } }
 function writeLS<T>(k: string, v: T) { if (typeof window !== "undefined") window.localStorage.setItem(k, JSON.stringify(v)); }
@@ -41,52 +42,73 @@ function pushDataLayer(event: string, params: Record<string, unknown>) {
   writeLS(LS_DL, list.slice(0, MAX_DL));
 }
 
-function seed(): Record<IntegrationKey, IntegrationConfig> {
-  const existing = readLS<Record<IntegrationKey, IntegrationConfig> | null>(LS, null);
-  if (existing) return existing;
+function defaults(): Record<IntegrationKey, IntegrationConfig> {
   const map = {} as Record<IntegrationKey, IntegrationConfig>;
   INTEGRATION_DEFINITIONS.forEach((d) => {
     const values: Record<string, string> = {};
     d.fields.forEach((f) => { if (f.defaultValue !== undefined) values[f.id] = f.defaultValue; });
     map[d.key] = { key: d.key, enabled: false, values, lastTestedAt: null, lastTestOk: null, lastSyncAt: null, lastError: null };
   });
-  writeLS(LS, map);
   return map;
+}
+
+async function dbLoad(): Promise<Record<IntegrationKey, IntegrationConfig>> {
+  const { data } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", SETTINGS_KEY)
+    .maybeSingle();
+  const base = defaults();
+  if (!data) return base;
+  const stored = (data.value as Partial<Record<IntegrationKey, IntegrationConfig>>) ?? {};
+  (Object.keys(stored) as IntegrationKey[]).forEach((k) => {
+    if (base[k]) base[k] = { ...base[k], ...stored[k]!, values: { ...base[k].values, ...(stored[k]!.values ?? {}) } };
+  });
+  cachedIntegrations = base;
+  return base;
+}
+async function dbSave(map: Record<IntegrationKey, IntegrationConfig>) {
+  const { error } = await supabase
+    .from("app_settings")
+    .upsert({ key: SETTINGS_KEY, value: map as never }, { onConflict: "key" });
+  if (error) throw new Error(error.message);
+  cachedIntegrations = map;
 }
 
 export async function listIntegrations(): Promise<Record<IntegrationKey, IntegrationConfig>> {
   if (!USE_MOCK) return apiFetch<Record<IntegrationKey, IntegrationConfig>>("/integrations");
-  return seed();
+  return dbLoad();
 }
 
 export async function saveIntegration(key: IntegrationKey, patch: Partial<IntegrationConfig>): Promise<IntegrationConfig> {
   if (!USE_MOCK) return apiFetch<IntegrationConfig>(`/integrations/${key}`, { method: "PUT", body: JSON.stringify(patch) });
-  const all = seed();
+  const all = await dbLoad();
   all[key] = { ...all[key], ...patch, values: { ...all[key].values, ...(patch.values ?? {}) }, lastSyncAt: new Date().toISOString() };
-  writeLS(LS, all);
+  await dbSave(all);
   pushLog({ key, level: "info", action: "save", message: `${key} configuration saved` });
   return all[key];
 }
 
 export async function deleteIntegration(key: IntegrationKey): Promise<void> {
-  const all = seed();
+  const all = await dbLoad();
   const values: Record<string, string> = {};
   const def = INTEGRATION_DEFINITIONS.find((d) => d.key === key);
   def?.fields.forEach((f) => { if (f.defaultValue !== undefined) values[f.id] = f.defaultValue; });
   all[key] = { key, enabled: false, values, lastTestedAt: null, lastTestOk: null, lastSyncAt: null, lastError: null };
-  writeLS(LS, all);
+  await dbSave(all);
   pushLog({ key, level: "warn", action: "delete", message: `${key} configuration reset` });
 }
 
 export async function resetAllIntegrations(): Promise<void> {
-  if (typeof window !== "undefined") window.localStorage.removeItem(LS);
+  await supabase.from("app_settings").delete().eq("key", SETTINGS_KEY);
+  cachedIntegrations = null;
   clearLogs();
   clearDataLayer();
   pushLog({ key: "global", level: "warn", action: "reset", message: "All integrations reset" });
 }
 
 export async function testIntegration(key: IntegrationKey): Promise<{ ok: boolean; message: string }> {
-  const all = seed();
+  const all = await dbLoad();
   const cfg = all[key];
   const def = INTEGRATION_DEFINITIONS.find((d) => d.key === key);
   if (!def) return { ok: false, message: "Unknown integration" };
@@ -97,13 +119,13 @@ export async function testIntegration(key: IntegrationKey): Promise<{ ok: boolea
   const now = new Date().toISOString();
   const message = ok ? "Connection looks good (mock)." : `Missing: ${missing.map((m) => m.label).join(", ")}`;
   all[key] = { ...cfg, lastTestedAt: now, lastTestOk: ok, lastError: ok ? null : message };
-  writeLS(LS, all);
+  await dbSave(all);
   pushLog({ key, level: ok ? "success" : "error", action: "test", message });
   return { ok, message };
 }
 
 export async function sendTestEmail(to: string): Promise<{ ok: boolean; message: string }> {
-  const cfg = seed().smtp;
+  const cfg = (await dbLoad()).smtp;
   const ok = !!(cfg.enabled && cfg.values.host && cfg.values.fromEmail && to);
   const message = ok ? `Mock test email queued to ${to}` : "SMTP not configured or recipient missing";
   pushLog({ key: "smtp", level: ok ? "success" : "error", action: "test_email", message });
@@ -111,7 +133,7 @@ export async function sendTestEmail(to: string): Promise<{ ok: boolean; message:
 }
 
 export async function sendTestWebhook(): Promise<{ ok: boolean; message: string }> {
-  const cfg = seed().webhook;
+  const cfg = (await dbLoad()).webhook;
   if (!cfg.enabled || !cfg.values.url) {
     pushLog({ key: "webhook", level: "error", action: "test", message: "Webhook not configured" });
     return { ok: false, message: "Webhook not configured" };
@@ -131,7 +153,7 @@ export async function sendTestWebhook(): Promise<{ ok: boolean; message: string 
 
 let cachedIntegrations: Record<IntegrationKey, IntegrationConfig> | null = null;
 export function primeIntegrationCache(map: Record<IntegrationKey, IntegrationConfig>) { cachedIntegrations = map; }
-export function getIntegrationCache() { return cachedIntegrations ?? seed(); }
+export function getIntegrationCache() { return cachedIntegrations ?? defaults(); }
 
 export function trackEvent(event: TrackingEvent, params: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;

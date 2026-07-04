@@ -28,15 +28,16 @@ import {
   type SmtpLogAction,
   type TestEmailResult,
 } from "./smtp";
+import { supabase } from "@/integrations/supabase/client";
 
 const API_BASE = (import.meta.env.VITE_ADMIN_API_BASE as string | undefined) ?? "/api";
 const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !== "false";
 const DEFAULT_TIMEOUT_MS = 15_000;
 const MAX_RETRIES = 2;
 
-const LS_CONFIG = "sel_smtp_config_v1";
 const LS_LOGS = "sel_smtp_logs_v1";
 const MAX_LOGS = 200;
+const SETTINGS_KEY = "smtp";
 
 // ---------- shared helpers ----------
 
@@ -133,27 +134,37 @@ async function httpFetch<T>(
   throw lastError instanceof Error ? lastError : new Error("Network request failed");
 }
 
-// ---------- mock backend (localStorage) ----------
+// ---------- Supabase-backed SMTP config ----------
 
-function mockGetConfig(): SmtpConfig {
-  const stored = readLS<SmtpConfig | null>(LS_CONFIG, null);
-  if (!stored) return { ...EMPTY_SMTP };
-  return { ...EMPTY_SMTP, ...stored };
+async function dbGetConfig(): Promise<SmtpConfig> {
+  const { data, error } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", SETTINGS_KEY)
+    .maybeSingle();
+  if (error || !data) return { ...EMPTY_SMTP };
+  return { ...EMPTY_SMTP, ...((data.value as Partial<SmtpConfig>) ?? {}) };
 }
-function mockWriteConfig(next: SmtpConfig, user: string | null) {
-  const prev = mockGetConfig();
-  // Never overwrite an existing password with a blank one — matches how a real
-  // PHP endpoint should behave for PUT /config.
+async function dbWriteConfig(next: SmtpConfig, user: string | null): Promise<SmtpConfig> {
+  const prev = await dbGetConfig();
   const merged: SmtpConfig = {
     ...prev,
     ...next,
+    // Blank password preserves the stored value.
     password: next.password ? next.password : prev.password,
     hasPassword: Boolean(next.password || prev.password),
     updatedAt: new Date().toISOString(),
     updatedBy: user,
   };
-  writeLS(LS_CONFIG, merged);
+  const { error } = await supabase
+    .from("app_settings")
+    .upsert({ key: SETTINGS_KEY, value: merged as never }, { onConflict: "key" });
+  if (error) throw new Error(error.message);
   return merged;
+}
+async function dbDeleteConfig(): Promise<void> {
+  const { error } = await supabase.from("app_settings").delete().eq("key", SETTINGS_KEY);
+  if (error) throw new Error(error.message);
 }
 
 // ---------- public API ----------
@@ -161,7 +172,7 @@ function mockWriteConfig(next: SmtpConfig, user: string | null) {
 /** GET /api/admin/smtp/config — returns config WITHOUT the password. */
 export async function getSmtpConfig(): Promise<Omit<SmtpConfig, "password"> & { hasPassword: boolean }> {
   if (!USE_MOCK) return httpFetch<Omit<SmtpConfig, "password"> & { hasPassword: boolean }>("/admin/smtp/config");
-  return redact(mockGetConfig());
+  return redact(await dbGetConfig());
 }
 
 /** POST /api/admin/smtp/config — create a fresh SMTP config. */
@@ -176,7 +187,7 @@ export async function createSmtpConfig(cfg: SmtpConfig): Promise<ApiResult<Omit<
       pushLog({ action, success: true, message: `SMTP configured (${cfg.host}:${cfg.port})` });
       return { ok: true, data };
     }
-    const saved = mockWriteConfig(cfg, currentUser());
+    const saved = await dbWriteConfig(cfg, currentUser());
     pushLog({ action, success: true, message: `SMTP configured (${saved.host}:${saved.port})` });
     return { ok: true, data: redact(saved) };
   } catch (err) {
@@ -198,7 +209,7 @@ export async function updateSmtpConfig(cfg: SmtpConfig): Promise<ApiResult<Omit<
       pushLog({ action, success: true, message: `SMTP updated (${cfg.host}:${cfg.port})` });
       return { ok: true, data };
     }
-    const saved = mockWriteConfig(cfg, currentUser());
+    const saved = await dbWriteConfig(cfg, currentUser());
     pushLog({ action, success: true, message: `SMTP updated (${saved.host}:${saved.port})` });
     return { ok: true, data: redact(saved) };
   } catch (err) {
@@ -214,8 +225,8 @@ export async function deleteSmtpConfig(): Promise<ApiResult<null>> {
   try {
     if (!USE_MOCK) {
       await httpFetch<null>("/admin/smtp/config", { method: "DELETE" });
-    } else if (typeof window !== "undefined") {
-      window.localStorage.removeItem(LS_CONFIG);
+    } else {
+      await dbDeleteConfig();
     }
     pushLog({ action, success: true, message: "SMTP configuration reset" });
     return { ok: true, data: null };
@@ -241,7 +252,7 @@ export async function sendTestEmail(to: string): Promise<TestEmailResult> {
       return { ok: res.ok, message, simulated: false };
     }
     // Mock mode — be explicit that nothing was actually sent.
-    const cfg = mockGetConfig();
+    const cfg = await dbGetConfig();
     const missing = !cfg.host || !cfg.fromEmail || !cfg.hasPassword;
     if (missing) {
       const msg = "SMTP is not fully configured — save host, sender email and password first.";
@@ -276,7 +287,7 @@ export async function sendEmail(input: SendEmailInput): Promise<ApiResult<{ mess
       return { ok: true, data: { messageId: data.messageId, simulated: false } };
     }
     // Mock — do not fake a real send. Report simulated so callers can show the right UX.
-    const cfg = mockGetConfig();
+    const cfg = await dbGetConfig();
     if (!cfg.host || !cfg.fromEmail || !cfg.hasPassword) {
       const msg = "SMTP not configured — email was not sent.";
       pushLog({ action, success: false, message: msg, error: msg });
