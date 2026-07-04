@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      crm_assignees: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       forms: {
         Row: {
           created_at: string
@@ -58,6 +85,96 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      leads: {
+        Row: {
+          analytics: Json
+          answers: Json
+          assigned_to: string | null
+          attachments: Json
+          code: string
+          communications: Json
+          created_at: string
+          email: string
+          form_id: string | null
+          form_name: string | null
+          id: string
+          lead_page_id: string | null
+          lead_page_slug: string | null
+          name: string
+          notes: Json
+          phone: string
+          score: number
+          source: string
+          status: string
+          tasks: Json
+          timeline: Json
+          updated_at: string
+        }
+        Insert: {
+          analytics?: Json
+          answers?: Json
+          assigned_to?: string | null
+          attachments?: Json
+          code: string
+          communications?: Json
+          created_at?: string
+          email?: string
+          form_id?: string | null
+          form_name?: string | null
+          id?: string
+          lead_page_id?: string | null
+          lead_page_slug?: string | null
+          name?: string
+          notes?: Json
+          phone?: string
+          score?: number
+          source?: string
+          status?: string
+          tasks?: Json
+          timeline?: Json
+          updated_at?: string
+        }
+        Update: {
+          analytics?: Json
+          answers?: Json
+          assigned_to?: string | null
+          attachments?: Json
+          code?: string
+          communications?: Json
+          created_at?: string
+          email?: string
+          form_id?: string | null
+          form_name?: string | null
+          id?: string
+          lead_page_id?: string | null
+          lead_page_slug?: string | null
+          name?: string
+          notes?: Json
+          phone?: string
+          score?: number
+          source?: string
+          status?: string
+          tasks?: Json
+          timeline?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "crm_assignees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       menus: {
         Row: {
