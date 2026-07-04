@@ -419,7 +419,6 @@ export async function listLeads(): Promise<Lead[]> {
     phone: l.phone,
     message: (l.answers.message as string) ?? "",
     source: l.source,
-    status: (l.status as unknown as Lead["status"]) ?? "new",
     createdAt: l.createdAt,
   }));
 }
