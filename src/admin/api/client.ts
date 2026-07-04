@@ -16,7 +16,6 @@ const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !==
 
 const LS_PAGES = "sel_admin_pages_v1";
 const LS_LEADS = "sel_admin_leads_v1";
-const LS_AUTH = "sel_admin_auth_v1";
 const LS_PAGES_MIGRATION = "sel_admin_pages_migration_v3";
 
 function uid() {
@@ -260,35 +259,10 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 // ---------- Auth ----------
-
-export interface AuthUser {
-  email: string;
-  name: string;
-  role: "admin";
-}
-
-export function getSession(): AuthUser | null {
-  return readLS<AuthUser | null>(LS_AUTH, null);
-}
-
-export async function login(email: string, password: string): Promise<AuthUser> {
-  if (!USE_MOCK) {
-    const user = await apiFetch<AuthUser>("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
-    writeLS(LS_AUTH, user);
-    return user;
-  }
-  if (!email || password.length < 4) throw new Error("Invalid credentials");
-  const user: AuthUser = { email, name: email.split("@")[0] || "Admin", role: "admin" };
-  writeLS(LS_AUTH, user);
-  return user;
-}
-
-export function logout() {
-  if (typeof window !== "undefined") window.localStorage.removeItem(LS_AUTH);
-}
+// Auth has moved to `./auth.ts` (Supabase-backed). This re-export keeps
+// legacy imports working during the phased migration.
+export { signIn as login, signOut as logout } from "./auth";
+export type { AppRole } from "./auth";
 
 // ---------- Pages ----------
 
