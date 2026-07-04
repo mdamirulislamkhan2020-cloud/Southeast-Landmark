@@ -1,5 +1,7 @@
 import type { CmsPage, DashboardStats, Lead, PageStatus } from "./types";
 import type { PageBlock, BlockType } from "./lead-pages";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database, Json } from "@/integrations/supabase/types";
 
 /**
  * Admin API client.
@@ -14,9 +16,8 @@ import type { PageBlock, BlockType } from "./lead-pages";
 const API_BASE = (import.meta.env.VITE_ADMIN_API_BASE as string | undefined) ?? "/api";
 const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !== "false";
 
-const LS_PAGES = "sel_admin_pages_v1";
+// Leads are still on localStorage until Phase 6 (CRM).
 const LS_LEADS = "sel_admin_leads_v1";
-const LS_PAGES_MIGRATION = "sel_admin_pages_migration_v3";
 
 function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
