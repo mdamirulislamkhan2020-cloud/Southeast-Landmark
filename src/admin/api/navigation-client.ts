@@ -1,3 +1,4 @@
+import { supabase } from "@/integrations/supabase/client";
 import type {
   FooterSettings,
   HeaderSettings,
@@ -7,45 +8,15 @@ import type {
   MobileMenuSettings,
 } from "./navigation";
 
-const API_BASE = (import.meta.env.VITE_ADMIN_API_BASE as string | undefined) ?? "/api";
-const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !== "false";
-
-const LS_MENUS = "sel_admin_menus_v1";
-const LS_HEADER = "sel_admin_header_settings_v1";
-const LS_FOOTER = "sel_admin_footer_settings_v1";
-const LS_MOBILE = "sel_admin_mobile_menu_v1";
-
 const NAV_EVENT = "sel:navigation-updated";
+
+function emitUpdate() {
+  if (typeof window === "undefined") return;
+  try { window.dispatchEvent(new CustomEvent(NAV_EVENT)); } catch { /* ignore */ }
+}
 
 function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
-}
-function readLS<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-function writeLS<T>(key: string, value: T) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(key, JSON.stringify(value));
-  try {
-    window.dispatchEvent(new CustomEvent(NAV_EVENT));
-  } catch {
-    /* ignore */
-  }
-}
-
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
-  });
-  if (!res.ok) throw new Error(`API ${res.status}`);
-  return (await res.json()) as T;
 }
 
 export const NAV_UPDATE_EVENT = NAV_EVENT;
@@ -93,68 +64,109 @@ function defaultFooterItems(): MenuItem[] {
   return base.map((b, i) => defaultItem({ ...b, sortOrder: i }));
 }
 
-function seedMenus(): Menu[] {
-  const existing = readLS<Menu[] | null>(LS_MENUS, null);
-  if (existing && existing.length) return existing;
-  const ts = nowISO();
-  const built: Menu[] = [
-    { id: uid(), name: "Main Header Menu", slug: "header", location: "header", enabled: true, items: defaultHeaderItems(), createdAt: ts, updatedAt: ts },
-    { id: uid(), name: "Footer Menu", slug: "footer", location: "footer", enabled: true, items: defaultFooterItems(), createdAt: ts, updatedAt: ts },
-    { id: uid(), name: "Mobile Menu", slug: "mobile", location: "mobile", enabled: true, items: defaultHeaderItems(), createdAt: ts, updatedAt: ts },
-    { id: uid(), name: "Top Bar Menu", slug: "topbar", location: "topbar", enabled: false, items: [], createdAt: ts, updatedAt: ts },
+type MenuRow = {
+  id: string;
+  name: string;
+  slug: string;
+  location: string;
+  description: string | null;
+  enabled: boolean;
+  items: unknown;
+  created_at: string;
+  updated_at: string;
+};
+
+function rowToMenu(r: MenuRow): Menu {
+  return {
+    id: r.id,
+    name: r.name,
+    slug: r.slug,
+    location: (r.location as MenuLocation) ?? "custom",
+    description: r.description ?? "",
+    enabled: r.enabled,
+    items: Array.isArray(r.items) ? (r.items as MenuItem[]) : [],
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+let _seededOnce = false;
+async function seedIfEmpty(): Promise<void> {
+  if (_seededOnce) return;
+  _seededOnce = true;
+  const { data, error } = await supabase.from("menus").select("id").limit(1);
+  if (error || (data && data.length > 0)) return;
+  const seeds = [
+    { name: "Main Header Menu", slug: "header", location: "header", enabled: true, items: defaultHeaderItems() },
+    { name: "Footer Menu", slug: "footer", location: "footer", enabled: true, items: defaultFooterItems() },
+    { name: "Mobile Menu", slug: "mobile", location: "mobile", enabled: true, items: defaultHeaderItems() },
+    { name: "Top Bar Menu", slug: "topbar", location: "topbar", enabled: false, items: [] as MenuItem[] },
   ];
-  writeLS(LS_MENUS, built);
-  return built;
+  // Best-effort; if RLS blocks (not an admin), silently continue.
+  await supabase.from("menus").insert(seeds.map((s) => ({ ...s, description: "", items: s.items as unknown })) as never);
 }
 
 export async function listMenus(): Promise<Menu[]> {
-  if (!USE_MOCK) return apiFetch<Menu[]>("/menus");
-  return seedMenus();
+  const { data, error } = await supabase.from("menus").select("*").order("created_at", { ascending: true });
+  if (error) throw error;
+  if (!data || data.length === 0) {
+    await seedIfEmpty();
+    const { data: d2, error: e2 } = await supabase.from("menus").select("*").order("created_at", { ascending: true });
+    if (e2) throw e2;
+    return (d2 ?? []).map((r) => rowToMenu(r as MenuRow));
+  }
+  return data.map((r) => rowToMenu(r as MenuRow));
 }
 
 export async function getMenu(id: string): Promise<Menu | null> {
-  const all = await listMenus();
-  return all.find((m) => m.id === id) ?? null;
+  const { data, error } = await supabase.from("menus").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data ? rowToMenu(data as MenuRow) : null;
 }
 
 export async function getMenuBySlug(slug: string): Promise<Menu | null> {
-  const all = await listMenus();
-  return all.find((m) => m.slug === slug) ?? null;
+  const { data, error } = await supabase.from("menus").select("*").eq("slug", slug).maybeSingle();
+  if (error) throw error;
+  if (data) return rowToMenu(data as MenuRow);
+  // Auto-seed default menus once so the public site has navigation
+  await seedIfEmpty();
+  const { data: d2 } = await supabase.from("menus").select("*").eq("slug", slug).maybeSingle();
+  return d2 ? rowToMenu(d2 as MenuRow) : null;
 }
 
 export async function createMenu(input: Partial<Menu>): Promise<Menu> {
-  const ts = nowISO();
-  const menu: Menu = {
-    id: uid(),
+  const payload = {
     name: input.name ?? "New Menu",
     slug: (input.slug ?? `menu-${Date.now().toString(36)}`).replace(/[^a-z0-9-]/gi, "-").toLowerCase(),
     location: input.location ?? "custom",
     description: input.description ?? "",
     enabled: input.enabled ?? true,
-    items: input.items ?? [],
-    createdAt: ts,
-    updatedAt: ts,
+    items: (input.items ?? []) as unknown as MenuItem[],
   };
-  if (!USE_MOCK) return apiFetch<Menu>("/menus", { method: "POST", body: JSON.stringify(menu) });
-  const all = seedMenus();
-  all.push(menu);
-  writeLS(LS_MENUS, all);
-  return menu;
+  const { data, error } = await supabase.from("menus").insert(payload as never).select("*").single();
+  if (error) throw error;
+  emitUpdate();
+  return rowToMenu(data as MenuRow);
 }
 
 export async function updateMenu(id: string, patch: Partial<Menu>): Promise<Menu> {
-  if (!USE_MOCK) return apiFetch<Menu>(`/menus/${id}`, { method: "PUT", body: JSON.stringify(patch) });
-  const all = seedMenus();
-  const idx = all.findIndex((m) => m.id === id);
-  if (idx < 0) throw new Error("Menu not found");
-  all[idx] = { ...all[idx], ...patch, updatedAt: nowISO() };
-  writeLS(LS_MENUS, all);
-  return all[idx];
+  const dbPatch: Record<string, unknown> = {};
+  if (patch.name !== undefined) dbPatch.name = patch.name;
+  if (patch.slug !== undefined) dbPatch.slug = patch.slug;
+  if (patch.location !== undefined) dbPatch.location = patch.location;
+  if (patch.description !== undefined) dbPatch.description = patch.description;
+  if (patch.enabled !== undefined) dbPatch.enabled = patch.enabled;
+  if (patch.items !== undefined) dbPatch.items = patch.items;
+  const { data, error } = await supabase.from("menus").update(dbPatch as never).eq("id", id).select("*").single();
+  if (error) throw error;
+  emitUpdate();
+  return rowToMenu(data as MenuRow);
 }
 
 export async function deleteMenu(id: string): Promise<void> {
-  if (!USE_MOCK) return apiFetch<void>(`/menus/${id}`, { method: "DELETE" });
-  writeLS(LS_MENUS, seedMenus().filter((m) => m.id !== id));
+  const { error } = await supabase.from("menus").delete().eq("id", id);
+  if (error) throw error;
+  emitUpdate();
 }
 
 export async function duplicateMenu(id: string): Promise<Menu> {
@@ -171,6 +183,24 @@ export async function duplicateMenu(id: string): Promise<Menu> {
 
 export function newMenuItem(overrides: Partial<MenuItem> = {}): MenuItem {
   return defaultItem(overrides);
+}
+
+// ---------- Settings helpers (key/value backed by nav_settings) ----------
+
+async function getSetting<T>(key: string, fallback: T): Promise<T> {
+  const { data, error } = await supabase.from("nav_settings").select("value").eq("key", key).maybeSingle();
+  if (error) return fallback;
+  if (!data) return fallback;
+  return { ...fallback, ...(data.value as object) } as T;
+}
+
+async function saveSetting<T extends object>(key: string, value: T): Promise<T> {
+  const { error } = await supabase
+    .from("nav_settings")
+    .upsert({ key, value: value as unknown } as never, { onConflict: "key" });
+  if (error) throw error;
+  emitUpdate();
+  return value;
 }
 
 // ---------- Header settings ----------
@@ -193,14 +223,11 @@ const DEFAULT_HEADER: HeaderSettings = {
 };
 
 export async function getHeaderSettings(): Promise<HeaderSettings> {
-  if (!USE_MOCK) return apiFetch<HeaderSettings>("/nav/header");
-  return { ...DEFAULT_HEADER, ...readLS<Partial<HeaderSettings>>(LS_HEADER, {}) };
+  return getSetting<HeaderSettings>("header", DEFAULT_HEADER);
 }
 export async function saveHeaderSettings(patch: Partial<HeaderSettings>): Promise<HeaderSettings> {
   const next = { ...(await getHeaderSettings()), ...patch };
-  if (!USE_MOCK) return apiFetch<HeaderSettings>("/nav/header", { method: "PUT", body: JSON.stringify(next) });
-  writeLS(LS_HEADER, next);
-  return next;
+  return saveSetting("header", next);
 }
 
 // ---------- Footer settings ----------
@@ -215,14 +242,11 @@ const DEFAULT_FOOTER: FooterSettings = {
 };
 
 export async function getFooterSettings(): Promise<FooterSettings> {
-  if (!USE_MOCK) return apiFetch<FooterSettings>("/nav/footer");
-  return { ...DEFAULT_FOOTER, ...readLS<Partial<FooterSettings>>(LS_FOOTER, {}) };
+  return getSetting<FooterSettings>("footer", DEFAULT_FOOTER);
 }
 export async function saveFooterSettings(patch: Partial<FooterSettings>): Promise<FooterSettings> {
   const next = { ...(await getFooterSettings()), ...patch };
-  if (!USE_MOCK) return apiFetch<FooterSettings>("/nav/footer", { method: "PUT", body: JSON.stringify(next) });
-  writeLS(LS_FOOTER, next);
-  return next;
+  return saveSetting("footer", next);
 }
 
 // ---------- Mobile menu settings ----------
@@ -235,14 +259,11 @@ const DEFAULT_MOBILE: MobileMenuSettings = {
 };
 
 export async function getMobileMenuSettings(): Promise<MobileMenuSettings> {
-  if (!USE_MOCK) return apiFetch<MobileMenuSettings>("/nav/mobile");
-  return { ...DEFAULT_MOBILE, ...readLS<Partial<MobileMenuSettings>>(LS_MOBILE, {}) };
+  return getSetting<MobileMenuSettings>("mobile", DEFAULT_MOBILE);
 }
 export async function saveMobileMenuSettings(patch: Partial<MobileMenuSettings>): Promise<MobileMenuSettings> {
   const next = { ...(await getMobileMenuSettings()), ...patch };
-  if (!USE_MOCK) return apiFetch<MobileMenuSettings>("/nav/mobile", { method: "PUT", body: JSON.stringify(next) });
-  writeLS(LS_MOBILE, next);
-  return next;
+  return saveSetting("mobile", next);
 }
 
 // ---------- Helpers ----------
