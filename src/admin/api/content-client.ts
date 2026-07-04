@@ -4,91 +4,10 @@ import type { Json } from "@/integrations/supabase/types";
 
 const asJson = <T,>(v: T): Json => v as unknown as Json;
 
-const API_BASE = (import.meta.env.VITE_ADMIN_API_BASE as string | undefined) ?? "/api";
-const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !== "false";
-
-const LS_FAQ = "sel_admin_faq_v1";
-const LS_TESTIMONIALS = "sel_admin_testimonials_v1";
-
-function uid() {
-  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
-}
-function readLS<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-function writeLS<T>(key: string, value: T) {
-  if (typeof window !== "undefined") window.localStorage.setItem(key, JSON.stringify(value));
-}
-
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
-  });
-  if (!res.ok) throw new Error(`API ${res.status}`);
-  return (await res.json()) as T;
-}
-
 function estimateReadingTime(html: string) {
   const text = html.replace(/<[^>]+>/g, " ");
   const words = text.trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
-}
-
-// ---------- Seeds ----------
-
-const AVATAR = "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=70";
-
-function seedFaq() {
-  if (readLS<Faq[] | null>(LS_FAQ, null) !== null) return;
-  const now = new Date().toISOString();
-  const samples: Partial<Faq>[] = [
-    { question: "What areas does Southeast Landmark cover?", answer: "We currently focus on Mohammadpur, Adabor, and surrounding zones in Dhaka.", category: "General" },
-    { question: "Do you offer installment plans?", answer: "Yes, most properties support flexible installment plans up to 36 months.", category: "Payment" },
-    { question: "Can I schedule a site visit?", answer: "Absolutely — book from any property page or contact our sales team.", category: "Visits" },
-    { question: "Are the properties ready to move in?", answer: "Availability varies. Each listing shows its current status (available, upcoming, sold).", category: "General" },
-  ];
-  const built: Faq[] = samples.map((f, i) => ({
-    id: uid(),
-    question: f.question!,
-    answer: f.answer!,
-    category: f.category ?? "General",
-    active: true,
-    sortOrder: i,
-    createdAt: now,
-    updatedAt: now,
-  }));
-  writeLS(LS_FAQ, built);
-}
-
-function seedTestimonials() {
-  if (readLS<Testimonial[] | null>(LS_TESTIMONIALS, null) !== null) return;
-  const now = new Date().toISOString();
-  const samples: Partial<Testimonial>[] = [
-    { name: "Ayesha Khan", position: "Owner", company: "Landmark Heights", rating: 5, review: "The experience from booking to handover was seamless. Highly recommend Southeast Landmark." },
-    { name: "Rafiq Islam", position: "Investor", company: "Private", rating: 5, review: "Transparent pricing and strong ROI. My family trusts them for every deal now." },
-    { name: "Tania Rahman", position: "Resident", company: "Green Villa", rating: 4, review: "Beautiful build quality and responsive after-sales support." },
-  ];
-  const built: Testimonial[] = samples.map((t, i) => ({
-    id: uid(),
-    name: t.name!,
-    position: t.position ?? "",
-    company: t.company ?? "",
-    image: AVATAR,
-    rating: t.rating ?? 5,
-    review: t.review!,
-    active: true,
-    sortOrder: i,
-    createdAt: now,
-    updatedAt: now,
-  }));
-  writeLS(LS_TESTIMONIALS, built);
 }
 
 // ---------- Blog ----------
