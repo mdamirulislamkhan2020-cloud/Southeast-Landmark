@@ -1,18 +1,15 @@
 import { PageHero } from "@/components/site/PageHero";
 import { MapPin, LandPlot, Layers, Ruler, Search } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useMemo, useState } from "react";
 import p1 from "@/assets/brand/property-1.jpg";
 import p2 from "@/assets/brand/property-2.jpg";
 import p3 from "@/assets/brand/property-3.jpg";
 import { blockData, CmsAssignedLeadForm, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
+import { usePublishedProperties } from "@/components/site/useCmsData";
+import { formatBdtShort } from "@/lib/format";
 
-const items = [
-  { img: p1, title: "Landmark City — Phase 1", location: "Purbachal, Dhaka", price: "৳ 18 Lac/katha", katha: 3, blocks: "A–D", status: "Ongoing" },
-  { img: p2, title: "Riverside Township", location: "Keraniganj, Dhaka", price: "৳ 24 Lac/katha", katha: 5, blocks: "A–F", status: "Upcoming" },
-  { img: p3, title: "Skyline Green Enclave", location: "Savar, Dhaka", price: "৳ 12 Lac/katha", katha: 3, blocks: "A–C", status: "Completed" },
-  { img: p1, title: "Adabor Garden Plots", location: "Adabor, Dhaka", price: "৳ 22 Lac/katha", katha: 3, blocks: "A–B", status: "Ongoing" },
-  { img: p2, title: "Ring Road Signature Township", location: "Mohammadpur, Dhaka", price: "৳ 28 Lac/katha", katha: 5, blocks: "A–E", status: "Upcoming" },
-  { img: p3, title: "Uttara Sky Enclave", location: "Uttara, Dhaka", price: "৳ 30 Lac/katha", katha: 3, blocks: "A–C", status: "Completed" },
-];
+const fallbackImages = [p1, p2, p3];
 
 const amenities = [
   "Wide Roads",
@@ -29,6 +26,21 @@ export function PropertyPage() {
   const heroBlock = blockData(blocks, "property.hero");
   const gridBlock = blockData(blocks, "property.grid");
   const editableAmenities = cmsList<string>(gridBlock, "amenities", amenities);
+  const { items, loading } = usePublishedProperties(48);
+  const [search, setSearch] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  const locations = useMemo(() => Array.from(new Set(items.map((p) => p.location.area).filter(Boolean))), [items]);
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return items.filter((p) => {
+      if (locationFilter && p.location.area !== locationFilter) return false;
+      if (statusFilter && p.listingStatus !== statusFilter) return false;
+      if (!q) return true;
+      return p.title.toLowerCase().includes(q) || p.location.area.toLowerCase().includes(q) || p.location.city.toLowerCase().includes(q);
+    });
+  }, [items, search, locationFilter, statusFilter]);
 
   return (
     <div>
@@ -40,17 +52,18 @@ export function PropertyPage() {
             <div className="mt-4 space-y-3">
               <label className="relative block">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input type="text" placeholder="Search project or location" className="w-full rounded-md border border-border bg-background py-2.5 pl-9 pr-3 text-sm outline-none focus:border-primary" />
+                <input type="text" placeholder="Search project or location" value={search} onChange={(e) => setSearch(e.target.value)} className="w-full rounded-md border border-border bg-background py-2.5 pl-9 pr-3 text-sm outline-none focus:border-primary" />
               </label>
-              <select className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary">
-                <option>Select Location</option>
-                <option>Purbachal</option><option>Keraniganj</option><option>Savar</option><option>Uttara</option><option>Mohammadpur</option>
+              <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary">
+                <option value="">Select Location</option>
+                {locations.map((l) => <option key={l} value={l}>{l}</option>)}
               </select>
-              <select className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary">
-                <option>Project Status</option>
-                <option>Ongoing</option>
-                <option>Upcoming</option>
-                <option>Completed</option>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary">
+                <option value="">Project Status</option>
+                <option value="available">Available</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="reserved">Reserved</option>
+                <option value="sold">Sold</option>
               </select>
             </div>
           </div>
@@ -65,29 +78,46 @@ export function PropertyPage() {
             </ul>
           </div>
         </aside>
-        <div className="grid gap-6 sm:grid-cols-2">
-          {items.map((p, i) => (
-            <article key={i} className="group overflow-hidden rounded-2xl border border-border/60 bg-card transition hover:border-primary/50">
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img src={p.img} alt={p.title} loading="lazy" width={1024} height={768} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-                <div className="absolute left-4 top-4 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">{p.price}</div>
-                <div className="absolute right-4 top-4 rounded-full bg-background/85 px-3 py-1 text-xs font-semibold text-primary">{p.status}</div>
-              </div>
-              <div className="p-5">
-                <h3 className="font-display text-lg font-semibold">{p.title}</h3>
-                <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground"><MapPin className="h-4 w-4 text-primary" /> {p.location}</p>
-                <div className="mt-4 flex items-center gap-4 border-t border-border/60 pt-4 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5"><LandPlot className="h-4 w-4 text-primary" /> {p.katha} katha</span>
-                  <span className="inline-flex items-center gap-1.5"><Layers className="h-4 w-4 text-primary" /> Blocks {p.blocks}</span>
-                  <span className="inline-flex items-center gap-1.5"><Ruler className="h-4 w-4 text-primary" /> Planned</span>
-                </div>
-                <div className="mt-4 flex items-center gap-3">
-                  <button className="flex-1 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:brightness-110">Book Site Visit</button>
-                  <button className="flex-1 rounded-full border border-primary/40 px-4 py-2 text-xs font-semibold text-primary transition hover:bg-primary/5">Request Project Details</button>
-                </div>
-              </div>
-            </article>
-          ))}
+        <div>
+          {loading ? (
+            <div className="rounded-2xl border border-border/60 bg-card p-12 text-center text-sm text-muted-foreground">Loading projects…</div>
+          ) : filtered.length === 0 ? (
+            <div className="rounded-2xl border border-border/60 bg-card p-12 text-center text-sm text-muted-foreground">
+              {items.length === 0 ? "No projects have been published yet." : "No projects match your filters."}
+            </div>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2">
+              {filtered.map((p, i) => {
+                const img = p.featuredImage || fallbackImages[i % fallbackImages.length];
+                const loc = [p.location.area, p.location.city].filter(Boolean).join(", ");
+                const price = formatBdtShort(p.pricing.price, p.pricing.currency);
+                return (
+                  <article key={p.id} className="group overflow-hidden rounded-2xl border border-border/60 bg-card transition hover:border-primary/50">
+                    <Link to={`/property/${p.slug}`} className="block">
+                      <div className="relative aspect-[4/3] overflow-hidden">
+                        <img src={img} alt={p.title} loading="lazy" width={1024} height={768} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                        {price && <div className="absolute left-4 top-4 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">{price}</div>}
+                        <div className="absolute right-4 top-4 rounded-full bg-background/85 px-3 py-1 text-xs font-semibold text-primary capitalize">{p.listingStatus}</div>
+                      </div>
+                    </Link>
+                    <div className="p-5">
+                      <h3 className="font-display text-lg font-semibold"><Link to={`/property/${p.slug}`}>{p.title}</Link></h3>
+                      <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground"><MapPin className="h-4 w-4 text-primary" /> {loc || "—"}</p>
+                      <div className="mt-4 flex items-center gap-4 border-t border-border/60 pt-4 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1.5"><LandPlot className="h-4 w-4 text-primary" /> {p.details.areaSqft || 0} sqft</span>
+                        <span className="inline-flex items-center gap-1.5"><Layers className="h-4 w-4 text-primary" /> {p.category}</span>
+                        <span className="inline-flex items-center gap-1.5"><Ruler className="h-4 w-4 text-primary" /> {p.type}</span>
+                      </div>
+                      <div className="mt-4 flex items-center gap-3">
+                        <Link to={`/property/${p.slug}`} className="flex-1 rounded-full bg-primary px-4 py-2 text-center text-xs font-semibold text-primary-foreground transition hover:brightness-110">View Project</Link>
+                        <Link to="/contact" className="flex-1 rounded-full border border-primary/40 px-4 py-2 text-center text-xs font-semibold text-primary transition hover:bg-primary/5">Request Details</Link>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
       <CmsAssignedLeadForm path="/property" />
