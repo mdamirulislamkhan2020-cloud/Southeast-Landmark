@@ -131,42 +131,49 @@ function writeLS<T>(key: string, value: T) {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
-function seed() {
-  if (readLS<CmsPage[] | null>(LS_PAGES, null) === null) {
-    const now = new Date().toISOString();
-    const built: CmsPage[] = [
-      { title: "Home", slug: "/", parentId: null, status: "published" },
-      { title: "About", slug: "/about", parentId: null, status: "published" },
-      { title: "Property", slug: "/property", parentId: null, status: "published" },
-      { title: "Blog", slug: "/blog", parentId: null, status: "published" },
-      { title: "FAQ", slug: "/faq", parentId: null, status: "published" },
-      { title: "Contact", slug: "/contact", parentId: null, status: "published" },
-      { title: "Privacy Policy", slug: "/privacy", parentId: null, status: "draft" },
-      { title: "Terms", slug: "/terms", parentId: null, status: "draft" },
+/**
+ * Seed built-in CMS pages the first time an admin opens the Pages list
+ * against an empty database. Requires an authenticated admin session
+ * (RLS blocks anon inserts). Public visitors see static markup fallbacks
+ * until an admin has visited at least once.
+ */
+let _pagesSeedPromise: Promise<void> | null = null;
+async function seedBuiltInPagesIfEmpty(): Promise<void> {
+  if (_pagesSeedPromise) return _pagesSeedPromise;
+  _pagesSeedPromise = (async () => {
+    const { count, error: cErr } = await supabase
+      .from("pages")
+      .select("id", { count: "exact", head: true });
+    if (cErr || (count ?? 0) > 0) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return; // only authenticated admins may seed
+    const built = [
+      { title: "Home", slug: "/", status: "published" as const },
+      { title: "About", slug: "/about", status: "published" as const },
+      { title: "Property", slug: "/property", status: "published" as const },
+      { title: "Blog", slug: "/blog", status: "published" as const },
+      { title: "FAQ", slug: "/faq", status: "published" as const },
+      { title: "Contact", slug: "/contact", status: "published" as const },
+      { title: "Privacy Policy", slug: "/privacy", status: "draft" as const },
+      { title: "Terms", slug: "/terms", status: "draft" as const },
     ].map((p) => ({
-      id: uid(),
       title: p.title,
       slug: p.slug,
-      parentId: p.parentId,
-      status: p.status as PageStatus,
-      seoTitle: p.title,
-      seoDescription: "",
+      status: p.status,
+      seo_title: p.title,
+      seo_description: "",
       content: `<h1>${p.title}</h1>`,
-      publishAt: null,
-      updatedAt: now,
-      createdAt: now,
-      formId: null,
-      blocks: defaultBlocksForSlug(p.slug),
-      showInNav: true,
-      template: "standard",
-      seoKeywords: "",
-      ogImage: null,
-      canonical: "",
+      blocks: defaultBlocksForSlug(p.slug) as unknown as Json,
+      show_in_nav: true,
+      template: "standard" as const,
+      created_by: session.user.id,
     }));
-    writeLS(LS_PAGES, built);
-    if (typeof window !== "undefined") window.localStorage.setItem(LS_PAGES_MIGRATION, "done");
-  }
-  migrateDefaultPageBlocks();
+    await supabase.from("pages").insert(built);
+  })();
+  try { await _pagesSeedPromise; } finally { /* keep promise cached */ }
+}
+
+function seedLeadsIfEmpty() {
   if (readLS<Lead[] | null>(LS_LEADS, null) === null) {
     const sources = ["Website", "Facebook", "Google Ads", "Referral", "Walk-in"];
     const names = ["Ayesha Khan", "Rafiq Islam", "Tania Rahman", "Sabbir Ahmed", "Nadia Chowdhury", "Imran Hossain", "Mou Akter", "Jahid Karim"];
