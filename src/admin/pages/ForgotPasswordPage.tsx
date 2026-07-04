@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { sendPasswordResetEmail } from "@/services/email-service";
+import { requestPasswordReset } from "@/admin/api/auth";
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -24,20 +24,11 @@ export function ForgotPasswordPage() {
     inFlight.current = true;
     setBusy(true);
     try {
-      // Backend issues the real token; frontend passes a placeholder that the
-      // future PHP endpoint (POST /api/admin/smtp/send) will replace.
-      const token = crypto.randomUUID();
-      const res = await sendPasswordResetEmail(email.trim(), token);
-      if (!res.ok) {
-        toast.error(res.error ?? "We couldn't send the reset email.");
-        return;
-      }
+      await requestPasswordReset(email.trim());
       setSent(true);
-      if (res.data?.simulated) {
-        toast.warning("Simulated — no email was sent (backend not connected).");
-      } else {
-        toast.success("Reset email sent — check your inbox.");
-      }
+      toast.success("If an account exists, a reset link is on its way.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "We couldn't send the reset email.");
     } finally {
       inFlight.current = false;
       setBusy(false);
