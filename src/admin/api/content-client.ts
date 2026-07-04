@@ -198,8 +198,8 @@ export async function listBlogPosts(q: ListBlogQuery = {}): Promise<ListBlogResu
 
   let query = supabase.from("blog_posts").select("*", { count: "exact" }).order("updated_at", { ascending: false });
   if (q.status && q.status !== "all") query = query.eq("status", q.status);
-  if (q.category && q.category !== "all") query = query.contains("categories", asJson([q.category]));
-  if (q.tag && q.tag !== "all") query = query.contains("tags", asJson([q.tag]));
+  if (q.category && q.category !== "all") query = query.contains("categories", [q.category]);
+  if (q.tag && q.tag !== "all") query = query.contains("tags", [q.tag]);
   if (q.search) {
     const s = q.search.replace(/[%,]/g, " ").trim();
     if (s) query = query.or(`title.ilike.%${s}%,excerpt.ilike.%${s}%,author.ilike.%${s}%`);
