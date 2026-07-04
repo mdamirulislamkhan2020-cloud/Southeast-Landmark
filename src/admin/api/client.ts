@@ -2,6 +2,8 @@ import type { CmsPage, DashboardStats, Lead, PageStatus } from "./types";
 import type { PageBlock, BlockType } from "./lead-pages";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
+import { listCrmLeads } from "./crm-client";
+import { listActivity } from "./activity-log-client";
 
 /**
  * Admin API client.
@@ -408,16 +410,23 @@ export async function getPageByPath(path: string): Promise<CmsPage | null> {
 // ---------- Leads / Dashboard ----------
 
 export async function listLeads(): Promise<Lead[]> {
-  if (!USE_MOCK) return apiFetch<Lead[]>("/leads");
-  seedLeadsIfEmpty();
-  return readLS<Lead[]>(LS_LEADS, []);
+  // Repository layer: leads live in the CRM store. Map to the legacy DashboardStats Lead shape.
+  const crm = await listCrmLeads();
+  return crm.map<Lead>((l) => ({
+    id: l.id,
+    name: l.name,
+    email: l.email,
+    phone: l.phone,
+    message: (l.answers.message as string) ?? "",
+    source: l.source,
+    createdAt: l.createdAt,
+  }));
 }
 
 export async function getDashboard(): Promise<DashboardStats> {
-  if (!USE_MOCK) return apiFetch<DashboardStats>("/dashboard");
-  seedLeadsIfEmpty();
-  const leads = readLS<Lead[]>(LS_LEADS, []);
+  const leads = await listLeads();
   const pages = await listPages();
+  const activity = await listActivity({ limit: 20 }).catch(() => []);
   const today = new Date();
   const isSameDay = (d: Date) => d.toDateString() === today.toDateString();
   const isSameMonth = (d: Date) => d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
@@ -444,12 +453,11 @@ export async function getDashboard(): Promise<DashboardStats> {
     propertyViews: 4820,
     conversionRate: leads.length ? Math.round((leads.length / 4820) * 1000) / 10 : 0,
     recentLeads: [...leads].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6),
-    recentActivity: [
-      { id: uid(), text: "New lead captured from Website form", at: new Date().toISOString() },
-      { id: uid(), text: "Property 'Landmark Heights' updated", at: new Date(Date.now() - 3600e3).toISOString() },
-      { id: uid(), text: "Blog post 'Investing in Dhaka' published", at: new Date(Date.now() - 7200e3).toISOString() },
-      { id: uid(), text: "Page 'About' edited", at: new Date(Date.now() - 86400e3).toISOString() },
-    ],
+    recentActivity: activity.slice(0, 8).map((a) => ({
+      id: a.id,
+      text: a.message || `${a.action}${a.entity ? ` · ${a.entity}` : ""}`,
+      at: a.createdAt,
+    })),
     leadsBySource: Array.from(sourceMap.entries()).map(([source, count]) => ({ source, count })),
     leadsByDay: days,
   };
