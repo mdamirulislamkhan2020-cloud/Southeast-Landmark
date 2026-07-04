@@ -14,16 +14,168 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      pages: {
+        Row: {
+          archived_at: string | null
+          blocks: Json
+          canonical: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          form_id: string | null
+          id: string
+          og_image: string | null
+          parent_id: string | null
+          publish_at: string | null
+          published_at: string | null
+          seo_description: string
+          seo_keywords: string | null
+          seo_title: string
+          show_in_nav: boolean
+          slug: string
+          status: Database["public"]["Enums"]["page_status"]
+          template: Database["public"]["Enums"]["page_template"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          blocks?: Json
+          canonical?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          form_id?: string | null
+          id?: string
+          og_image?: string | null
+          parent_id?: string | null
+          publish_at?: string | null
+          published_at?: string | null
+          seo_description?: string
+          seo_keywords?: string | null
+          seo_title?: string
+          show_in_nav?: boolean
+          slug: string
+          status?: Database["public"]["Enums"]["page_status"]
+          template?: Database["public"]["Enums"]["page_template"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          blocks?: Json
+          canonical?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          form_id?: string | null
+          id?: string
+          og_image?: string | null
+          parent_id?: string | null
+          publish_at?: string | null
+          published_at?: string | null
+          seo_description?: string
+          seo_keywords?: string | null
+          seo_title?: string
+          show_in_nav?: boolean
+          slug?: string
+          status?: Database["public"]["Enums"]["page_status"]
+          template?: Database["public"]["Enums"]["page_template"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          active: boolean
+          avatar: string | null
+          created_at: string
+          email: string
+          id: string
+          last_login: string | null
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          avatar?: string | null
+          created_at?: string
+          email?: string
+          id: string
+          last_login?: string | null
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          avatar?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          last_login?: string | null
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "admin" | "manager" | "editor" | "sales"
+      page_status: "draft" | "published" | "scheduled" | "archived"
+      page_template:
+        | "standard"
+        | "builder"
+        | "blank"
+        | "landing"
+        | "contact"
+        | "blog"
+        | "full_width"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +302,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "admin", "manager", "editor", "sales"],
+      page_status: ["draft", "published", "scheduled", "archived"],
+      page_template: [
+        "standard",
+        "builder",
+        "blank",
+        "landing",
+        "contact",
+        "blog",
+        "full_width",
+      ],
+    },
   },
 } as const
