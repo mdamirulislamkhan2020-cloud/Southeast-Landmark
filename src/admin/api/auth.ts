@@ -18,6 +18,28 @@ export interface AuthSession {
   roles: AppRole[];
 }
 
+// ---------- Synchronous session snapshot ----------
+// Some site-side components (Header, Footer, VisibilityGate) need a cheap
+// synchronous "is the current viewer signed in?" check to bypass visibility
+// gates for admins. We maintain a module-level snapshot fed by
+// onAuthStateChange, hydrated once at startup from supabase.auth.getSession().
+let _sessionSnapshot: Session | null = null;
+
+if (typeof window !== "undefined") {
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    _sessionSnapshot = session;
+  });
+  supabase.auth.onAuthStateChange((_e, session) => {
+    _sessionSnapshot = session;
+  });
+}
+
+/** Cheap synchronous snapshot of the current Supabase session (may be null
+ * during the first ~100ms after page load, before hydration completes). */
+export function getSessionSnapshot(): Session | null {
+  return _sessionSnapshot;
+}
+
 export async function signIn(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
