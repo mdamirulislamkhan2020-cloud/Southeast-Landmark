@@ -93,7 +93,7 @@ export function Header() {
         style={{ height: headerSettings?.height ? `${headerSettings.height}px` : undefined }}
       >
         <Link to="/" className="flex items-center gap-3">
-          <img src={logoSrc} alt={site.name} className="h-9 w-auto" />
+          <img src={logoSrc} alt={site.name} width={144} height={36} decoding="async" fetchPriority="high" className="h-9 w-auto" />
           <span className="hidden font-display text-lg font-semibold tracking-wide text-gradient-gold sm:inline">
             {site.short}
           </span>

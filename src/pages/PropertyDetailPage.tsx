@@ -52,14 +52,14 @@ export function PropertyDetailPage() {
           <div>
             {gallery[0] && (
               <div className="overflow-hidden rounded-3xl border border-primary/20">
-                <img src={gallery[0]} alt={property.title} className="h-full w-full object-cover" width={1600} height={900} />
+                <img src={gallery[0]} alt={property.title} decoding="async" fetchPriority="high" className="h-full w-full object-cover" width={1600} height={900} />
               </div>
             )}
             {gallery.length > 1 && (
               <div className="mt-4 grid grid-cols-3 gap-4 sm:grid-cols-4">
                 {gallery.slice(1, 9).map((src, i) => (
                   <div key={i} className="overflow-hidden rounded-xl border border-border/60">
-                    <img src={src} alt="" loading="lazy" className="aspect-square h-full w-full object-cover" />
+                    <img src={src} alt="" loading="lazy" decoding="async" className="aspect-square h-full w-full object-cover" />
                   </div>
                 ))}
               </div>

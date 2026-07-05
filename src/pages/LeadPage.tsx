@@ -48,7 +48,7 @@ export function LeadPage() {
     <>
       <Seo title={page.seo.title || page.title} description={page.seo.description || page.shortDescription} path={`/lead/${page.slug}`} />
       <div style={{ background: page.design.background }}>
-        {page.banner && <img src={page.banner} alt="" className="w-full h-64 md:h-80 object-cover" />}
+        {page.banner && <img src={page.banner} alt="" decoding="async" fetchPriority="high" className="w-full h-64 md:h-80 object-cover" />}
         {page.blocks.map((b) => <BlockRenderer key={b.id} block={b} containerWidth={page.design.sectionWidth} pageFormId={page.formId} />)}
       </div>
     </>

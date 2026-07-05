@@ -56,7 +56,7 @@ export function BlogDetailPage() {
         </div>
         {post.featuredImage && (
           <div className="mt-8 overflow-hidden rounded-3xl border border-primary/20">
-            <img src={post.featuredImage} alt={post.title} className="h-full w-full object-cover" />
+            <img src={post.featuredImage} alt={post.title} decoding="async" fetchPriority="high" className="h-full w-full object-cover" />
           </div>
         )}
         {post.excerpt && <p className="mt-8 text-lg text-muted-foreground">{post.excerpt}</p>}
