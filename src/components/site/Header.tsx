@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Menu, X, User } from "lucide-react";
 import logo from "@/assets/brand/logo.png";
@@ -16,7 +16,7 @@ function visibleItems(items: MenuItem[] | undefined) {
   return items.filter((i) => i.enabled && (i.visibility === "everyone" || i.visibility === "guest"));
 }
 
-export function Header() {
+function HeaderImpl() {
   const [open, setOpen] = useState(false);
   const headerSettings = useHeaderSettings();
   const mobileSettings = useMobileMenuSettings();
@@ -165,3 +165,5 @@ export function Header() {
     </header>
   );
 }
+
+export const Header = memo(HeaderImpl);

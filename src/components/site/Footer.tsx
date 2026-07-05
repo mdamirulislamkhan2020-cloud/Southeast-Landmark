@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Mail, MapPin, Phone, Clock } from "lucide-react";
 import logo from "@/assets/brand/logo.png";
@@ -9,7 +10,7 @@ import { decideVisibility } from "@/admin/api/visibility-client";
 import { getSession } from "@/admin/api/client";
 import { useGlobalSettings } from "./useCmsData";
 
-export function Footer() {
+function FooterImpl() {
   const footerSettings = useFooterSettings();
   const footerMenu = useMenu(footerSettings?.footerMenuSlug ?? "footer");
   const visibility = useVisibility();
@@ -101,3 +102,5 @@ export function Footer() {
     </footer>
   );
 }
+
+export const Footer = memo(FooterImpl);
