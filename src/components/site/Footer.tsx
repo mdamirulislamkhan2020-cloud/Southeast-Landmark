@@ -39,20 +39,20 @@ function FooterImpl() {
 
   return (
     <footer className="mt-24 border-t border-border/60 bg-card">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-4 lg:px-8">
+      <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-x-8 gap-y-10 px-6 py-14 sm:grid-cols-2 sm:px-8 lg:grid-cols-4 lg:gap-x-12 lg:px-10">
         <div>
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt={site.name} loading="lazy" decoding="async" width={160} height={40} className="h-10 w-auto" />
           </Link>
-          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
             {site.tagline}
           </p>
         </div>
         <div>
-          <h4 className="mb-4 font-display text-base font-semibold text-primary">
+          <h4 className="mb-3 font-display text-base font-semibold text-primary">
             Useful Links
           </h4>
-          <ul className="space-y-2 text-sm text-muted-foreground">
+          <ul className="space-y-2.5 text-sm text-muted-foreground">
             {links.map((l) => {
               const external = /^https?:\/\//i.test(l.url) || l.newTab;
               return (
@@ -68,25 +68,25 @@ function FooterImpl() {
           </ul>
         </div>
         <div>
-          <h4 className="mb-4 font-display text-base font-semibold text-primary">
+          <h4 className="mb-3 font-display text-base font-semibold text-primary">
             Company Policy
           </h4>
-          <ul className="space-y-2 text-sm text-muted-foreground">
+          <ul className="space-y-2.5 text-sm text-muted-foreground">
             <li><a href="#" className="hover:text-primary">Privacy Policy</a></li>
             <li><a href="#" className="hover:text-primary">Terms &amp; Conditions</a></li>
           </ul>
         </div>
         <div>
-          <h4 className="mb-4 font-display text-base font-semibold text-primary">
+          <h4 className="mb-3 font-display text-base font-semibold text-primary">
             Get in touch
           </h4>
-          <ul className="space-y-3 text-sm text-muted-foreground">
+          <ul className="space-y-2.5 text-sm text-muted-foreground">
             <li className="flex gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span>{global.address || site.address}</span></li>
             <li className="flex gap-3"><Phone className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><a href={`tel:${global.phone || site.phone}`} className="hover:text-primary">{global.phone || site.phone}</a></li>
             <li className="flex gap-3"><Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><a href={`mailto:${global.email || site.email}`} className="hover:text-primary">{global.email || site.email}</a></li>
             <li className="flex gap-3"><Clock className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span>{global.officeHours || site.hours}</span></li>
           </ul>
-          <div className="mt-6">
+          <div className="mt-5">
             <div className="text-xs font-semibold uppercase tracking-wider text-primary">Newsletter</div>
             <p className="mt-1 text-xs text-muted-foreground">Project launches & investment updates.</p>
             <NewsletterForm />
@@ -94,7 +94,7 @@ function FooterImpl() {
         </div>
       </div>
       <div className="border-t border-border/60">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-[1280px] flex-col items-center justify-between gap-3 px-6 py-5 text-xs text-muted-foreground sm:flex-row sm:px-8 lg:px-10">
           <p>{footerSettings?.copyright || global.copyright || `© ${new Date().getFullYear()} ${global.companyName || site.name}. All rights reserved.`}</p>
           <p>Crafted with care.</p>
         </div>
