@@ -8,7 +8,7 @@ import { signIn } from "../api/auth";
 
 export function LoginPage() {
   const nav = useNavigate();
-  const loc = useLocation() as { state?: { from?: string } };
+  const loc = useLocation() as { state?: { from?: string; deactivated?: boolean } };
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -45,6 +45,9 @@ export function LoginPage() {
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
             {err && <div className="text-sm text-destructive">{err}</div>}
+            {loc.state?.deactivated && !err && (
+              <div className="text-sm text-destructive">Your account has been deactivated. Contact an administrator.</div>
+            )}
             <Button type="submit" className="w-full" disabled={busy}>{busy ? "Signing in..." : "Sign in"}</Button>
             <div className="flex items-center justify-between text-xs">
               <Link to="/admin/signup" className="text-muted-foreground hover:text-foreground">Create admin account</Link>
