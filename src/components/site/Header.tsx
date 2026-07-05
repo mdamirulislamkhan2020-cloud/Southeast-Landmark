@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Menu, X, User } from "lucide-react";
 import logo from "@/assets/brand/logo.png";
@@ -16,7 +16,7 @@ function visibleItems(items: MenuItem[] | undefined) {
   return items.filter((i) => i.enabled && (i.visibility === "everyone" || i.visibility === "guest"));
 }
 
-export function Header() {
+function HeaderImpl() {
   const [open, setOpen] = useState(false);
   const headerSettings = useHeaderSettings();
   const mobileSettings = useMobileMenuSettings();
@@ -93,7 +93,7 @@ export function Header() {
         style={{ height: headerSettings?.height ? `${headerSettings.height}px` : undefined }}
       >
         <Link to="/" className="flex items-center gap-3">
-          <img src={logoSrc} alt={site.name} className="h-9 w-auto" />
+          <img src={logoSrc} alt={site.name} width={144} height={36} decoding="async" fetchPriority="high" className="h-9 w-auto" />
           <span className="hidden font-display text-lg font-semibold tracking-wide text-gradient-gold sm:inline">
             {site.short}
           </span>
@@ -165,3 +165,5 @@ export function Header() {
     </header>
   );
 }
+
+export const Header = memo(HeaderImpl);

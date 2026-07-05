@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Mail, MapPin, Phone, Clock } from "lucide-react";
 import logo from "@/assets/brand/logo.png";
@@ -9,7 +10,7 @@ import { decideVisibility } from "@/admin/api/visibility-client";
 import { getSession } from "@/admin/api/client";
 import { useGlobalSettings } from "./useCmsData";
 
-export function Footer() {
+function FooterImpl() {
   const footerSettings = useFooterSettings();
   const footerMenu = useMenu(footerSettings?.footerMenuSlug ?? "footer");
   const visibility = useVisibility();
@@ -41,7 +42,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-4 lg:px-8">
         <div>
           <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt={site.name} className="h-10 w-auto" />
+            <img src={logo} alt={site.name} loading="lazy" decoding="async" width={160} height={40} className="h-10 w-auto" />
           </Link>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
             {site.tagline}
@@ -101,3 +102,5 @@ export function Footer() {
     </footer>
   );
 }
+
+export const Footer = memo(FooterImpl);
