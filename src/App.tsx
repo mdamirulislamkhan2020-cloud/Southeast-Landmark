@@ -40,6 +40,7 @@ const AdminIntegrations = lazy(() => import("@/admin/pages/IntegrationsPage").th
 const AdminNavigation = lazy(() => import("@/admin/pages/NavigationPage").then((m) => ({ default: m.NavigationPage })));
 const AdminSmtp = lazy(() => import("@/admin/pages/SmtpPage").then((m) => ({ default: m.SmtpPage })));
 const AdminVisibility = lazy(() => import("@/admin/pages/VisibilityPage").then((m) => ({ default: m.VisibilityPage })));
+const AdminAuditLogs = lazy(() => import("@/admin/pages/AuditLogsPage").then((m) => ({ default: m.AuditLogsPage })));
 const AdminForgotPassword = lazy(() => import("@/admin/pages/ForgotPasswordPage").then((m) => ({ default: m.ForgotPasswordPage })));
 const AdminSignup = lazy(() => import("@/admin/pages/SignupPage").then((m) => ({ default: m.SignupPage })));
 const AdminResetPassword = lazy(() => import("@/admin/pages/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })));
@@ -88,6 +89,7 @@ export default function App() {
           <Route path="navigation" element={<AdminNavigation />} />
           <Route path="smtp" element={<AdminSmtp />} />
           <Route path="visibility" element={<AdminVisibility />} />
+          <Route path="audit" element={<AdminAuditLogs />} />
         </Route>
 
         {/* Public site */}
