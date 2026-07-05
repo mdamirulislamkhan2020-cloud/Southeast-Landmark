@@ -1,80 +1,20 @@
 import type { FieldType, FormField, LeadForm } from "./forms";
-import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
 
-const asJson = <T,>(v: T): Json => v as unknown as Json;
+const API_BASE = (import.meta.env.VITE_ADMIN_API_BASE as string | undefined) ?? "/api";
+const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !== "false";
+const LS_FORMS = "sel_admin_forms_v1";
 
 function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
-
-type FormRow = {
-  id: string;
-  name: string;
-  slug: string;
-  status: string;
-  multi_step: boolean;
-  show_progress: boolean;
-  steps: unknown;
-  fields: unknown;
-  design: unknown;
-  settings: unknown;
-  created_at: string;
-  updated_at: string;
-};
-
-function rowToForm(row: FormRow): LeadForm {
-  const settings = (row.settings ?? {}) as Partial<LeadForm["settings"]>;
-  return {
-    id: row.id,
-    name: row.name,
-    multiStep: row.multi_step,
-    showProgress: row.show_progress,
-    steps: (row.steps ?? []) as LeadForm["steps"],
-    fields: (row.fields ?? []) as LeadForm["fields"],
-    design: (row.design ?? {}) as LeadForm["design"],
-    settings: {
-      seoTitle: "",
-      seoDescription: "",
-      thankYou: "",
-      redirectUrl: "",
-      whatsappRedirect: "",
-      notifyEmail: "",
-      autoReplyEmail: "",
-      ...settings,
-      slug: settings.slug ?? row.slug,
-      status: (settings.status ?? row.status ?? "draft") as LeadForm["settings"]["status"],
-    },
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
+function readLS<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try { const raw = window.localStorage.getItem(key); return raw ? (JSON.parse(raw) as T) : fallback; } catch { return fallback; }
 }
+function writeLS<T>(key: string, value: T) { if (typeof window !== "undefined") window.localStorage.setItem(key, JSON.stringify(value)); }
 
-function formToRow(form: Partial<LeadForm>): Record<string, unknown> {
-  const row: Record<string, unknown> = {};
-  if (form.name !== undefined) row.name = form.name;
-  if (form.multiStep !== undefined) row.multi_step = form.multiStep;
-  if (form.showProgress !== undefined) row.show_progress = form.showProgress;
-  if (form.steps !== undefined) row.steps = form.steps;
-  if (form.fields !== undefined) row.fields = form.fields;
-  if (form.design !== undefined) row.design = form.design;
-  if (form.settings !== undefined) {
-    row.settings = form.settings;
-    if (form.settings.slug) row.slug = form.settings.slug;
-    if (form.settings.status) row.status = form.settings.status;
-  }
-  return row;
-}
-
-async function uniqueSlug(base: string, excludeId?: string): Promise<string> {
-  const clean = (base || "form").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "form";
-  let candidate = clean;
-  for (let i = 2; i < 100; i++) {
-    const q = supabase.from("forms").select("id").eq("slug", candidate).limit(1);
-    const { data } = await q;
-    const hit = (data ?? []).find((r) => r.id !== excludeId);
-    if (!hit) return candidate;
-    candidate = `${clean}-${i}`;
-  }
-  return `${clean}-${Date.now()}`;
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, { ...init, headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) } });
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  return (await res.json()) as T;
 }
 
 export function newField(type: FieldType): FormField {
@@ -106,11 +46,9 @@ export function newField(type: FieldType): FormField {
   }
 }
 
-async function seedIfEmpty(): Promise<void> {
-  const { count, error } = await supabase.from("forms").select("id", { count: "exact", head: true });
-  if (error || (count ?? 0) > 0) return;
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData?.user) return;
+function seed() {
+  if (readLS<LeadForm[] | null>(LS_FORMS, null) !== null) return;
+  const now = new Date().toISOString();
   const step0 = uid();
   const contact: LeadForm = {
     id: uid(),
@@ -126,92 +64,62 @@ async function seedIfEmpty(): Promise<void> {
     ],
     design: { background: "#ffffff", containerWidth: 640, inputStyle: "outline", labelPosition: "top", buttonStyle: "rounded", radius: 8, spacing: 16, successMessage: "Thanks! We received your message.", errorMessage: "Something went wrong. Please try again." },
     settings: { slug: "contact", seoTitle: "Contact Us", seoDescription: "Get in touch with Southeast Landmark.", thankYou: "Thanks — we'll be in touch.", redirectUrl: "", whatsappRedirect: "", notifyEmail: "leads@southeastlandmark.com", autoReplyEmail: "no-reply@southeastlandmark.com", status: "published" },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: now, updatedAt: now,
   };
-  await supabase.from("forms").insert({
-    name: contact.name,
-    slug: contact.settings.slug,
-    status: contact.settings.status,
-    multi_step: contact.multiStep,
-    show_progress: contact.showProgress,
-    steps: asJson(contact.steps),
-    fields: asJson(contact.fields),
-    design: asJson(contact.design),
-    settings: asJson(contact.settings),
-  });
+  writeLS(LS_FORMS, [contact]);
 }
 
 export async function listForms(): Promise<LeadForm[]> {
-  await seedIfEmpty();
-  const { data, error } = await supabase.from("forms").select("*").order("updated_at", { ascending: false });
-  if (error) throw error;
-  return (data as FormRow[]).map(rowToForm);
+  if (!USE_MOCK) return apiFetch<LeadForm[]>("/forms");
+  seed();
+  return readLS<LeadForm[]>(LS_FORMS, []);
 }
-
 export async function getForm(id: string): Promise<LeadForm | null> {
-  const { data, error } = await supabase.from("forms").select("*").eq("id", id).maybeSingle();
-  if (error) throw error;
-  return data ? rowToForm(data as FormRow) : null;
+  if (!USE_MOCK) return apiFetch<LeadForm>(`/forms/${id}`);
+  seed();
+  return readLS<LeadForm[]>(LS_FORMS, []).find((f) => f.id === id) ?? null;
 }
-
-export async function getFormBySlug(slug: string): Promise<LeadForm | null> {
-  const { data, error } = await supabase.from("forms").select("*").eq("slug", slug).maybeSingle();
-  if (error) throw error;
-  return data ? rowToForm(data as FormRow) : null;
-}
-
 export async function createForm(name = "Untitled Form"): Promise<LeadForm> {
+  const now = new Date().toISOString();
   const stepId = uid();
-  const slug = await uniqueSlug(name);
-  const settings: LeadForm["settings"] = {
-    slug, seoTitle: name, seoDescription: "", thankYou: "Thanks!", redirectUrl: "",
-    whatsappRedirect: "", notifyEmail: "", autoReplyEmail: "", status: "draft",
+  const form: LeadForm = {
+    id: uid(), name, multiStep: false, showProgress: true,
+    steps: [{ id: stepId, title: "Step 1", description: "" }],
+    fields: [],
+    design: { background: "#ffffff", containerWidth: 640, inputStyle: "outline", labelPosition: "top", buttonStyle: "rounded", radius: 8, spacing: 16, successMessage: "Thanks!", errorMessage: "Something went wrong." },
+    settings: { slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-"), seoTitle: name, seoDescription: "", thankYou: "Thanks!", redirectUrl: "", whatsappRedirect: "", notifyEmail: "", autoReplyEmail: "", status: "draft" },
+    createdAt: now, updatedAt: now,
   };
-  const design: LeadForm["design"] = {
-    background: "#ffffff", containerWidth: 640, inputStyle: "outline", labelPosition: "top",
-    buttonStyle: "rounded", radius: 8, spacing: 16, successMessage: "Thanks!", errorMessage: "Something went wrong.",
-  };
-  const { data, error } = await supabase.from("forms").insert({
-    name, slug, status: "draft", multi_step: false, show_progress: true,
-    steps: asJson([{ id: stepId, title: "Step 1", description: "" }]),
-    fields: asJson([]),
-    design: asJson(design),
-    settings: asJson(settings),
-  }).select("*").single();
-  if (error) throw error;
-  return rowToForm(data as FormRow);
+  if (!USE_MOCK) return apiFetch<LeadForm>("/forms", { method: "POST", body: JSON.stringify(form) });
+  const all = readLS<LeadForm[]>(LS_FORMS, []);
+  all.unshift(form);
+  writeLS(LS_FORMS, all);
+  return form;
 }
-
 export async function updateForm(id: string, patch: Partial<LeadForm>): Promise<LeadForm> {
-  const row = formToRow(patch);
-  if (row.slug) row.slug = await uniqueSlug(String(row.slug), id);
-  const { data, error } = await supabase.from("forms").update(row as never).eq("id", id).select("*").single();
-  if (error) throw error;
-  return rowToForm(data as FormRow);
+  if (!USE_MOCK) return apiFetch<LeadForm>(`/forms/${id}`, { method: "PUT", body: JSON.stringify(patch) });
+  const all = readLS<LeadForm[]>(LS_FORMS, []);
+  const i = all.findIndex((f) => f.id === id);
+  if (i < 0) throw new Error("Form not found");
+  all[i] = { ...all[i], ...patch, updatedAt: new Date().toISOString() };
+  writeLS(LS_FORMS, all);
+  return all[i];
 }
-
 export async function deleteForm(id: string): Promise<void> {
-  const { error } = await supabase.from("forms").delete().eq("id", id);
-  if (error) throw error;
+  if (!USE_MOCK) return apiFetch<void>(`/forms/${id}`, { method: "DELETE" });
+  writeLS(LS_FORMS, readLS<LeadForm[]>(LS_FORMS, []).filter((f) => f.id !== id));
 }
-
 export async function duplicateForm(id: string): Promise<LeadForm> {
   const src = await getForm(id);
   if (!src) throw new Error("Form not found");
-  const slug = await uniqueSlug(`${src.settings.slug}-copy`);
-  const settings = { ...src.settings, slug, status: "draft" as const };
-  const { data, error } = await supabase.from("forms").insert({
-    name: `${src.name} (Copy)`,
-    slug,
-    status: "draft",
-    multi_step: src.multiStep,
-    show_progress: src.showProgress,
-    steps: asJson(src.steps),
-    fields: asJson(src.fields),
-    design: asJson(src.design),
-    settings: asJson(settings),
-  }).select("*").single();
-  if (error) throw error;
-  return rowToForm(data as FormRow);
+  const copy = { ...src, id: undefined as unknown as string, name: `${src.name} (Copy)`, settings: { ...src.settings, status: "draft" as const, slug: `${src.settings.slug}-copy` } };
+  return createFromClone(copy);
+}
+async function createFromClone(input: Partial<LeadForm>): Promise<LeadForm> {
+  const now = new Date().toISOString();
+  const form = { ...(input as LeadForm), id: Math.random().toString(36).slice(2, 10) + Date.now().toString(36), createdAt: now, updatedAt: now };
+  const all = readLS<LeadForm[]>(LS_FORMS, []);
+  all.unshift(form);
+  writeLS(LS_FORMS, all);
+  return form;
 }

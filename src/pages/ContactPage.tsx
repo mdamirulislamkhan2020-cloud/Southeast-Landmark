@@ -4,22 +4,13 @@ import { site } from "@/config/site";
 import { useState } from "react";
 import { toast } from "sonner";
 import { sendAppEmail } from "@/services/email-service";
-import { submitLead } from "@/admin/api/crm-client";
-import type { CrmAnalytics } from "@/admin/api/crm";
 import { blockData, CmsAssignedLeadForm, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
-import { useGlobalSettings, usePublishedProperties } from "@/components/site/useCmsData";
 
 export function ContactPage() {
   const blocks = useCmsPageBlocks("/contact");
   const heroBlock = blockData(blocks, "contact.hero");
   const contactBlock = blockData(blocks, "contact.info");
   const [submitting, setSubmitting] = useState(false);
-  const global = useGlobalSettings();
-  const { items: properties } = usePublishedProperties(48);
-  const phone = cmsString(contactBlock, "phone", global.phone || site.phone);
-  const email = cmsString(contactBlock, "email", global.email || site.email);
-  const address = cmsString(contactBlock, "address", global.address || site.address);
-  const mapsEmbed = cmsString(contactBlock, "mapsEmbed", global.mapsEmbed || "");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,35 +24,8 @@ export function ContactPage() {
     }
     setSubmitting(true);
     try {
-      // 1. Record the lead in the CRM so it lands in the pipeline exactly like form submissions.
-      let analytics: CrmAnalytics = {};
-      if (typeof window !== "undefined") {
-        const url = new URL(window.location.href);
-        const p = url.searchParams;
-        analytics = {
-          utmSource: p.get("utm_source") ?? undefined,
-          utmMedium: p.get("utm_medium") ?? undefined,
-          utmCampaign: p.get("utm_campaign") ?? undefined,
-          utmContent: p.get("utm_content") ?? undefined,
-          utmTerm: p.get("utm_term") ?? undefined,
-          gclid: p.get("gclid") ?? undefined,
-          fbclid: p.get("fbclid") ?? undefined,
-          landingUrl: window.location.href,
-          referrer: document.referrer || undefined,
-          device: /Mobi|Android/i.test(navigator.userAgent) ? "mobile" : "desktop",
-        };
-      }
-      try {
-        await submitLead({
-          formName: "Contact Page",
-          answers: payload,
-          analytics,
-          source: "Contact Page",
-        });
-      } catch { /* CRM failure shouldn't block the email path */ }
-
       const res = await sendAppEmail({
-        to: email,
+        to: site.email,
         subject: `New inquiry from ${payload.name}`,
         source: "contact_form",
         replyTo: payload.email || undefined,
@@ -100,7 +64,7 @@ export function ContactPage() {
           <div className="overflow-hidden rounded-2xl border border-border/60">
             <iframe
               title="Southeast Landmark location"
-              src={mapsEmbed || `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
+              src="https://www.google.com/maps?q=Adabor,Mohammadpur,Dhaka&output=embed"
               className="h-full min-h-[420px] w-full"
               loading="lazy"
             />
@@ -117,10 +81,10 @@ export function ContactPage() {
                 <input name="email" type="email" placeholder="Email Address" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary" />
                 <select name="project" className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary">
                   <option value="">Interested Project</option>
-                  {properties.map((p) => (
-                    <option key={p.id} value={p.title}>{p.title}</option>
-                  ))}
-                  <option value="Any">Any Ongoing / Upcoming Project</option>
+                  <option>Landmark City — Purbachal</option>
+                  <option>Riverside Township — Keraniganj</option>
+                  <option>Skyline Green Enclave — Savar</option>
+                  <option>Any Ongoing / Upcoming Project</option>
                 </select>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -150,9 +114,9 @@ export function ContactPage() {
 
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {[
-            { icon: Phone, label: "Phone", value: phone, href: `tel:${phone}` },
-            { icon: Mail, label: "Email", value: email, href: `mailto:${email}` },
-            { icon: MapPin, label: "Address", value: address, href: "#" },
+            { icon: Phone, label: "Phone", value: cmsString(contactBlock, "phone", site.phone), href: `tel:${cmsString(contactBlock, "phone", site.phone)}` },
+            { icon: Mail, label: "Email", value: cmsString(contactBlock, "email", site.email), href: `mailto:${cmsString(contactBlock, "email", site.email)}` },
+            { icon: MapPin, label: "Address", value: cmsString(contactBlock, "address", site.address), href: "#" },
           ].map((c) => (
             <a key={c.label} href={c.href} className="flex items-start gap-4 rounded-2xl border border-border/60 bg-card p-6 transition hover:border-primary/50">
               <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">

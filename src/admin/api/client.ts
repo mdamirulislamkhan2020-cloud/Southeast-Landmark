@@ -1,9 +1,5 @@
 import type { CmsPage, DashboardStats, Lead, PageStatus } from "./types";
 import type { PageBlock, BlockType } from "./lead-pages";
-import { supabase } from "@/integrations/supabase/client";
-import type { Database, Json } from "@/integrations/supabase/types";
-import { listCrmLeads } from "./crm-client";
-import { listActivity } from "./activity-log-client";
 
 /**
  * Admin API client.
@@ -18,8 +14,10 @@ import { listActivity } from "./activity-log-client";
 const API_BASE = (import.meta.env.VITE_ADMIN_API_BASE as string | undefined) ?? "/api";
 const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !== "false";
 
-// Leads are still on localStorage until Phase 6 (CRM).
+const LS_PAGES = "sel_admin_pages_v1";
 const LS_LEADS = "sel_admin_leads_v1";
+const LS_AUTH = "sel_admin_auth_v1";
+const LS_PAGES_MIGRATION = "sel_admin_pages_migration_v3";
 
 function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -116,7 +114,30 @@ export function defaultBlocksForSlug(slug: string): PageBlock[] {
   }
 }
 
-// Legacy migrateDefaultPageBlocks() was removed — pages now live in Supabase.
+/**
+ * Backfill blocks for built-in pages whose block list is currently empty.
+ * Runs once per browser (guarded by a versioned flag) and never touches pages
+ * that already have any builder blocks, because block data can contain user
+ * choices such as assigned Lead Forms.
+ */
+function migrateDefaultPageBlocks() {
+  if (typeof window === "undefined") return;
+  try {
+    if (window.localStorage.getItem(LS_PAGES_MIGRATION) === "done") return;
+    const pages = readLS<CmsPage[]>(LS_PAGES, []);
+    let changed = false;
+    const next = pages.map((p) => {
+      const hasBlocks = Array.isArray(p.blocks) && p.blocks.length > 0;
+      if (hasBlocks) return p;
+      const seedBlocks = defaultBlocksForSlug(p.slug);
+      if (seedBlocks.length === 0) return p;
+      changed = true;
+      return { ...p, blocks: seedBlocks, updatedAt: new Date().toISOString() };
+    });
+    if (changed) writeLS(LS_PAGES, next);
+    window.localStorage.setItem(LS_PAGES_MIGRATION, "done");
+  } catch { /* ignore */ }
+}
 
 function readLS<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -133,49 +154,42 @@ function writeLS<T>(key: string, value: T) {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
-/**
- * Seed built-in CMS pages the first time an admin opens the Pages list
- * against an empty database. Requires an authenticated admin session
- * (RLS blocks anon inserts). Public visitors see static markup fallbacks
- * until an admin has visited at least once.
- */
-let _pagesSeedPromise: Promise<void> | null = null;
-async function seedBuiltInPagesIfEmpty(): Promise<void> {
-  if (_pagesSeedPromise) return _pagesSeedPromise;
-  _pagesSeedPromise = (async () => {
-    const { count, error: cErr } = await supabase
-      .from("pages")
-      .select("id", { count: "exact", head: true });
-    if (cErr || (count ?? 0) > 0) return;
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return; // only authenticated admins may seed
-    const built = [
-      { title: "Home", slug: "/", status: "published" as const },
-      { title: "About", slug: "/about", status: "published" as const },
-      { title: "Property", slug: "/property", status: "published" as const },
-      { title: "Blog", slug: "/blog", status: "published" as const },
-      { title: "FAQ", slug: "/faq", status: "published" as const },
-      { title: "Contact", slug: "/contact", status: "published" as const },
-      { title: "Privacy Policy", slug: "/privacy", status: "draft" as const },
-      { title: "Terms", slug: "/terms", status: "draft" as const },
+function seed() {
+  if (readLS<CmsPage[] | null>(LS_PAGES, null) === null) {
+    const now = new Date().toISOString();
+    const built: CmsPage[] = [
+      { title: "Home", slug: "/", parentId: null, status: "published" },
+      { title: "About", slug: "/about", parentId: null, status: "published" },
+      { title: "Property", slug: "/property", parentId: null, status: "published" },
+      { title: "Blog", slug: "/blog", parentId: null, status: "published" },
+      { title: "FAQ", slug: "/faq", parentId: null, status: "published" },
+      { title: "Contact", slug: "/contact", parentId: null, status: "published" },
+      { title: "Privacy Policy", slug: "/privacy", parentId: null, status: "draft" },
+      { title: "Terms", slug: "/terms", parentId: null, status: "draft" },
     ].map((p) => ({
+      id: uid(),
       title: p.title,
       slug: p.slug,
-      status: p.status,
-      seo_title: p.title,
-      seo_description: "",
+      parentId: p.parentId,
+      status: p.status as PageStatus,
+      seoTitle: p.title,
+      seoDescription: "",
       content: `<h1>${p.title}</h1>`,
-      blocks: defaultBlocksForSlug(p.slug) as unknown as Json,
-      show_in_nav: true,
-      template: "standard" as const,
-      created_by: session.user.id,
+      publishAt: null,
+      updatedAt: now,
+      createdAt: now,
+      formId: null,
+      blocks: defaultBlocksForSlug(p.slug),
+      showInNav: true,
+      template: "standard",
+      seoKeywords: "",
+      ogImage: null,
+      canonical: "",
     }));
-    await supabase.from("pages").insert(built);
-  })();
-  try { await _pagesSeedPromise; } finally { /* keep promise cached */ }
-}
-
-function seedLeadsIfEmpty() {
+    writeLS(LS_PAGES, built);
+    if (typeof window !== "undefined") window.localStorage.setItem(LS_PAGES_MIGRATION, "done");
+  }
+  migrateDefaultPageBlocks();
   if (readLS<Lead[] | null>(LS_LEADS, null) === null) {
     const sources = ["Website", "Facebook", "Google Ads", "Referral", "Walk-in"];
     const names = ["Ayesha Khan", "Rafiq Islam", "Tania Rahman", "Sabbir Ahmed", "Nadia Chowdhury", "Imran Hossain", "Mou Akter", "Jahid Karim"];
@@ -246,150 +260,130 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 // ---------- Auth ----------
-// Auth has moved to `./auth.ts` (Supabase-backed). This re-export keeps
-// legacy imports working during the phased migration.
-export { signIn as login, signOut as logout, getSessionSnapshot as getSession } from "./auth";
-export type { AppRole } from "./auth";
 
-// ---------- Pages (Supabase-backed) ----------
-
-type PageRow = Database["public"]["Tables"]["pages"]["Row"];
-type PageInsert = Database["public"]["Tables"]["pages"]["Insert"];
-type PageUpdate = Database["public"]["Tables"]["pages"]["Update"];
-
-function rowToPage(r: PageRow): CmsPage {
-  return {
-    id: r.id,
-    title: r.title,
-    slug: r.slug,
-    parentId: r.parent_id,
-    status: r.status as PageStatus,
-    seoTitle: r.seo_title ?? "",
-    seoDescription: r.seo_description ?? "",
-    content: r.content ?? "",
-    publishAt: r.publish_at,
-    updatedAt: r.updated_at,
-    createdAt: r.created_at,
-    publishedAt: r.published_at ?? null,
-    archivedAt: r.archived_at ?? null,
-    formId: r.form_id,
-    blocks: (Array.isArray(r.blocks) ? (r.blocks as unknown as PageBlock[]) : []),
-    showInNav: r.show_in_nav,
-    template: r.template as CmsPage["template"],
-    seoKeywords: r.seo_keywords ?? "",
-    ogImage: r.og_image,
-    canonical: r.canonical ?? "",
-  };
+export interface AuthUser {
+  email: string;
+  name: string;
+  role: "admin";
 }
 
-function pageToDbPatch(p: Partial<CmsPage>): PageUpdate {
-  const out: PageUpdate = {};
-  if (p.title !== undefined) out.title = p.title;
-  if (p.slug !== undefined) out.slug = p.slug;
-  if (p.parentId !== undefined) out.parent_id = p.parentId;
-  if (p.status !== undefined) out.status = p.status;
-  if (p.seoTitle !== undefined) out.seo_title = p.seoTitle;
-  if (p.seoDescription !== undefined) out.seo_description = p.seoDescription;
-  if (p.content !== undefined) out.content = p.content;
-  if (p.publishAt !== undefined) out.publish_at = p.publishAt;
-  if (p.publishedAt !== undefined) out.published_at = p.publishedAt;
-  if (p.archivedAt !== undefined) out.archived_at = p.archivedAt;
-  if (p.formId !== undefined) out.form_id = p.formId;
-  if (p.blocks !== undefined) out.blocks = p.blocks as unknown as Json;
-  if (p.showInNav !== undefined) out.show_in_nav = p.showInNav;
-  if (p.template !== undefined) out.template = p.template;
-  if (p.seoKeywords !== undefined) out.seo_keywords = p.seoKeywords;
-  if (p.ogImage !== undefined) out.og_image = p.ogImage;
-  if (p.canonical !== undefined) out.canonical = p.canonical;
-  return out;
+export function getSession(): AuthUser | null {
+  return readLS<AuthUser | null>(LS_AUTH, null);
 }
+
+export async function login(email: string, password: string): Promise<AuthUser> {
+  if (!USE_MOCK) {
+    const user = await apiFetch<AuthUser>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+    writeLS(LS_AUTH, user);
+    return user;
+  }
+  if (!email || password.length < 4) throw new Error("Invalid credentials");
+  const user: AuthUser = { email, name: email.split("@")[0] || "Admin", role: "admin" };
+  writeLS(LS_AUTH, user);
+  return user;
+}
+
+export function logout() {
+  if (typeof window !== "undefined") window.localStorage.removeItem(LS_AUTH);
+}
+
+// ---------- Pages ----------
 
 export async function listPages(): Promise<CmsPage[]> {
-  await seedBuiltInPagesIfEmpty();
-  const { data, error } = await supabase
-    .from("pages")
-    .select("*")
-    .order("updated_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  return (data ?? []).map(rowToPage);
+  if (!USE_MOCK) return apiFetch<CmsPage[]>("/pages");
+  seed();
+  return readLS<CmsPage[]>(LS_PAGES, []);
 }
 
 export async function getPage(id: string): Promise<CmsPage | null> {
-  const { data, error } = await supabase.from("pages").select("*").eq("id", id).maybeSingle();
-  if (error) throw new Error(error.message);
-  return data ? rowToPage(data) : null;
-}
-
-/**
- * Make a slug unique by appending -2, -3, … if the target slug already exists.
- * Case-insensitive on `pages.slug` (which itself is stored lowercased).
- */
-async function ensureUniqueSlug(base: string, ignoreId?: string): Promise<string> {
-  const query = supabase.from("pages").select("id, slug");
-  const { data } = await query;
-  const taken = new Set((data ?? []).filter((r) => r.id !== ignoreId).map((r) => r.slug));
-  if (!taken.has(base)) return base;
-  let i = 2;
-  while (taken.has(`${base}-${i}`)) i++;
-  return `${base}-${i}`;
+  if (!USE_MOCK) return apiFetch<CmsPage>(`/pages/${id}`);
+  seed();
+  return readLS<CmsPage[]>(LS_PAGES, []).find((p) => p.id === id) ?? null;
 }
 
 export async function createPage(input: Partial<CmsPage>): Promise<CmsPage> {
+  const now = new Date().toISOString();
   const title = (input.title ?? "Untitled").trim() || "Untitled";
-  const baseSlug = normalizeSlug(input.slug || title) || `/untitled-${Date.now().toString(36)}`;
-  const slug = await ensureUniqueSlug(baseSlug);
-  const status: PageStatus = input.status ?? "draft";
-  const { data: { session } } = await supabase.auth.getSession();
-  const row: PageInsert = {
+  const slug = normalizeSlug(input.slug || title);
+  const page: CmsPage = {
+    id: uid(),
     title,
-    slug,
-    parent_id: input.parentId ?? null,
-    status,
-    seo_title: input.seoTitle ?? title,
-    seo_description: input.seoDescription ?? "",
+    slug: slug || `/untitled-${Date.now().toString(36)}`,
+    parentId: input.parentId ?? null,
+    status: input.status ?? "draft",
+    seoTitle: input.seoTitle ?? title,
+    seoDescription: input.seoDescription ?? "",
     content: input.content ?? "",
-    publish_at: input.publishAt ?? null,
-    form_id: input.formId ?? null,
-    blocks: (input.blocks ?? []) as unknown as Json,
-    show_in_nav: input.showInNav ?? true,
+    publishAt: input.publishAt ?? null,
+    updatedAt: now,
+    createdAt: now,
+    publishedAt: input.status === "published" ? (input.publishedAt ?? now) : (input.publishedAt ?? null),
+    archivedAt: input.status === "archived" ? (input.archivedAt ?? now) : null,
+    formId: input.formId ?? null,
+    blocks: (input.blocks as PageBlock[] | undefined) ?? [],
+    showInNav: input.showInNav ?? true,
     template: input.template ?? "standard",
-    seo_keywords: input.seoKeywords ?? "",
-    og_image: input.ogImage ?? null,
+    seoKeywords: input.seoKeywords ?? "",
+    ogImage: input.ogImage ?? null,
     canonical: input.canonical ?? "",
-    created_by: session?.user.id ?? null,
   };
-  const { data, error } = await supabase.from("pages").insert(row).select("*").single();
-  if (error) throw new Error(error.message);
-  return rowToPage(data);
+  // Guard against duplicate slugs in the mock store
+  if (USE_MOCK) {
+    const all = readLS<CmsPage[]>(LS_PAGES, []);
+    let candidate = page.slug;
+    let i = 2;
+    while (all.some((p) => p.slug === candidate)) {
+      candidate = `${page.slug}-${i++}`;
+    }
+    page.slug = candidate;
+  }
+  if (!USE_MOCK) return apiFetch<CmsPage>("/pages", { method: "POST", body: JSON.stringify(page) });
+  const all = readLS<CmsPage[]>(LS_PAGES, []);
+  all.unshift(page);
+  writeLS(LS_PAGES, all);
+  return page;
 }
 
 export async function updatePage(id: string, patch: Partial<CmsPage>): Promise<CmsPage> {
   const normalized: Partial<CmsPage> = { ...patch };
-  if (typeof patch.slug === "string") {
-    const base = normalizeSlug(patch.slug) || patch.slug;
-    normalized.slug = await ensureUniqueSlug(base, id);
-  }
-  const dbPatch = pageToDbPatch(normalized);
-  const { data, error } = await supabase.from("pages").update(dbPatch).eq("id", id).select("*").single();
-  if (error) throw new Error(error.message);
-  return rowToPage(data);
+  if (typeof patch.slug === "string") normalized.slug = normalizeSlug(patch.slug) || patch.slug;
+  if (!USE_MOCK) return apiFetch<CmsPage>(`/pages/${id}`, { method: "PUT", body: JSON.stringify(normalized) });
+  const all = readLS<CmsPage[]>(LS_PAGES, []);
+  const idx = all.findIndex((p) => p.id === id);
+  if (idx < 0) throw new Error("Page not found");
+  const now = new Date().toISOString();
+  const prev = all[idx];
+  const nextStatus = (normalized.status ?? prev.status) as CmsPage["status"];
+  const publishedAt =
+    nextStatus === "published" && prev.status !== "published"
+      ? now
+      : normalized.publishedAt !== undefined
+        ? normalized.publishedAt
+        : prev.publishedAt ?? null;
+  const archivedAt =
+    nextStatus === "archived" && prev.status !== "archived"
+      ? now
+      : normalized.archivedAt !== undefined
+        ? normalized.archivedAt
+        : prev.archivedAt ?? null;
+  all[idx] = { ...prev, ...normalized, updatedAt: now, publishedAt, archivedAt };
+  writeLS(LS_PAGES, all);
+  return all[idx];
 }
 
 export async function deletePage(id: string): Promise<void> {
-  const { error } = await supabase.from("pages").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  if (!USE_MOCK) return apiFetch<void>(`/pages/${id}`, { method: "DELETE" });
+  writeLS(LS_PAGES, readLS<CmsPage[]>(LS_PAGES, []).filter((p) => p.id !== id));
 }
 
 export async function duplicatePage(id: string): Promise<CmsPage> {
   const src = await getPage(id);
   if (!src) throw new Error("Page not found");
-  const { id: _omitId, createdAt: _c, updatedAt: _u, publishedAt: _p, archivedAt: _a, ...rest } = src;
-  return createPage({
-    ...rest,
-    title: `${src.title} (Copy)`,
-    slug: `${src.slug}-copy-${Date.now().toString(36)}`,
-    status: "draft",
-  });
+  const { id: _omitId, createdAt: _c, updatedAt: _u, ...rest } = src;
+  return createPage({ ...rest, title: `${src.title} (Copy)`, slug: `${src.slug}-copy-${Date.now().toString(36)}`, status: "draft" });
 }
 
 /**
@@ -397,36 +391,23 @@ export async function duplicatePage(id: string): Promise<CmsPage> {
  */
 export async function getPageByPath(path: string): Promise<CmsPage | null> {
   const normalized = normalizeSlug(path) || path;
-  const { data, error } = await supabase
-    .from("pages")
-    .select("*")
-    .eq("slug", normalized)
-    .eq("status", "published")
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return data ? rowToPage(data) : null;
+  const all = await listPages();
+  return all.find((p) => p.slug === normalized && p.status === "published") ?? null;
 }
 
 // ---------- Leads / Dashboard ----------
 
 export async function listLeads(): Promise<Lead[]> {
-  // Repository layer: leads live in the CRM store. Map to the legacy DashboardStats Lead shape.
-  const crm = await listCrmLeads();
-  return crm.map<Lead>((l) => ({
-    id: l.id,
-    name: l.name,
-    email: l.email,
-    phone: l.phone,
-    message: (l.answers.message as string) ?? "",
-    source: l.source,
-    createdAt: l.createdAt,
-  }));
+  if (!USE_MOCK) return apiFetch<Lead[]>("/leads");
+  seed();
+  return readLS<Lead[]>(LS_LEADS, []);
 }
 
 export async function getDashboard(): Promise<DashboardStats> {
-  const leads = await listLeads();
-  const pages = await listPages();
-  const activity = await listActivity({ limit: 20 }).catch(() => []);
+  if (!USE_MOCK) return apiFetch<DashboardStats>("/dashboard");
+  seed();
+  const leads = readLS<Lead[]>(LS_LEADS, []);
+  const pages = readLS<CmsPage[]>(LS_PAGES, []);
   const today = new Date();
   const isSameDay = (d: Date) => d.toDateString() === today.toDateString();
   const isSameMonth = (d: Date) => d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
@@ -453,11 +434,12 @@ export async function getDashboard(): Promise<DashboardStats> {
     propertyViews: 4820,
     conversionRate: leads.length ? Math.round((leads.length / 4820) * 1000) / 10 : 0,
     recentLeads: [...leads].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6),
-    recentActivity: activity.slice(0, 8).map((a) => ({
-      id: a.id,
-      text: a.message || `${a.action}${a.entity ? ` · ${a.entity}` : ""}`,
-      at: a.createdAt,
-    })),
+    recentActivity: [
+      { id: uid(), text: "New lead captured from Website form", at: new Date().toISOString() },
+      { id: uid(), text: "Property 'Landmark Heights' updated", at: new Date(Date.now() - 3600e3).toISOString() },
+      { id: uid(), text: "Blog post 'Investing in Dhaka' published", at: new Date(Date.now() - 7200e3).toISOString() },
+      { id: uid(), text: "Page 'About' edited", at: new Date(Date.now() - 86400e3).toISOString() },
+    ],
     leadsBySource: Array.from(sourceMap.entries()).map(([source, count]) => ({ source, count })),
     leadsByDay: days,
   };

@@ -13,12 +13,10 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import { Star } from "lucide-react";
-import { submitLead, recordEmailSent } from "../api/crm-client";
-import { logActivity } from "../api/activity-log-client";
+import { submitLead } from "../api/crm-client";
 import type { CrmAnalytics } from "../api/crm";
-import { formatAnswers, notifyAdmin, sendAppEmail, type EmailSource } from "@/services/email-service";
+import { formatAnswers, notifyAdmin, type EmailSource } from "@/services/email-service";
 import { buildFormCss } from "../api/form-design";
-import { site } from "@/config/site";
 
 /**
  * Map form purpose → email source. Purpose comes from the LeadForm settings
@@ -146,9 +144,8 @@ export function FormRenderer({ form }: { form: LeadForm }) {
         }
       }
       // 1. Persist the lead in the CRM (best-effort, non-blocking).
-      let leadId: string | null = null;
       try {
-        const lead = await submitLead({
+        await submitLead({
           formId: form.id,
           formName: form.name,
           answers,
@@ -156,7 +153,6 @@ export function FormRenderer({ form }: { form: LeadForm }) {
           analytics,
           source: leadPageSlug ? `Lead Page: ${leadPageSlug}` : `Form: ${form.name}`,
         });
-        leadId = lead.id;
       } catch { /* CRM failure shouldn't block the email path */ }
 
       // 2. Email the admin via the centralised SMTP service.
@@ -165,50 +161,17 @@ export function FormRenderer({ form }: { form: LeadForm }) {
         (typeof answers.email === "string" && answers.email) ||
         (typeof answers.emailAddress === "string" && answers.emailAddress) ||
         undefined;
-      const adminSubject = `[${form.name}] New submission`;
       const res = await notifyAdmin({
         source,
-        subject: adminSubject,
-        to: form.settings.notifyEmail || undefined,
+        subject: `[${form.name}] New submission`,
         text: `Form: ${form.name}\nSource: ${source}\n\n${formatAnswers(answers)}`,
         replyTo,
-        meta: { formId: form.id, leadPageSlug, leadId },
+        meta: { formId: form.id, leadPageSlug },
       });
       if (!res.ok) {
         toast.error(res.error ?? "We couldn't send your submission. Please try again.");
         return;
       }
-
-      // 3. Timeline + activity log (best-effort).
-      if (leadId) {
-        recordEmailSent(leadId, adminSubject, form.settings.notifyEmail || site.email);
-        logActivity({
-          action: "lead_notification_sent",
-          entity: "lead",
-          entityId: leadId,
-          message: `Admin notified for ${form.name} submission`,
-          metadata: { formId: form.id, source },
-        });
-      }
-
-      // 4. Optional auto-response to the customer.
-      if (form.settings.autoReplyEmail && replyTo) {
-        const auto = await sendAppEmail({
-          to: replyTo,
-          subject: `Thank you for contacting ${site.name}`,
-          text: form.settings.autoReplyEmail,
-          source,
-          meta: { autoReply: true, formId: form.id, leadId },
-        });
-        if (auto.ok && leadId) recordEmailSent(leadId, "Auto-response", replyTo);
-      }
-
-      // 5. Redirect if configured.
-      if (form.settings.redirectUrl) {
-        const url = form.settings.redirectUrl;
-        setTimeout(() => { if (typeof window !== "undefined") window.location.href = url; }, 400);
-      }
-
       setSubmitted(true);
       if (res.data?.simulated) {
         toast.warning("Submitted — email backend not connected yet (simulated).");

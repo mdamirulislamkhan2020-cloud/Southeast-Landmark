@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { signIn } from "../api/auth";
+import { login } from "../api/client";
 
 export function LoginPage() {
   const nav = useNavigate();
-  const loc = useLocation() as { state?: { from?: string; deactivated?: boolean } };
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const loc = useLocation() as { state?: { from?: string } };
+  const [email, setEmail] = useState("admin@southeastlandmark.com");
+  const [password, setPassword] = useState("admin");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -18,7 +18,7 @@ export function LoginPage() {
     e.preventDefault();
     setBusy(true); setErr(null);
     try {
-      await signIn(email.trim(), password);
+      await login(email, password);
       nav(loc.state?.from ?? "/admin", { replace: true });
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Login failed");
@@ -45,14 +45,11 @@ export function LoginPage() {
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
             {err && <div className="text-sm text-destructive">{err}</div>}
-            {loc.state?.deactivated && !err && (
-              <div className="text-sm text-destructive">Your account has been deactivated. Contact an administrator.</div>
-            )}
             <Button type="submit" className="w-full" disabled={busy}>{busy ? "Signing in..." : "Sign in"}</Button>
-            <div className="flex items-center justify-between text-xs">
-              <Link to="/admin/signup" className="text-muted-foreground hover:text-foreground">Create admin account</Link>
-              <Link to="/admin/forgot-password" className="text-muted-foreground hover:text-foreground">Forgot password?</Link>
+            <div className="text-center">
+              <Link to="/admin/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">Forgot password?</Link>
             </div>
+            <p className="text-xs text-muted-foreground text-center">Default: any email + password 4+ chars (mock mode).</p>
           </form>
         </CardContent>
       </Card>

@@ -1,16 +1,14 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { CmsSeo } from "@/components/site/Seo";
+import { Seo } from "@/components/site/Seo";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { VisibilityGate } from "@/components/site/VisibilityGate";
 
 const HomePage = lazy(() => import("@/pages/HomePage").then((m) => ({ default: m.HomePage })));
 const AboutPage = lazy(() => import("@/pages/AboutPage").then((m) => ({ default: m.AboutPage })));
 const PropertyPage = lazy(() => import("@/pages/PropertyPage").then((m) => ({ default: m.PropertyPage })));
-const PropertyDetailPage = lazy(() => import("@/pages/PropertyDetailPage").then((m) => ({ default: m.PropertyDetailPage })));
 const BlogPage = lazy(() => import("@/pages/BlogPage").then((m) => ({ default: m.BlogPage })));
-const BlogDetailPage = lazy(() => import("@/pages/BlogDetailPage").then((m) => ({ default: m.BlogDetailPage })));
 const FAQPage = lazy(() => import("@/pages/FAQPage").then((m) => ({ default: m.FAQPage })));
 const ContactPage = lazy(() => import("@/pages/ContactPage").then((m) => ({ default: m.ContactPage })));
 
@@ -40,10 +38,7 @@ const AdminIntegrations = lazy(() => import("@/admin/pages/IntegrationsPage").th
 const AdminNavigation = lazy(() => import("@/admin/pages/NavigationPage").then((m) => ({ default: m.NavigationPage })));
 const AdminSmtp = lazy(() => import("@/admin/pages/SmtpPage").then((m) => ({ default: m.SmtpPage })));
 const AdminVisibility = lazy(() => import("@/admin/pages/VisibilityPage").then((m) => ({ default: m.VisibilityPage })));
-const AdminAuditLogs = lazy(() => import("@/admin/pages/AuditLogsPage").then((m) => ({ default: m.AuditLogsPage })));
 const AdminForgotPassword = lazy(() => import("@/admin/pages/ForgotPasswordPage").then((m) => ({ default: m.ForgotPasswordPage })));
-const AdminSignup = lazy(() => import("@/admin/pages/SignupPage").then((m) => ({ default: m.SignupPage })));
-const AdminResetPassword = lazy(() => import("@/admin/pages/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })));
 const PublicLeadPage = lazy(() => import("@/pages/LeadPage").then((m) => ({ default: m.LeadPage })));
 const DynamicPage = lazy(() => import("@/pages/DynamicPage").then((m) => ({ default: m.DynamicPage })));
 const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
@@ -56,8 +51,6 @@ export default function App() {
         {/* Admin routes (no public layout, no site chrome) */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
-        <Route path="/admin/signup" element={<AdminSignup />} />
-        <Route path="/admin/reset-password" element={<AdminResetPassword />} />
         <Route
           path="/admin"
           element={
@@ -89,7 +82,6 @@ export default function App() {
           <Route path="navigation" element={<AdminNavigation />} />
           <Route path="smtp" element={<AdminSmtp />} />
           <Route path="visibility" element={<AdminVisibility />} />
-          <Route path="audit" element={<AdminAuditLogs />} />
         </Route>
 
         {/* Public site */}
@@ -104,7 +96,7 @@ export default function App() {
             path="/"
             element={
               <>
-                <CmsSeo slug="/" defaultTitle="Southeast Landmark Ltd — Planned Residential Plots & Township Development" defaultDescription="Southeast Landmark Ltd is a Dhaka-based land development company offering planned residential plots, township projects and secure land investment." />
+                <Seo title="Southeast Landmark Ltd — Planned Residential Plots & Township Development" description="Southeast Landmark Ltd is a Dhaka-based land development company offering planned residential plots, township projects and secure land investment." path="/" />
                 <HomePage />
               </>
             }
@@ -113,7 +105,7 @@ export default function App() {
             path="/about"
             element={
               <>
-                <CmsSeo slug="/about" defaultTitle="About — Southeast Landmark Ltd" defaultDescription="Learn about Southeast Landmark Ltd, a Dhaka-based land development company delivering planned residential plots and township projects." />
+                <Seo title="About — Southeast Landmark Ltd" description="Learn about Southeast Landmark Ltd, a Dhaka-based land development company delivering planned residential plots and township projects." path="/about" />
                 <AboutPage />
               </>
             }
@@ -122,27 +114,25 @@ export default function App() {
             path="/property"
             element={
               <>
-                <CmsSeo slug="/property" defaultTitle="Projects — Southeast Landmark Ltd" defaultDescription="Explore ongoing, upcoming and completed land development and residential plot projects by Southeast Landmark across Bangladesh." />
+                <Seo title="Projects — Southeast Landmark Ltd" description="Explore ongoing, upcoming and completed land development and residential plot projects by Southeast Landmark across Bangladesh." path="/property" />
                 <PropertyPage />
               </>
             }
           />
-          <Route path="/property/:slug" element={<PropertyDetailPage />} />
           <Route
             path="/blog"
             element={
               <>
-                <CmsSeo slug="/blog" defaultTitle="Blog — Southeast Landmark Ltd" defaultDescription="Land investment insights, township updates and news from Southeast Landmark." />
+                <Seo title="Blog — Southeast Landmark Ltd" description="Land investment insights, township updates and news from Southeast Landmark." path="/blog" />
                 <BlogPage />
               </>
             }
           />
-          <Route path="/blog/:slug" element={<BlogDetailPage />} />
           <Route
             path="/faq"
             element={
               <>
-                <CmsSeo slug="/faq" defaultTitle="FAQ — Southeast Landmark Ltd" defaultDescription="Answers to common questions about our residential plots, land projects, booking and installment facilities." />
+                <Seo title="FAQ — Southeast Landmark Ltd" description="Answers to common questions about our residential plots, land projects, booking and installment facilities." path="/faq" />
                 <FAQPage />
               </>
             }
@@ -151,7 +141,7 @@ export default function App() {
             path="/contact"
             element={
               <>
-                <CmsSeo slug="/contact" defaultTitle="Contact — Southeast Landmark Ltd" defaultDescription="Book a site visit or request project details from the Southeast Landmark land development team in Mohammadpur, Dhaka." />
+                <Seo title="Contact — Southeast Landmark Ltd" description="Book a site visit or request project details from the Southeast Landmark land development team in Mohammadpur, Dhaka." path="/contact" />
                 <ContactPage />
               </>
             }

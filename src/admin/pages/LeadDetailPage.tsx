@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import {
   addAttachment, addCommunication, addNote, addTask, assignLead, deleteAttachment, deleteNote, deleteTask,
   getCrmLead, listAssignees, setScore, updateLeadStatus, updateNote, updateTaskStatus,
-  findDuplicates, mergeLeads,
 } from "../api/crm-client";
 import { LEAD_STATUSES, type LeadStatus } from "../api/crm";
 import { sendLeadAssignmentEmail } from "@/services/email-service";
@@ -26,15 +25,6 @@ export function LeadDetailPage() {
   const qc = useQueryClient();
   const { data: lead, isLoading } = useQuery({ queryKey: ["crm-lead", id], queryFn: () => getCrmLead(id) });
   const { data: assignees = [] } = useQuery({ queryKey: ["crm-assignees"], queryFn: listAssignees });
-  const { data: duplicates = [] } = useQuery({
-    queryKey: ["crm-duplicates", id, lead?.phone, lead?.email],
-    queryFn: () => (lead ? findDuplicates(lead.phone, lead.email, lead.id) : Promise.resolve([])),
-    enabled: !!lead,
-  });
-  const mergeMut = useMutation({
-    mutationFn: (secondaryId: string) => mergeLeads(id, secondaryId),
-    onSuccess: () => { toast.success("Leads merged"); invalidate(); qc.invalidateQueries({ queryKey: ["crm-leads"] }); qc.invalidateQueries({ queryKey: ["crm-duplicates"] }); },
-  });
 
   const [note, setNote] = useState("");
   const [editingNote, setEditingNote] = useState<string | null>(null);
@@ -345,27 +335,6 @@ export function LeadDetailPage() {
               ))}
             </ul>
           </CardContent></Card>
-
-          {duplicates.length > 0 && (
-            <Card><CardContent className="p-4 space-y-2">
-              <div className="text-sm font-semibold">Possible duplicates ({duplicates.length})</div>
-              <p className="text-xs text-muted-foreground">Matched by phone or email.</p>
-              <ul className="space-y-2">
-                {duplicates.map((d) => (
-                  <li key={d.id} className="flex items-center justify-between gap-2 rounded-md border border-border p-2 text-xs">
-                    <div className="min-w-0">
-                      <div className="font-medium truncate">{d.name} <span className="font-mono text-muted-foreground">{d.code}</span></div>
-                      <div className="text-muted-foreground truncate">{d.email || d.phone} · {new Date(d.createdAt).toLocaleDateString()}</div>
-                    </div>
-                    <div className="flex gap-1 shrink-0">
-                      <Button size="sm" variant="outline" asChild><Link to={`/admin/leads/${d.id}`}>Open</Link></Button>
-                      <Button size="sm" onClick={() => mergeMut.mutate(d.id)} disabled={mergeMut.isPending}>Merge</Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </CardContent></Card>
-          )}
         </div>
       </div>
     </div>
