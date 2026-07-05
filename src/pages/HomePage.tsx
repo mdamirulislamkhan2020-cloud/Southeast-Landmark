@@ -112,6 +112,8 @@ export function HomePage() {
                 alt="Planned residential township at dusk"
                 width={1600}
                 height={1024}
+                fetchPriority="high"
+                decoding="async"
                 className="h-full w-full object-cover"
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-background/40 via-transparent to-transparent" />
