@@ -212,10 +212,10 @@ export default function SeminarPage() {
 
       {/* Body */}
       <section className="mx-auto max-w-3xl px-5 pt-5 sm:pt-6">
-        <div className="rounded-2xl border border-border bg-card/60 p-6 text-[17px] leading-[1.9] text-foreground/90 sm:p-8">
+        <div className="rounded-2xl border border-border bg-card/60 p-6 text-center text-[14px] leading-[1.6] text-foreground/90 sm:p-8 sm:text-[15px]">
           <p>আমাদের ফ্রি অনলাইন সেমিনারে অংশ নিয়ে জানুন নিরাপদ ও পরিকল্পিতভাবে জমিকে আদর্শ সম্পদে রূপান্তরের গুরুত্বপূর্ণ কৌশল এবং অভিজ্ঞ পরামর্শকের দিকনির্দেশনা।</p>
-          <p className="mt-4">এর মাধ্যমে আপনি আপনার সম্পদকে আরও নিরাপদ করতে পারবেন।</p>
-          <p className="mt-4">এখনই WhatsApp গ্রুপে যোগ দিয়ে আপনার রেজিস্ট্রেশন সম্পন্ন করুন এবং আপনার আসন নিশ্চিত করুন।</p>
+          <p className="mt-2">এর মাধ্যমে আপনি আপনার সম্পদকে আরও নিরাপদ করতে পারবেন।</p>
+          <p className="mt-2">এখনই WhatsApp গ্রুপে যোগ দিয়ে আপনার রেজিস্ট্রেশন সম্পন্ন করুন এবং আপনার আসন নিশ্চিত করুন।</p>
         </div>
       </section>
 
