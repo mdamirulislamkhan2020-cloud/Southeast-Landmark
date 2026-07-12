@@ -1,1 +1,4 @@
 project_id = "zedzpdddeokdlhrzcmcx"
+
+[functions.send-seminar-registration]
+verify_jwt = false
