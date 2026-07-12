@@ -1,9 +1,11 @@
 import { PageHero } from "@/components/site/PageHero";
+import { useEffect, useRef } from "react";
 import { User, Calendar } from "lucide-react";
 import p1 from "@/assets/brand/property-1.jpg";
 import p2 from "@/assets/brand/property-2.jpg";
 import p3 from "@/assets/brand/property-3.jpg";
 import { blockData, CmsAssignedLeadForm, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
+import { gtmPush } from "@/lib/gtm";
 
 const posts = [
   { title: "A Practical Guide to Land Investment in Bangladesh", date: "12/02/2026", img: p1 },
@@ -18,6 +20,13 @@ export function BlogPage() {
   const blocks = useCmsPageBlocks("/blog");
   const heroBlock = blockData(blocks, "blog.hero");
   const gridBlock = blockData(blocks, "blog.grid");
+
+  const blogViewFiredRef = useRef(false);
+  useEffect(() => {
+    if (blogViewFiredRef.current) return;
+    blogViewFiredRef.current = true;
+    gtmPush("blog_view", { page_type: "blog" });
+  }, []);
 
   return (
     <div>
