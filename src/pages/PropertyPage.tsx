@@ -6,6 +6,7 @@ import p2 from "@/assets/brand/property-2.jpg";
 import p3 from "@/assets/brand/property-3.jpg";
 import { blockData, CmsAssignedLeadForm, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
 import { fbqTrack } from "@/lib/fbq";
+import { gtmPush } from "@/lib/gtm";
 
 const items = [
   { img: p1, title: "Landmark City — Phase 1", location: "Purbachal, Dhaka", price: "৳ 18 Lac/katha", katha: 3, blocks: "A–D", status: "Ongoing" },
@@ -42,6 +43,10 @@ export function PropertyPage() {
       content_category: "Projects",
       page_title: typeof document !== "undefined" ? document.title : "",
       page_location: typeof window !== "undefined" ? window.location.href : "",
+    });
+    gtmPush("property_view", {
+      property_name: "Projects Overview",
+      page_type: "property",
     });
   }, []);
 
