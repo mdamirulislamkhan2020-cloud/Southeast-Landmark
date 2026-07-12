@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { sendAppEmail } from "@/services/email-service";
 import { blockData, CmsAssignedLeadForm, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
-import { fbqTrack } from "@/lib/fbq";
+import { fbqTrack, setFbqAdvancedMatching, splitName } from "@/lib/fbq";
 
 export function ContactPage() {
   const blocks = useCmsPageBlocks("/contact");
@@ -51,6 +51,16 @@ export function ContactPage() {
       } else {
         toast.success("Thanks — our land consultant will reach out shortly.");
       }
+      // Meta Advanced Matching — set before firing so the Contact event
+      // includes normalised user data provided in the form.
+      const { firstName, lastName } = splitName(payload.name ?? "");
+      setFbqAdvancedMatching({
+        email: payload.email || undefined,
+        phone: payload.phone,
+        firstName,
+        lastName,
+        country: "bd",
+      });
       fbqTrack("Contact");
       form.reset();
     } finally {

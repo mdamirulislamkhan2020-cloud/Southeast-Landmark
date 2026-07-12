@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { fbqTrack, fbqTrackCustom } from "@/lib/fbq";
+import { fbqTrack, fbqTrackCustom, setFbqAdvancedMatching, splitName } from "@/lib/fbq";
 
 const WHATSAPP_URL = "https://chat.whatsapp.com/J0clS5gbuapCiSnOogGk9Y?mode=gi_t";
 
@@ -107,6 +107,10 @@ export default function SeminarPage() {
       console.error("[seminar] email send failed:", err);
     }
     // Meta Pixel: fire only after a successful (validated) submission.
+    // Advanced Matching — set BEFORE firing events so the events include the
+    // normalised user data. Only user-provided post-submit data is used.
+    const { firstName, lastName } = splitName(data.name);
+    setFbqAdvancedMatching({ phone: data.phone, firstName, lastName, country: "bd" });
     fbqTrack("Lead");
     fbqTrack("CompleteRegistration");
     fbqTrack("SubmitApplication");
