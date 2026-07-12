@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { sendAppEmail } from "@/services/email-service";
 import { blockData, CmsAssignedLeadForm, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
+import { fbqTrack } from "@/lib/fbq";
 
 export function ContactPage() {
   const blocks = useCmsPageBlocks("/contact");
@@ -50,6 +51,7 @@ export function ContactPage() {
       } else {
         toast.success("Thanks — our land consultant will reach out shortly.");
       }
+      fbqTrack("Contact");
       form.reset();
     } finally {
       setSubmitting(false);
@@ -118,7 +120,14 @@ export function ContactPage() {
             { icon: Mail, label: "Email", value: cmsString(contactBlock, "email", site.email), href: `mailto:${cmsString(contactBlock, "email", site.email)}` },
             { icon: MapPin, label: "Address", value: cmsString(contactBlock, "address", site.address), href: "#" },
           ].map((c) => (
-            <a key={c.label} href={c.href} className="flex items-start gap-4 rounded-2xl border border-border/60 bg-card p-6 transition hover:border-primary/50">
+            <a
+              key={c.label}
+              href={c.href}
+              onClick={() => {
+                if (c.href.startsWith("tel:") || c.href.startsWith("mailto:")) fbqTrack("Contact");
+              }}
+              className="flex items-start gap-4 rounded-2xl border border-border/60 bg-card p-6 transition hover:border-primary/50"
+            >
               <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
                 <c.icon className="h-5 w-5" />
               </div>

@@ -1,9 +1,11 @@
 import { PageHero } from "@/components/site/PageHero";
+import { useEffect } from "react";
 import { MapPin, LandPlot, Layers, Ruler, Search } from "lucide-react";
 import p1 from "@/assets/brand/property-1.jpg";
 import p2 from "@/assets/brand/property-2.jpg";
 import p3 from "@/assets/brand/property-3.jpg";
 import { blockData, CmsAssignedLeadForm, cmsList, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
+import { fbqTrack } from "@/lib/fbq";
 
 const items = [
   { img: p1, title: "Landmark City — Phase 1", location: "Purbachal, Dhaka", price: "৳ 18 Lac/katha", katha: 3, blocks: "A–D", status: "Ongoing" },
@@ -29,6 +31,10 @@ export function PropertyPage() {
   const heroBlock = blockData(blocks, "property.hero");
   const gridBlock = blockData(blocks, "property.grid");
   const editableAmenities = cmsList<string>(gridBlock, "amenities", amenities);
+
+  useEffect(() => {
+    fbqTrack("ViewContent", { content_type: "product_group", content_category: "Projects" });
+  }, []);
 
   return (
     <div>
