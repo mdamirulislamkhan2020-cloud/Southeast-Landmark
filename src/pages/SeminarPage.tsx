@@ -194,24 +194,24 @@ export default function SeminarPage() {
 
       {/* Hero */}
       <header className="border-b border-border/60 bg-gradient-to-b from-primary/5 to-transparent">
-        <div className="mx-auto max-w-3xl px-5 py-14 text-center sm:py-20">
-          <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+        <div className="mx-auto max-w-3xl px-5 pt-10 pb-7 text-center sm:pt-14 sm:pb-10">
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[13px] font-medium text-primary">
             <span className="h-2 w-2 rounded-full bg-primary" /> ফ্রি অনলাইন সেমিনার
           </span>
-          <h1 className="mt-6 text-3xl font-bold leading-[1.3] text-foreground sm:text-4xl md:text-[42px] md:leading-[1.25]">
+          <h1 className="mt-4 text-[24px] font-bold leading-[1.25] text-foreground sm:text-[30px] md:text-[34px] md:leading-[1.2]">
             আপনার ভবিষ্যৎ আরও নিরাপদ করতে নিচের ফর্মটি পূরণ করুন
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+          <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-[1.55] text-muted-foreground sm:text-base">
             আপনি কি নিজের বার্ধক্য এবং সন্তানের আর্থিক ভবিষ্যৎ আরও নিরাপদ করতে চান?
           </p>
-          <p className="mx-auto mt-3 max-w-2xl text-lg leading-relaxed text-foreground/80">
+          <p className="mx-auto mt-2 max-w-2xl text-[15px] leading-[1.55] text-foreground/80 sm:text-base">
             আপনার উত্তর যদি <strong className="text-primary">"হ্যাঁ"</strong> হয়, তাহলে এই সুযোগ হাতছাড়া করবেন না।
           </p>
         </div>
       </header>
 
       {/* Body */}
-      <section className="mx-auto max-w-3xl px-5 pt-10 sm:pt-14">
+      <section className="mx-auto max-w-3xl px-5 pt-5 sm:pt-6">
         <div className="rounded-2xl border border-border bg-card/60 p-6 text-[17px] leading-[1.9] text-foreground/90 sm:p-8">
           <p>আমাদের ফ্রি অনলাইন সেমিনারে অংশ নিয়ে জানুন নিরাপদ ও পরিকল্পিতভাবে জমিকে আদর্শ সম্পদে রূপান্তরের গুরুত্বপূর্ণ কৌশল এবং অভিজ্ঞ পরামর্শকের দিকনির্দেশনা।</p>
           <p className="mt-4">এর মাধ্যমে আপনি আপনার সম্পদকে আরও নিরাপদ করতে পারবেন।</p>
