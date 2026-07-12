@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { fbqTrack, fbqTrackCustom } from "@/lib/fbq";
 
 const WHATSAPP_URL = "https://chat.whatsapp.com/J0clS5gbuapCiSnOogGk9Y?mode=gi_t";
 
@@ -105,6 +106,10 @@ export default function SeminarPage() {
       // Never block the user's successful registration on an email failure.
       console.error("[seminar] email send failed:", err);
     }
+    // Meta Pixel: fire only after a successful (validated) submission.
+    fbqTrack("Lead");
+    fbqTrack("CompleteRegistration");
+    fbqTrack("SubmitApplication");
     setSubmitted(true);
     if (typeof window !== "undefined") {
       requestAnimationFrame(() => {
