@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { notifyAdmin, formatAnswers } from "@/services/email-service";
+import { supabase } from "@/integrations/supabase/client";
 
 const WHATSAPP_URL = "https://chat.whatsapp.com/J0clS5gbuapCiSnOogGk9Y?mode=gi_t";
 
@@ -98,14 +98,12 @@ export default function SeminarPage() {
     };
     QUESTIONS.forEach((q) => { answers[q.label] = data[q.id]; });
     try {
-      await notifyAdmin({
-        subject: `Seminar registration — ${data.name}`,
-        text: formatAnswers(answers),
-        source: "lead_form",
-        replyTo: undefined,
-        meta: { form: "seminar", ...answers },
-      });
-    } catch { /* ignore, still show success */ }
+      const { error } = await supabase.functions.invoke("send-seminar-registration", { body: answers });
+      if (error) console.error("[seminar] email invoke error:", error.message);
+    } catch (err) {
+      // Never block the user's successful registration on an email failure.
+      console.error("[seminar] email send failed:", err);
+    }
     setSubmitted(true);
     if (typeof window !== "undefined") {
       requestAnimationFrame(() => {
