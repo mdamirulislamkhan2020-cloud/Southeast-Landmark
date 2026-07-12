@@ -234,7 +234,7 @@ export default function SoutheastCityPage() {
             noValidate
             className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-10"
           >
-            <h2 className="text-2xl font-bold text-foreground sm:text-3xl">সঠিক তথ্য দিয়ে ফর্মটি পূরণ করুন</h2>
+            <h2 className="mb-6 text-center text-2xl font-bold text-primary sm:text-3xl">সঠিক তথ্য দিয়ে ফর্মটি পূরণ করুন</h2>
 
             <ol className="mt-8 space-y-10">
               {QUESTIONS.map((q, i) => (
