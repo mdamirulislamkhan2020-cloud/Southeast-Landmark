@@ -199,6 +199,7 @@ export default function SeminarPage() {
               href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => fbqTrackCustom("WhatsAppGroupJoin")}
               className="mt-8 inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#25D366] px-8 py-4 text-[17px] font-semibold text-white shadow-sm transition-transform hover:brightness-110 active:scale-[0.99]"
             >
               <WhatsAppIcon className="h-6 w-6" />
