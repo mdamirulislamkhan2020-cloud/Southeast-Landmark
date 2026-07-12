@@ -115,8 +115,8 @@ export default function SeminarPage() {
   };
 
   const FIELD_ORDER: (keyof FormValues)[] = [
-    "name", "phone", "jobTitle", "companyName",
     "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8",
+    "name", "phone", "jobTitle", "companyName",
   ];
 
   const onInvalid = () => {
@@ -210,7 +210,24 @@ export default function SeminarPage() {
             <h2 className="text-2xl font-bold text-foreground sm:text-3xl">রেজিস্ট্রেশন ফর্ম</h2>
             <p className="mt-2 text-base text-muted-foreground">সঠিক তথ্য দিয়ে ফর্মটি পূরণ করুন।</p>
 
-            <fieldset className="mt-8">
+            <ol className="mt-8 space-y-10">
+              {QUESTIONS.map((q, i) => (
+                <li key={q.id} data-field={q.id}>
+                  <p className="text-[19px] font-semibold leading-[1.6] text-foreground">
+                    <span className="mr-2 text-primary">{i + 1}.</span>{q.label}<Req />
+                  </p>
+                  <RadioGroup
+                    name={q.id}
+                    options={q.options}
+                    value={values[q.id] as string | undefined}
+                    onChange={(v) => setValue(q.id, v, { shouldValidate: true })}
+                    error={errors[q.id]?.message as string | undefined}
+                  />
+                </li>
+              ))}
+            </ol>
+
+            <fieldset className="mt-12">
               <legend className="text-[19px] font-bold text-foreground">ব্যক্তিগত তথ্য</legend>
               <div className="mt-5 grid gap-5 sm:grid-cols-2">
                 <div>
@@ -276,23 +293,6 @@ export default function SeminarPage() {
                 </div>
               </div>
             </fieldset>
-
-            <ol className="mt-10 space-y-10">
-              {QUESTIONS.map((q, i) => (
-                <li key={q.id} data-field={q.id}>
-                  <p className="text-[19px] font-semibold leading-[1.6] text-foreground">
-                    <span className="mr-2 text-primary">{i + 1}.</span>{q.label}<Req />
-                  </p>
-                  <RadioGroup
-                    name={q.id}
-                    options={q.options}
-                    value={values[q.id] as string | undefined}
-                    onChange={(v) => setValue(q.id, v, { shouldValidate: true })}
-                    error={errors[q.id]?.message as string | undefined}
-                  />
-                </li>
-              ))}
-            </ol>
 
             <button
               type="submit"
