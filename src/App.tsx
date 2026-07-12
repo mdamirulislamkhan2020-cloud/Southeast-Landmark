@@ -4,6 +4,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { Seo } from "@/components/site/Seo";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { VisibilityGate } from "@/components/site/VisibilityGate";
+import { useGtmPageview } from "@/lib/use-gtm-pageview";
 
 const HomePage = lazy(() => import("@/pages/HomePage").then((m) => ({ default: m.HomePage })));
 const AboutPage = lazy(() => import("@/pages/AboutPage").then((m) => ({ default: m.AboutPage })));
@@ -45,6 +46,7 @@ const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ defa
 const SeminarPage = lazy(() => import("@/pages/SeminarPage").then((m) => ({ default: m.SeminarPage })));
 
 export default function App() {
+  useGtmPageview();
   return (
     <ErrorBoundary scope="app">
       <Suspense fallback={<div className="min-h-screen" />}>
