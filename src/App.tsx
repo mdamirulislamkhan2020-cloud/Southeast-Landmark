@@ -42,6 +42,7 @@ const AdminForgotPassword = lazy(() => import("@/admin/pages/ForgotPasswordPage"
 const PublicLeadPage = lazy(() => import("@/pages/LeadPage").then((m) => ({ default: m.LeadPage })));
 const DynamicPage = lazy(() => import("@/pages/DynamicPage").then((m) => ({ default: m.DynamicPage })));
 const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
+const SeminarPage = lazy(() => import("@/pages/SeminarPage").then((m) => ({ default: m.SeminarPage })));
 
 export default function App() {
   return (
@@ -51,6 +52,7 @@ export default function App() {
         {/* Admin routes (no public layout, no site chrome) */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
+        <Route path="/seminar" element={<SeminarPage />} />
         <Route
           path="/admin"
           element={
