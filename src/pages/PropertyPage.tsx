@@ -1,5 +1,5 @@
 import { PageHero } from "@/components/site/PageHero";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { MapPin, LandPlot, Layers, Ruler, Search } from "lucide-react";
 import p1 from "@/assets/brand/property-1.jpg";
 import p2 from "@/assets/brand/property-2.jpg";
@@ -32,8 +32,17 @@ export function PropertyPage() {
   const gridBlock = blockData(blocks, "property.grid");
   const editableAmenities = cmsList<string>(gridBlock, "amenities", amenities);
 
+  // Guard against React StrictMode double-invoke of effects in dev.
+  const viewContentFiredRef = useRef(false);
   useEffect(() => {
-    fbqTrack("ViewContent", { content_type: "product_group", content_category: "Projects" });
+    if (viewContentFiredRef.current) return;
+    viewContentFiredRef.current = true;
+    fbqTrack("ViewContent", {
+      content_type: "product_group",
+      content_category: "Projects",
+      page_title: typeof document !== "undefined" ? document.title : "",
+      page_location: typeof window !== "undefined" ? window.location.href : "",
+    });
   }, []);
 
   return (
