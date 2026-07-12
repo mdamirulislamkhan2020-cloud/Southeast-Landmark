@@ -203,44 +203,85 @@ export default function SeminarPage() {
           </div>
         ) : (
           <form
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(onSubmit, onInvalid)}
             noValidate
             className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-10"
           >
             <h2 className="text-2xl font-bold text-foreground sm:text-3xl">রেজিস্ট্রেশন ফর্ম</h2>
             <p className="mt-2 text-base text-muted-foreground">সঠিক তথ্য দিয়ে ফর্মটি পূরণ করুন।</p>
 
-            <div className="mt-8 grid gap-5 sm:grid-cols-2">
-              <div>
-                <label htmlFor="name" className="block text-[15px] font-semibold text-foreground">আপনার নাম</label>
-                <input
-                  id="name"
-                  type="text"
-                  autoComplete="name"
-                  {...register("name")}
-                  className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-[16px] text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-                {errors.name && <p className="pt-1.5 text-sm text-destructive">{errors.name.message}</p>}
+            <fieldset className="mt-8">
+              <legend className="text-[19px] font-bold text-foreground">ব্যক্তিগত তথ্য</legend>
+              <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="name" className="block text-[15px] font-semibold text-foreground">
+                    Full Name<Req />
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    autoComplete="name"
+                    placeholder="Enter your full name"
+                    aria-invalid={!!errors.name}
+                    {...register("name")}
+                    className={inputCls(!!errors.name)}
+                  />
+                  {errors.name && <p className="pt-1.5 text-sm text-destructive">{errors.name.message}</p>}
+                </div>
+                <div>
+                  <label htmlFor="phone" className="block text-[15px] font-semibold text-foreground">
+                    Phone Number<Req />
+                  </label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="Enter your phone number"
+                    aria-invalid={!!errors.phone}
+                    {...register("phone")}
+                    className={inputCls(!!errors.phone)}
+                  />
+                  {errors.phone && <p className="pt-1.5 text-sm text-destructive">{errors.phone.message}</p>}
+                </div>
+                <div>
+                  <label htmlFor="jobTitle" className="block text-[15px] font-semibold text-foreground">
+                    Job Title<Req />
+                  </label>
+                  <input
+                    id="jobTitle"
+                    type="text"
+                    autoComplete="organization-title"
+                    placeholder="Enter your job title"
+                    aria-invalid={!!errors.jobTitle}
+                    {...register("jobTitle")}
+                    className={inputCls(!!errors.jobTitle)}
+                  />
+                  {errors.jobTitle && <p className="pt-1.5 text-sm text-destructive">{errors.jobTitle.message}</p>}
+                </div>
+                <div>
+                  <label htmlFor="companyName" className="block text-[15px] font-semibold text-foreground">
+                    Company Name<Req />
+                  </label>
+                  <input
+                    id="companyName"
+                    type="text"
+                    autoComplete="organization"
+                    placeholder="Enter your company name"
+                    aria-invalid={!!errors.companyName}
+                    {...register("companyName")}
+                    className={inputCls(!!errors.companyName)}
+                  />
+                  {errors.companyName && <p className="pt-1.5 text-sm text-destructive">{errors.companyName.message}</p>}
+                </div>
               </div>
-              <div>
-                <label htmlFor="phone" className="block text-[15px] font-semibold text-foreground">মোবাইল নম্বর</label>
-                <input
-                  id="phone"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  {...register("phone")}
-                  className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-[16px] text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-                {errors.phone && <p className="pt-1.5 text-sm text-destructive">{errors.phone.message}</p>}
-              </div>
-            </div>
+            </fieldset>
 
             <ol className="mt-10 space-y-10">
               {QUESTIONS.map((q, i) => (
-                <li key={q.id}>
+                <li key={q.id} data-field={q.id}>
                   <p className="text-[19px] font-semibold leading-[1.6] text-foreground">
-                    <span className="mr-2 text-primary">{i + 1}.</span>{q.label}
+                    <span className="mr-2 text-primary">{i + 1}.</span>{q.label}<Req />
                   </p>
                   <RadioGroup
                     name={q.id}
