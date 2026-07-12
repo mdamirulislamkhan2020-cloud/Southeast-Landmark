@@ -90,15 +90,16 @@ export default function SeminarPage() {
   const values = watch();
 
   const onSubmit = async (data: FormValues) => {
-    const answers: Record<string, unknown> = {
-      নাম: data.name,
-      ফোন: data.phone,
-      "পদবি": data.jobTitle,
-      "কোম্পানি": data.companyName,
+    const payload = {
+      full_name: data.name,
+      phone_number: data.phone,
+      job_title: data.jobTitle,
+      company_name: data.companyName,
+      answers: QUESTIONS.map((q) => ({ question: q.label, answer: data[q.id] as string })),
+      submitted_at: new Date().toISOString(),
     };
-    QUESTIONS.forEach((q) => { answers[q.label] = data[q.id]; });
     try {
-      const { error } = await supabase.functions.invoke("send-seminar-registration", { body: answers });
+      const { error } = await supabase.functions.invoke("send-seminar-registration", { body: payload });
       if (error) console.error("[seminar] email invoke error:", error.message);
     } catch (err) {
       // Never block the user's successful registration on an email failure.
