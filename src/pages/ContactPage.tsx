@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { sendAppEmail } from "@/services/email-service";
 import { blockData, CmsAssignedLeadForm, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
-import { fbqTrack, setFbqAdvancedMatching, splitName } from "@/lib/fbq";
+import { fbqTrackWithId, newEventId, setFbqAdvancedMatching, splitName } from "@/lib/fbq";
 
 export function ContactPage() {
   const blocks = useCmsPageBlocks("/contact");
@@ -61,7 +61,12 @@ export function ContactPage() {
         lastName,
         country: "bd",
       });
-      fbqTrack("Contact");
+      fbqTrackWithId("Contact", newEventId("Contact"), {
+        content_name: "Contact Form",
+        source: "Website",
+        page_location: typeof window !== "undefined" ? window.location.href : "",
+        page_path: typeof window !== "undefined" ? window.location.pathname : "",
+      });
       form.reset();
     } finally {
       setSubmitting(false);
@@ -134,7 +139,14 @@ export function ContactPage() {
               key={c.label}
               href={c.href}
               onClick={() => {
-                if (c.href.startsWith("tel:") || c.href.startsWith("mailto:")) fbqTrack("Contact");
+                if (c.href.startsWith("tel:") || c.href.startsWith("mailto:")) {
+                  fbqTrackWithId("Contact", newEventId("Contact"), {
+                    content_name: c.href.startsWith("tel:") ? "Phone Click" : "Email Click",
+                    source: "Contact Page",
+                    page_location: typeof window !== "undefined" ? window.location.href : "",
+                    page_path: typeof window !== "undefined" ? window.location.pathname : "",
+                  });
+                }
               }}
               className="flex items-start gap-4 rounded-2xl border border-border/60 bg-card p-6 transition hover:border-primary/50"
             >
