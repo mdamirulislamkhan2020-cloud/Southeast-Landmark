@@ -201,7 +201,7 @@ export default function SoutheastCityPage() {
           </ol>
           <div className="mt-7 rounded-2xl border border-primary/20 bg-card/70 p-6 text-left sm:p-8">
             <p className="text-[20px] font-bold leading-[1.5] text-primary sm:text-[22px]">সাউথইস্ট সিটি আপনার জন্যই।</p>
-            <p className="mt-3 text-[16px] leading-[1.85] text-foreground/85 sm:text-[17px]">
+            <p className="mt-3 text-justify text-[14px] leading-[1.75] text-foreground/85 sm:text-[15px]">
               আপনাদের মতন দূরদর্শী সম্পদ নির্মাতাদের জন্য আমাদের প্রকল্প দিবে দীর্ঘমেয়াদি স্থায়িত্ব, মূল্যবৃদ্ধির সম্ভাবনা এবং ভবিষ্যৎ প্রজন্মের সম্পদের একটি শক্ত ভিত্তি।
             </p>
           </div>
