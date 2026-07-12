@@ -181,20 +181,20 @@ export default function SoutheastCityPage() {
           <h1 className="mt-4 text-center text-[26px] font-bold leading-[1.3] text-foreground sm:text-[30px] md:text-[34px] md:leading-[1.25]">
             আপনি কি সেই ব্যক্তি?
           </h1>
-          <ol className="mx-auto mt-6 max-w-2xl space-y-3 text-left text-[15px] leading-[1.85] text-foreground/90 sm:text-[16px]">
-            <li className="flex gap-3">
+          <ol className="mx-auto mt-6 max-w-2xl space-y-3 text-left text-[15px] leading-[1.85] text-foreground/90 sm:text-[16px] lg:max-w-[880px] lg:text-[15px] lg:leading-[1.7] lg:whitespace-nowrap">
+            <li className="flex gap-2 lg:gap-1.5">
               <span className="shrink-0 font-semibold text-primary">১)</span>
               <span>যিনি শুধু জমি নয়, গড়তে চান সম্পদের ভিত্তি।</span>
             </li>
-            <li className="flex gap-3">
+            <li className="flex gap-2 lg:gap-1.5">
               <span className="shrink-0 font-semibold text-primary">২)</span>
               <span>যাঁর প্রতিটি সিদ্ধান্ত ভবিষ্যৎ প্রজন্মকে করবে আরও সুরক্ষিত।</span>
             </li>
-            <li className="flex gap-3">
+            <li className="flex gap-2 lg:gap-1.5">
               <span className="shrink-0 font-semibold text-primary">৩)</span>
               <span>যিনি সাময়িক লাভ নয়, দীর্ঘমেয়াদি সম্পদ বৃদ্ধিতে বিশ্বাসী।</span>
             </li>
-            <li className="flex gap-3">
+            <li className="flex gap-2 lg:gap-1.5">
               <span className="shrink-0 font-semibold text-primary">৪)</span>
               <span>যিনি শুধু একটি প্লট নয়, চান একটি পরিকল্পিত ইকোসিস্টেম।</span>
             </li>
