@@ -174,14 +174,14 @@ export default function SoutheastCityPage() {
 
       {/* Hero */}
       <header className="border-b border-border/60 bg-gradient-to-b from-primary/5 to-transparent">
-        <div className="mx-auto max-w-3xl px-5 py-14 sm:py-20">
+        <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
             <span className="h-2 w-2 rounded-full bg-primary" /> সাউথইস্ট সিটি
           </span>
-          <h1 className="mt-6 text-3xl font-bold leading-[1.3] text-foreground sm:text-4xl md:text-[42px] md:leading-[1.25]">
+          <h1 className="mt-4 text-center text-[26px] font-bold leading-[1.3] text-foreground sm:text-[30px] md:text-[34px] md:leading-[1.25]">
             আপনি কি সেই ব্যক্তি?
           </h1>
-          <ol className="mt-8 space-y-4 text-[17px] leading-[1.9] text-foreground/90">
+          <ol className="mx-auto mt-6 max-w-2xl space-y-3 text-left text-[15px] leading-[1.85] text-foreground/90 sm:text-[16px]">
             <li className="flex gap-3">
               <span className="shrink-0 font-semibold text-primary">১)</span>
               <span>যিনি শুধু জমি কিনতে চান না, গড়ে তুলতে চান সম্পদের ভিত্তি?</span>
@@ -199,9 +199,9 @@ export default function SoutheastCityPage() {
               <span>যিনি শুধু একটি প্লট নয়, বরং চান একটি পরিকল্পিত ইকোসিস্টেম।</span>
             </li>
           </ol>
-          <div className="mt-10 rounded-2xl border border-primary/20 bg-card/70 p-6 sm:p-8">
+          <div className="mt-7 rounded-2xl border border-primary/20 bg-card/70 p-6 text-left sm:p-8">
             <p className="text-[20px] font-bold leading-[1.5] text-primary sm:text-[22px]">সাউথইস্ট সিটি আপনার জন্যই।</p>
-            <p className="mt-4 text-[17px] leading-[1.9] text-foreground/85">
+            <p className="mt-3 text-[16px] leading-[1.85] text-foreground/85 sm:text-[17px]">
               আপনাদের মতন দূরদর্শী সম্পদ নির্মাতাদের জন্য আমাদের প্রকল্প দিবে দীর্ঘমেয়াদি স্থায়িত্ব, মূল্যবৃদ্ধির সম্ভাবনা এবং ভবিষ্যৎ প্রজন্মের সম্পদের একটি শক্ত ভিত্তি।
             </p>
           </div>
@@ -209,7 +209,7 @@ export default function SoutheastCityPage() {
       </header>
 
       {/* Form / Success */}
-      <section className="mx-auto max-w-3xl px-5 py-12 sm:py-16">
+      <section className="mx-auto max-w-3xl px-5 py-9 sm:py-12">
         {submitted ? (
           <div
             ref={successRef}
@@ -234,8 +234,7 @@ export default function SoutheastCityPage() {
             noValidate
             className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-10"
           >
-            <h2 className="text-2xl font-bold text-foreground sm:text-3xl">রেজিস্ট্রেশন ফর্ম</h2>
-            <p className="mt-2 text-base text-muted-foreground">সঠিক তথ্য দিয়ে ফর্মটি পূরণ করুন।</p>
+            <h2 className="text-2xl font-bold text-foreground sm:text-3xl">সঠিক তথ্য দিয়ে ফর্মটি পূরণ করুন</h2>
 
             <ol className="mt-8 space-y-10">
               {QUESTIONS.map((q, i) => (
