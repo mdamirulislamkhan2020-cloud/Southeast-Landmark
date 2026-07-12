@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { sendAppEmail } from "@/services/email-service";
 import { blockData, CmsAssignedLeadForm, cmsString, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
 import { fbqTrackWithId, newEventId, setFbqAdvancedMatching, splitName } from "@/lib/fbq";
+import { gtmPush } from "@/lib/gtm";
 
 export function ContactPage() {
   const blocks = useCmsPageBlocks("/contact");
@@ -67,6 +68,8 @@ export function ContactPage() {
         page_location: typeof window !== "undefined" ? window.location.href : "",
         page_path: typeof window !== "undefined" ? window.location.pathname : "",
       });
+      gtmPush("form_submit", { form_name: "contact_form", source: "Website" });
+      gtmPush("contact_form_submit", { source: "Website" });
       form.reset();
     } finally {
       setSubmitting(false);
@@ -146,6 +149,10 @@ export function ContactPage() {
                     page_location: typeof window !== "undefined" ? window.location.href : "",
                     page_path: typeof window !== "undefined" ? window.location.pathname : "",
                   });
+                  gtmPush(
+                    c.href.startsWith("tel:") ? "contact_click_phone" : "contact_click_email",
+                    { source: "Contact Page", destination: c.value }
+                  );
                 }
               }}
               className="flex items-start gap-4 rounded-2xl border border-border/60 bg-card p-6 transition hover:border-primary/50"
