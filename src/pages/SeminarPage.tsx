@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,6 +73,7 @@ function RadioGroup({ name, options, value, onChange, error }: { name: string; o
 
 export default function SeminarPage() {
   const [submitted, setSubmitted] = useState(false);
+  const successRef = useRef<HTMLDivElement | null>(null);
   const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver: zodResolver(schema), mode: "onSubmit" });
   const values = watch();
 
@@ -89,7 +90,11 @@ export default function SeminarPage() {
       });
     } catch { /* ignore, still show success */ }
     setSubmitted(true);
-    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined") {
+      requestAnimationFrame(() => {
+        successRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
   };
 
   return (
@@ -136,20 +141,27 @@ export default function SeminarPage() {
       {/* Form / Success */}
       <section className="mx-auto max-w-3xl px-5 py-12 sm:py-16">
         {submitted ? (
-          <div className="rounded-3xl border border-primary/30 bg-card p-8 text-center shadow-sm sm:p-12">
+          <div
+            ref={successRef}
+            role="status"
+            aria-live="polite"
+            className="animate-fade-in rounded-3xl border border-primary/30 bg-card p-8 text-center shadow-sm sm:p-12"
+          >
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary/10 text-primary">
               <CheckIcon />
             </div>
-            <h2 className="mt-6 text-2xl font-bold text-foreground sm:text-3xl">ধন্যবাদ।</h2>
-            <p className="mt-3 text-lg text-foreground/85">আপনার রেজিস্ট্রেশন সফল হয়েছে।</p>
-            <p className="mt-2 text-base text-muted-foreground">ফ্রি সেমিনারের আপডেট পেতে অবশ্যই আমাদের WhatsApp গ্রুপে যোগ দিন।</p>
+            <h2 className="mt-6 text-2xl font-bold text-foreground sm:text-3xl">ধন্যবাদ!</h2>
+            <p className="mt-4 text-lg text-foreground/85">আপনার রেজিস্ট্রেশন সফল হয়েছে।</p>
+            <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-muted-foreground">
+              ফ্রি সেমিনারের আপডেট পেতে এবং সেমিনারের তারিখ, সময় ও ক্লাসে যোগ দেওয়ার লিংক পেতে অবশ্যই আমাদের WhatsApp গ্রুপে Join করুন।
+            </p>
             <a
               href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-8 inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#25D366] px-7 py-4 text-base font-semibold text-white shadow-sm transition-transform hover:brightness-110 active:scale-[0.99]"
+              className="mt-8 inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#25D366] px-8 py-4 text-[17px] font-semibold text-white shadow-sm transition-transform hover:brightness-110 active:scale-[0.99]"
             >
-              <WhatsAppIcon className="h-5 w-5" />
+              <WhatsAppIcon className="h-6 w-6" />
               WhatsApp Group এ Join করুন
             </a>
           </div>
@@ -214,34 +226,6 @@ export default function SeminarPage() {
             </button>
           </form>
         )}
-      </section>
-
-      {/* WhatsApp Highlight */}
-      <section className="mx-auto max-w-3xl px-5 pb-12">
-        <div className="overflow-hidden rounded-3xl border border-[#25D366]/30 bg-gradient-to-br from-[#25D366]/10 via-card to-card p-8 sm:p-10">
-          <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
-            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#25D366] text-white">
-              <WhatsAppIcon className="h-7 w-7" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold leading-snug text-foreground sm:text-2xl">
-                ফ্রি সেমিনারের আপডেট পেতে অবশ্যই WhatsApp গ্রুপে Join করুন
-              </h2>
-              <p className="mt-2 text-[16px] leading-relaxed text-muted-foreground">
-                সেমিনারের তারিখ, সময় এবং ক্লাসে Join করার লিংক শুধুমাত্র WhatsApp গ্রুপে শেয়ার করা হবে।
-              </p>
-            </div>
-          </div>
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-6 inline-flex w-full items-center justify-center gap-2.5 rounded-xl bg-[#25D366] px-6 py-4 text-[17px] font-semibold text-white shadow-sm transition-transform hover:brightness-110 active:scale-[0.99] sm:w-auto"
-          >
-            <WhatsAppIcon className="h-5 w-5" />
-            WhatsApp Group এ Join করুন
-          </a>
-        </div>
       </section>
 
       {/* Trust */}
