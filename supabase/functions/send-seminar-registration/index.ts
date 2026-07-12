@@ -17,31 +17,84 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function formatBody(payload: Record<string, unknown>): string {
-  const lines: string[] = [];
-  lines.push("New Free Seminar Registration");
-  lines.push("=".repeat(40));
-  lines.push("");
-  for (const [key, value] of Object.entries(payload)) {
-    if (value === undefined || value === null || String(value).trim() === "") continue;
-    const val = Array.isArray(value) ? value.join(", ") : String(value);
-    lines.push(`${key}: ${val}`);
-  }
-  lines.push("");
-  lines.push(`Submitted at: ${new Date().toISOString()}`);
-  return lines.join("\n");
+const SEP = "=".repeat(52);
+
+type SeminarPayload = {
+  full_name?: string;
+  phone_number?: string;
+  job_title?: string;
+  company_name?: string;
+  answers?: Array<{ question: string; answer: string }>;
+  submitted_at?: string;
+};
+
+function v(x: unknown): string {
+  const s = x === undefined || x === null ? "" : String(x).trim();
+  return s.length ? s : "-";
+}
+
+function formatBody(payload: SeminarPayload, ipAddress: string): string {
+  const L: string[] = [];
+  L.push(SEP);
+  L.push("NEW FREE SEMINAR REGISTRATION");
+  L.push(SEP);
+  L.push("");
+  L.push("PERSONAL INFORMATION");
+  L.push("");
+  L.push("Full Name:");
+  L.push(v(payload.full_name));
+  L.push("");
+  L.push("Phone Number:");
+  L.push(v(payload.phone_number));
+  L.push("");
+  L.push("Job Title:");
+  L.push(v(payload.job_title));
+  L.push("");
+  L.push("Company Name:");
+  L.push(v(payload.company_name));
+  L.push("");
+  L.push(SEP);
+  L.push("QUESTIONNAIRE");
+  L.push(SEP);
+  L.push("");
+  const answers = Array.isArray(payload.answers) ? payload.answers : [];
+  answers.forEach((a, i) => {
+    L.push(`${i + 1}. ${v(a?.question)}`);
+    L.push("Answer:");
+    L.push(v(a?.answer));
+    L.push("");
+  });
+  L.push(SEP);
+  L.push("SYSTEM INFORMATION");
+  L.push(SEP);
+  L.push("");
+  L.push("Submitted At:");
+  L.push(v(payload.submitted_at) === "-" ? new Date().toISOString() : v(payload.submitted_at));
+  L.push("");
+  L.push("IP Address:");
+  L.push(v(ipAddress));
+  L.push("");
+  L.push(SEP);
+  L.push("");
+  L.push("This email was generated automatically from the Southeast Landmark Free Seminar Registration System.");
+  return L.join("\r\n");
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ ok: false, error: "method_not_allowed" }, 405);
 
-  let payload: Record<string, unknown> = {};
+  let payload: SeminarPayload = {};
   try {
     payload = await req.json();
   } catch {
     return json({ ok: false, error: "invalid_json" }, 400);
   }
+
+  const ipAddress =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "";
 
   const host = Deno.env.get("SMTP_HOST");
   const portStr = Deno.env.get("SMTP_PORT") ?? "465";
@@ -82,7 +135,7 @@ Deno.serve(async (req) => {
       to: recipients,
       replyTo: replyTo || undefined,
       subject,
-      content: formatBody(payload),
+      content: formatBody(payload, ipAddress),
     });
     console.log(`[send-seminar-registration] sent to ${recipients.length} recipient(s)`);
     return json({ ok: true });
