@@ -32,6 +32,38 @@ export function fbqTrackCustom(event: string, params?: Record<string, unknown>) 
 }
 
 /**
+ * Fire a standard Meta Pixel event with an `eventID` for CAPI
+ * deduplication. The exact same `eventID` must be reused by a future
+ * server-side Conversions API call for Meta to deduplicate.
+ */
+export function fbqTrackWithId(event: StandardEvent, eventID: string, params?: Record<string, unknown>) {
+  if (typeof window === "undefined" || typeof window.fbq !== "function") return;
+  const payload = params ?? {};
+  window.fbq("track", event, payload, { eventID });
+}
+
+export function fbqTrackCustomWithId(event: string, eventID: string, params?: Record<string, unknown>) {
+  if (typeof window === "undefined" || typeof window.fbq !== "function") return;
+  const payload = params ?? {};
+  window.fbq("trackCustom", event, payload, { eventID });
+}
+
+/**
+ * CAPI-compatible event ID. Format: `<event>.<uuid>` so server-side code
+ * can log/inspect the event type without parsing. UUIDs are unique per
+ * user action, preventing duplicate credit if the same handler somehow
+ * runs twice (StrictMode, retries, etc. — we still guard those, but the
+ * ID gives Meta a final dedupe key).
+ */
+export function newEventId(event: string): string {
+  const uuid =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  return `${event}.${uuid}`;
+}
+
+/**
  * Meta Advanced Matching. Re-initialises the pixel with normalised user
  * data so subsequent events send matching signals to Meta. The Pixel
  * library hashes these fields client-side before transmission — we only
