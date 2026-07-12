@@ -45,6 +45,7 @@ const PublicLeadPage = lazy(() => import("@/pages/LeadPage").then((m) => ({ defa
 const DynamicPage = lazy(() => import("@/pages/DynamicPage").then((m) => ({ default: m.DynamicPage })));
 const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
 const SeminarPage = lazy(() => import("@/pages/SeminarPage").then((m) => ({ default: m.SeminarPage })));
+const SoutheastCityPage = lazy(() => import("@/pages/SoutheastCityPage").then((m) => ({ default: m.SoutheastCityPage })));
 
 export default function App() {
   useGtmPageview();
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
         <Route path="/seminar" element={<SeminarPage />} />
+        <Route path="/southeast-city" element={<SoutheastCityPage />} />
         <Route
           path="/admin"
           element={
