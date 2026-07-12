@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { fbqTrack, fbqTrackCustom, setFbqAdvancedMatching, splitName } from "@/lib/fbq";
+import { fbqTrackCustomWithId, fbqTrackWithId, newEventId, setFbqAdvancedMatching, splitName } from "@/lib/fbq";
 
 const WHATSAPP_URL = "https://chat.whatsapp.com/J0clS5gbuapCiSnOogGk9Y?mode=gi_t";
 
@@ -87,6 +87,11 @@ function RadioGroup({ name, options, value, onChange, error }: { name: string; o
 export default function SeminarPage() {
   const [submitted, setSubmitted] = useState(false);
   const successRef = useRef<HTMLDivElement | null>(null);
+  // Guarantees Meta conversion events cannot fire twice for the same user
+  // action even if the submit handler is re-entered somehow (React
+  // StrictMode, double-click, dev HMR). Page refresh naturally resets this
+  // because it lives in component state — the user then re-submits fresh.
+  const conversionFiredRef = useRef(false);
   const { register, handleSubmit, setValue, watch, setFocus, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver: zodResolver(schema), mode: "onSubmit" });
   const values = watch();
 
@@ -106,14 +111,38 @@ export default function SeminarPage() {
       // Never block the user's successful registration on an email failure.
       console.error("[seminar] email send failed:", err);
     }
-    // Meta Pixel: fire only after a successful (validated) submission.
-    // Advanced Matching — set BEFORE firing events so the events include the
-    // normalised user data. Only user-provided post-submit data is used.
-    const { firstName, lastName } = splitName(data.name);
-    setFbqAdvancedMatching({ phone: data.phone, firstName, lastName, country: "bd" });
-    fbqTrack("Lead");
-    fbqTrack("CompleteRegistration");
-    fbqTrack("SubmitApplication");
+    // Meta Pixel: fire only after a successful (validated) submission,
+    // and only once per component lifetime.
+    if (!conversionFiredRef.current) {
+      conversionFiredRef.current = true;
+      const { firstName, lastName } = splitName(data.name);
+      setFbqAdvancedMatching({ phone: data.phone, firstName, lastName, country: "bd" });
+
+      const page_location = typeof window !== "undefined" ? window.location.href : "";
+      const page_path = typeof window !== "undefined" ? window.location.pathname : "";
+
+      const leadId = newEventId("Lead");
+      const completeRegId = newEventId("CompleteRegistration");
+      const submitAppId = newEventId("SubmitApplication");
+
+      fbqTrackWithId("Lead", leadId, {
+        content_name: "Free Seminar Registration",
+        content_category: "Seminar",
+        source: "Website",
+        page_location,
+        page_path,
+      });
+      fbqTrackWithId("CompleteRegistration", completeRegId, {
+        registration_type: "Free Seminar",
+        source: "Website",
+      });
+      fbqTrackWithId("SubmitApplication", submitAppId, {
+        content_name: "Free Seminar Registration",
+        source: "Website",
+      });
+      // Exposed for future CAPI implementation to reuse for deduplication.
+      console.debug("[fbq] event ids", { leadId, completeRegId, submitAppId });
+    }
     setSubmitted(true);
     if (typeof window !== "undefined") {
       requestAnimationFrame(() => {
@@ -203,7 +232,12 @@ export default function SeminarPage() {
               href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => fbqTrackCustom("WhatsAppGroupJoin")}
+              onClick={() =>
+                fbqTrackCustomWithId("WhatsAppGroupJoin", newEventId("WhatsAppGroupJoin"), {
+                  destination: "WhatsApp Group",
+                  source: "Seminar Success Screen",
+                })
+              }
               className="mt-8 inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#25D366] px-8 py-4 text-[17px] font-semibold text-white shadow-sm transition-transform hover:brightness-110 active:scale-[0.99]"
             >
               <WhatsAppIcon className="h-6 w-6" />
