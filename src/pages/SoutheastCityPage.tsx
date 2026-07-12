@@ -174,7 +174,7 @@ export default function SoutheastCityPage() {
 
       {/* Hero */}
       <header className="border-b border-border/60 bg-gradient-to-b from-primary/5 to-transparent">
-        <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14 text-center">
+        <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14 text-center lg:max-w-[920px]">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
             <span className="h-2 w-2 rounded-full bg-primary" /> সাউথইস্ট সিটি
           </span>
