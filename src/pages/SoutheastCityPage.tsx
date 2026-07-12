@@ -178,10 +178,10 @@ export default function SoutheastCityPage() {
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
             <span className="h-2 w-2 rounded-full bg-primary" /> সাউথইস্ট সিটি
           </span>
-          <h1 className="mt-4 text-center text-[26px] font-bold leading-[1.3] text-foreground sm:text-[30px] md:text-[34px] md:leading-[1.25]">
+          <h1 className="mt-3 text-center text-[22px] font-bold leading-[1.3] text-foreground sm:text-[26px] md:text-[30px] md:leading-[1.25]">
             আপনি কি সেই ব্যক্তি?
           </h1>
-          <ol className="mx-auto mt-6 max-w-2xl space-y-3 text-left text-[15px] leading-[1.85] text-foreground/90 sm:text-[16px] lg:max-w-[880px] lg:text-[15px] lg:leading-[1.7] lg:whitespace-nowrap">
+          <ol className="mx-auto mt-5 max-w-2xl space-y-2 text-left text-[14px] leading-[1.7] text-foreground/90 sm:text-[15px] lg:max-w-[880px] lg:text-[14px] lg:leading-[1.65] lg:whitespace-nowrap">
             <li className="flex gap-2 lg:gap-1.5">
               <span className="shrink-0 font-semibold text-primary">১)</span>
               <span>যিনি শুধু জমি নয়, গড়তে চান সম্পদের ভিত্তি।</span>
@@ -199,9 +199,9 @@ export default function SoutheastCityPage() {
               <span>যিনি শুধু একটি প্লট নয়, চান একটি পরিকল্পিত ইকোসিস্টেম।</span>
             </li>
           </ol>
-          <div className="mt-7 rounded-2xl border border-primary/20 bg-card/70 p-6 text-left sm:p-8">
+          <div className="mt-6 rounded-2xl border border-primary/20 bg-card/70 p-5 text-left sm:p-6">
             <p className="text-[20px] font-bold leading-[1.5] text-primary sm:text-[22px]">সাউথইস্ট সিটি আপনার জন্যই।</p>
-            <p className="mt-3 text-justify text-[14px] leading-[1.75] text-foreground/85 sm:text-[15px]">
+            <p className="mt-2 text-justify text-[13px] leading-[1.7] text-foreground/85 sm:text-[14px]">
               আপনাদের মতন দূরদর্শী সম্পদ নির্মাতাদের জন্য আমাদের প্রকল্প দিবে দীর্ঘমেয়াদি স্থায়িত্ব, মূল্যবৃদ্ধির সম্ভাবনা এবং ভবিষ্যৎ প্রজন্মের সম্পদের একটি শক্ত ভিত্তি।
             </p>
           </div>
