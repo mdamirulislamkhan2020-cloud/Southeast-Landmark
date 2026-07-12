@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { fbqTrackCustomWithId, fbqTrackWithId, newEventId, setFbqAdvancedMatching, splitName } from "@/lib/fbq";
+import { gtmPush } from "@/lib/gtm";
 
 const WHATSAPP_URL = "https://chat.whatsapp.com/J0clS5gbuapCiSnOogGk9Y?mode=gi_t";
 
@@ -142,6 +143,13 @@ export default function SeminarPage() {
       });
       // Exposed for future CAPI implementation to reuse for deduplication.
       console.debug("[fbq] event ids", { leadId, completeRegId, submitAppId });
+
+      // GTM dataLayer — fire once per successful submission.
+      gtmPush("form_submit", { form_name: "seminar_registration", source: "Website" });
+      gtmPush("seminar_registration_success", {
+        registration_type: "Free Seminar",
+        source: "Website",
+      });
     }
     setSubmitted(true);
     if (typeof window !== "undefined") {
@@ -232,12 +240,16 @@ export default function SeminarPage() {
               href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() =>
+              onClick={() => {
                 fbqTrackCustomWithId("WhatsAppGroupJoin", newEventId("WhatsAppGroupJoin"), {
                   destination: "WhatsApp Group",
                   source: "Seminar Success Screen",
-                })
-              }
+                });
+                gtmPush("whatsapp_group_join", {
+                  destination: "WhatsApp Group",
+                  source: "Seminar Success Screen",
+                });
+              }}
               className="mt-8 inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#25D366] px-8 py-4 text-[17px] font-semibold text-white shadow-sm transition-transform hover:brightness-110 active:scale-[0.99]"
             >
               <WhatsAppIcon className="h-6 w-6" />
