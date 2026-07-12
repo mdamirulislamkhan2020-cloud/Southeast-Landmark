@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -264,5 +264,3 @@ export default function SeminarPage() {
 }
 
 export { SeminarPage };
-// silence unused Suspense/lazy imports (kept for potential future code-split)
-void Suspense; void lazy;
