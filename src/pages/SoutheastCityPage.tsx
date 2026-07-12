@@ -184,19 +184,19 @@ export default function SoutheastCityPage() {
           <ol className="mx-auto mt-6 max-w-2xl space-y-3 text-left text-[15px] leading-[1.85] text-foreground/90 sm:text-[16px]">
             <li className="flex gap-3">
               <span className="shrink-0 font-semibold text-primary">১)</span>
-              <span>যিনি শুধু জমি কিনতে চান না, গড়ে তুলতে চান সম্পদের ভিত্তি?</span>
+              <span>যিনি শুধু জমি নয়, গড়তে চান সম্পদের ভিত্তি।</span>
             </li>
             <li className="flex gap-3">
               <span className="shrink-0 font-semibold text-primary">২)</span>
-              <span>যাঁর প্রতিটি সিদ্ধান্ত আজকের পাশাপাশি আগামী প্রজন্মকে করবে সুরক্ষিত?</span>
+              <span>যাঁর প্রতিটি সিদ্ধান্ত ভবিষ্যৎ প্রজন্মকে করবে আরও সুরক্ষিত।</span>
             </li>
             <li className="flex gap-3">
               <span className="shrink-0 font-semibold text-primary">৩)</span>
-              <span>যিনি সাময়িক ছাড়ে নয়, বরং পরবর্তী যুগের সম্পদ বৃদ্ধির কথা ভাবেন?</span>
+              <span>যিনি সাময়িক লাভ নয়, দীর্ঘমেয়াদি সম্পদ বৃদ্ধিতে বিশ্বাসী।</span>
             </li>
             <li className="flex gap-3">
               <span className="shrink-0 font-semibold text-primary">৪)</span>
-              <span>যিনি শুধু একটি প্লট নয়, বরং চান একটি পরিকল্পিত ইকোসিস্টেম।</span>
+              <span>যিনি শুধু একটি প্লট নয়, চান একটি পরিকল্পিত ইকোসিস্টেম।</span>
             </li>
           </ol>
           <div className="mt-7 rounded-2xl border border-primary/20 bg-card/70 p-6 text-left sm:p-8">
