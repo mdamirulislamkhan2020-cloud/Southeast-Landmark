@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="16" fill="#0F172A"/>
+  <!-- Gold Landmark Emblem for Southeast Landmark Ltd -->
+  <path d="M32 10L14 25H19V52H45V25H50L32 10Z" fill="#C5A059"/>
+  <path d="M27 34H37V52H27V34Z" fill="#0F172A"/>
+  <polygon points="32,16 21,25 43,25" fill="#E5C178"/>
+  <circle cx="32" cy="29" r="2.5" fill="#C5A059"/>
+</svg>
