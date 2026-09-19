@@ -10,13 +10,18 @@ export function LoginPage() {
   const nav = useNavigate();
   const loc = useLocation() as { state?: { from?: string } };
   const [email, setEmail] = useState("admin@southeastlandmark.com");
-  const [password, setPassword] = useState("admin");
+  const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setBusy(true); setErr(null);
+    if (!password) {
+      setErr("Password is required");
+      return;
+    }
+    setBusy(true);
+    setErr(null);
     try {
       await login(email, password);
       nav(loc.state?.from ?? "/admin", { replace: true });
@@ -38,18 +43,35 @@ export function LoginPage() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@southeastlandmark.com"
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
             </div>
             {err && <div className="text-sm text-destructive">{err}</div>}
-            <Button type="submit" className="w-full" disabled={busy}>{busy ? "Signing in..." : "Sign in"}</Button>
+            <Button type="submit" className="w-full" disabled={busy}>
+              {busy ? "Signing in..." : "Sign in"}
+            </Button>
             <div className="text-center">
-              <Link to="/admin/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">Forgot password?</Link>
+              <Link to="/admin/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">
+                Forgot password?
+              </Link>
             </div>
-            <p className="text-xs text-muted-foreground text-center">Default: any email + password 4+ chars (mock mode).</p>
           </form>
         </CardContent>
       </Card>

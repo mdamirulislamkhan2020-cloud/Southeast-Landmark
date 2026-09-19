@@ -23,13 +23,14 @@ export function useCmsPage(path: string) {
   return page;
 }
 
-export function useCmsPageBlocks(path: string) {
+export function useCmsPageBlocks(path: string): PageBlock[] {
   const page = useCmsPage(path);
   return Array.isArray(page?.blocks) ? page.blocks : [];
 }
 
-export function CmsAssignedLeadForm({ path }: { path: string }) {
-  const page = useCmsPage(path);
+export function CmsAssignedLeadForm({ path, pageSlug }: { path?: string; pageSlug?: string }) {
+  const targetPath = path || pageSlug || "/";
+  const page = useCmsPage(targetPath);
   if (!page?.formId) return null;
   return createElement(BlockRenderer, {
     block: { id: `${page.id}-assigned-form`, type: "lead_form", data: { formId: page.formId } },
@@ -38,16 +39,18 @@ export function CmsAssignedLeadForm({ path }: { path: string }) {
   });
 }
 
-export function blockData(blocks: PageBlock[], key: string) {
-  return blocks.find((block) => block.data?.key === key)?.data ?? null;
+export function blockData(blocks: PageBlock[] | undefined | null, key: string): Record<string, any> {
+  if (!Array.isArray(blocks)) return {};
+  const found = blocks.find((block) => block?.data?.key === key);
+  return (found?.data ?? {}) as Record<string, any>;
 }
 
-export function cmsString(data: Record<string, unknown> | null, key: string, fallback: string) {
+export function cmsString(data: Record<string, unknown> | null | undefined, key: string, fallback: string): string {
   const value = data?.[key];
   return typeof value === "string" && value.length > 0 ? value : fallback;
 }
 
-export function cmsList<T>(data: Record<string, unknown> | null, key: string, fallback: T[]): T[] {
+export function cmsList<T>(data: Record<string, unknown> | null | undefined, key: string, fallback: T[]): T[] {
   const value = data?.[key];
   return Array.isArray(value) && value.length > 0 ? (value as T[]) : fallback;
 }

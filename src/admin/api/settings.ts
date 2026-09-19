@@ -52,15 +52,55 @@ export interface AdminUser {
   createdAt: string;
 }
 
+export interface ButtonCustomStyle {
+  bgColor?: string;
+  textColor?: string;
+  hoverBgColor?: string;
+  hoverTextColor?: string;
+  borderColor?: string;
+  radius?: number;
+  shadow?: "none" | "sm" | "md" | "lg";
+  fontSize?: number;
+  paddingX?: number;
+  paddingY?: number;
+  fontWeight?: string;
+}
+
 export interface ThemeSettings {
   logo: string | null;
   favicon: string | null;
-  primaryColor: string; // HSL string "H S% L%"
+  // Brand / Design Tokens
+  primaryColor: string; // e.g. "oklch(0.78 0.14 85)" or "#D4AF37"
   secondaryColor: string;
   accentColor: string;
+  backgroundColor?: string;
+  surfaceColor?: string;
+  textColor?: string;
+  mutedTextColor?: string;
+  borderColor?: string;
+  successColor?: string;
+  errorColor?: string;
+  // Typography
   fontHeading: string;
   fontBody: string;
+  h1Size?: string;
+  h2Size?: string;
+  h3Size?: string;
+  h4Size?: string;
+  bodySize?: string;
+  smallSize?: string;
+  h1Weight?: string;
+  h2Weight?: string;
+  bodyWeight?: string;
+  lineHeightHeading?: string;
+  lineHeightBody?: string;
+  letterSpacingHeading?: string;
+  // Buttons
   buttonStyle: "rounded" | "square" | "pill";
+  primaryButton?: ButtonCustomStyle;
+  secondaryButton?: ButtonCustomStyle;
+  outlineButton?: ButtonCustomStyle;
+  // Layout & Global
   radius: number; // px
   shadow: "none" | "sm" | "md" | "lg";
   headerStyle: "default" | "minimal" | "centered";
@@ -75,6 +115,7 @@ export interface MediaFile {
   folder: string;
   url: string;
   mime: string;
+  mimeType?: string;
   size: number;
   width?: number;
   height?: number;

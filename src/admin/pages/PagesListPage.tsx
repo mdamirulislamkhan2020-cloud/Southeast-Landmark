@@ -5,7 +5,7 @@ import { listPages, deletePage, duplicatePage } from "../api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Copy, Trash2, Pencil, ExternalLink, Search } from "lucide-react";
+import { Plus, Copy, Trash2, Pencil, ExternalLink, Search, Sparkles } from "lucide-react";
 import { PageStatusBadge } from "../components/PageStatusBadge";
 import { toast } from "sonner";
 import { NewPageDialog } from "../components/NewPageDialog";
@@ -72,8 +72,13 @@ export function PagesListPage() {
                     <td className="px-4 py-3 text-muted-foreground">{new Date(p.updatedAt).toLocaleDateString()}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
+                        <Button asChild size="sm" variant="secondary" className="h-8 px-2.5 text-xs text-primary font-medium">
+                          <Link to={`/admin/pages/${p.id}/edit`} title="Visual Page Builder">
+                            <Sparkles className="h-3.5 w-3.5 mr-1 text-primary" /> Visual Builder
+                          </Link>
+                        </Button>
                         <Button asChild size="sm" variant="ghost"><a href={p.slug} target="_blank" rel="noreferrer" title="Preview"><ExternalLink className="h-4 w-4" /></a></Button>
-                        <Button asChild size="sm" variant="ghost"><Link to={`/admin/pages/${p.id}`} title="Edit"><Pencil className="h-4 w-4" /></Link></Button>
+                        <Button asChild size="sm" variant="ghost"><Link to={`/admin/pages/${p.id}`} title="Settings / Form Editor"><Pencil className="h-4 w-4" /></Link></Button>
                         <Button size="sm" variant="ghost" title="Duplicate" onClick={() => dup.mutate(p.id)}><Copy className="h-4 w-4" /></Button>
                         <Button size="sm" variant="ghost" title="Delete" onClick={() => { if (confirm(`Delete "${p.title}"?`)) del.mutate(p.id); }}>
                           <Trash2 className="h-4 w-4 text-destructive" />

@@ -7,13 +7,14 @@ export default defineConfig({
   plugins: [react(), tsconfigPaths(), tailwindcss()],
   base: "./",
   server: {
-    host: "::",
-    port: 8080,
-    strictPort: true,
+    host: "0.0.0.0",
+    port: 3000,
+    allowedHosts: true,
   },
   preview: {
-    host: "::",
-    port: 8080,
+    host: "0.0.0.0",
+    port: 3000,
+    allowedHosts: true,
   },
   build: {
     outDir: "dist",

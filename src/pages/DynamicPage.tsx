@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { getPageByPath } from "@/admin/api/client";
 import type { CmsPage } from "@/admin/api/types";
-import { BlockRenderer } from "@/admin/components/BlockRenderer";
+import { SectionRenderer } from "@/components/sections/SectionRenderer";
 import { Seo } from "@/components/site/Seo";
 import { Button } from "@/components/ui/button";
 
@@ -17,9 +17,15 @@ export function DynamicPage() {
   useEffect(() => {
     let alive = true;
     getPageByPath(location.pathname)
-      .then((p) => { if (alive) setPage(p ?? "notfound"); })
-      .catch(() => { if (alive) setPage("notfound"); });
-    return () => { alive = false; };
+      .then((p) => {
+        if (alive) setPage(p ?? "notfound");
+      })
+      .catch(() => {
+        if (alive) setPage("notfound");
+      });
+    return () => {
+      alive = false;
+    };
   }, [location.pathname]);
 
   if (page === null) {
@@ -30,7 +36,9 @@ export function DynamicPage() {
       <div className="mx-auto max-w-md px-4 py-24 text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <p className="mt-4 text-muted-foreground">The page you're looking for doesn't exist.</p>
-        <Button asChild className="mt-6"><Link to="/">Go home</Link></Button>
+        <Button asChild className="mt-6">
+          <Link to="/">Go home</Link>
+        </Button>
       </div>
     );
   }
@@ -38,20 +46,16 @@ export function DynamicPage() {
   const blocks = page.blocks ?? [];
   return (
     <>
-      <Seo
-        title={page.seoTitle || page.title}
-        description={page.seoDescription || ""}
-        path={page.slug}
-      />
+      <Seo title={page.seoTitle || page.title} description={page.seoDescription || ""} path={page.slug} />
       {page.content && (
         <div className="prose max-w-none mx-auto px-4 py-8" dangerouslySetInnerHTML={{ __html: page.content }} />
       )}
       {blocks.map((b) => (
-        <BlockRenderer key={b.id} block={b} containerWidth={1200} pageFormId={page.formId ?? null} />
+        <SectionRenderer key={b.id} block={b} containerWidth={1200} pageFormId={page.formId ?? null} />
       ))}
       {/* If a form is assigned but there is no lead_form block, auto-render it at the bottom */}
       {page.formId && !blocks.some((b) => b.type === "lead_form") && (
-        <BlockRenderer
+        <SectionRenderer
           block={{ id: "auto-form", type: "lead_form", data: { formId: page.formId } }}
           containerWidth={1200}
           pageFormId={page.formId}

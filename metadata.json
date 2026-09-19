@@ -1,0 +1,6 @@
+{
+  "name": "Southeast Landmark Ltd",
+  "description": "Southeast Landmark Ltd is a Dhaka-based land development company delivering planned residential plots, township projects and secure land investment opportunities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

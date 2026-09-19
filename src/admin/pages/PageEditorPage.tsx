@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams, Link, useBlocker } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createPage, getPage, listPages, updatePage } from "../api/client";
 import type { CmsPage, PageStatus } from "../api/types";
@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, ExternalLink, Plus, Copy, Trash2, GripVertical, Send, RotateCcw, Archive, ArchiveRestore, Globe } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, Plus, Copy, Trash2, GripVertical, Send, RotateCcw, Archive, ArchiveRestore, Globe, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { toErrorMessage } from "@/lib/error-handler";
 import { PAGE_TEMPLATES } from "../components/NewPageDialog";
@@ -123,15 +123,37 @@ export function PageEditorPage() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
 
-  // Block in-app route changes when dirty.
-  const blocker = useBlocker(({ currentLocation, nextLocation }) =>
-    isDirty && !bypassGuardRef.current && currentLocation.pathname !== nextLocation.pathname,
-  );
+  // Warn on in-app link navigation when there are unsaved changes.
   useEffect(() => {
-    if (blocker.state !== "blocked") return;
-    const ok = window.confirm("You have unsaved changes. Leave without saving?");
-    if (ok) blocker.proceed(); else blocker.reset();
-  }, [blocker]);
+    if (!isDirty) return;
+    const handleLinkClick = (e: MouseEvent) => {
+      if (bypassGuardRef.current) return;
+      const target = e.target as HTMLElement | null;
+      const anchor = target?.closest("a");
+      if (!anchor) return;
+
+      // Ignore links that open in a new tab, downloads, or anchor jumps
+      if (
+        anchor.target === "_blank" ||
+        anchor.hasAttribute("download") ||
+        anchor.getAttribute("rel")?.includes("external")
+      ) {
+        return;
+      }
+
+      const href = anchor.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("javascript:")) return;
+
+      const ok = window.confirm("You have unsaved changes. Leave without saving?");
+      if (!ok) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    document.addEventListener("click", handleLinkClick, true);
+    return () => document.removeEventListener("click", handleLinkClick, true);
+  }, [isDirty]);
 
   useEffect(() => {
     if (autoSlug && form.title) {
@@ -240,6 +262,13 @@ export function PageEditorPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          {!isNew && (
+            <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm">
+              <Link to={`/admin/pages/${id}/edit`}>
+                <Sparkles className="h-4 w-4 mr-1.5" /> Visual Builder
+              </Link>
+            </Button>
+          )}
           {!isNew && form.slug && (
             <Button asChild variant="outline" size="sm"><a href={form.slug} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4 mr-1" /> Preview</a></Button>
           )}

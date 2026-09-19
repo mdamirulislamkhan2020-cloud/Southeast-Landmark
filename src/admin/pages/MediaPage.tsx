@@ -79,7 +79,11 @@ export function MediaPage() {
           {filtered.map((f) => (
             <button key={f.id} onClick={() => setSelected(f)} className="group rounded-md border border-border bg-card overflow-hidden text-left hover:border-primary transition">
               <div className="aspect-square bg-secondary flex items-center justify-center overflow-hidden">
-                {f.mime.startsWith("image/") ? <img src={f.url} alt={f.name} className="h-full w-full object-cover" /> : <FileText className="h-8 w-8 text-muted-foreground" />}
+                {typeof f.mime === "string" && f.mime.startsWith("image/") ? (
+                  <img src={f.url} alt={f.name} className="h-full w-full object-cover" />
+                ) : (
+                  <FileText className="h-8 w-8 text-muted-foreground" />
+                )}
               </div>
               <div className="p-2">
                 <div className="text-xs font-medium truncate">{f.name}</div>
@@ -96,7 +100,11 @@ export function MediaPage() {
           {selected && (
             <div className="space-y-4">
               <div className="rounded-md border border-border bg-secondary p-2 flex items-center justify-center min-h-[200px]">
-                {selected.mime.startsWith("image/") ? <img src={selected.url} alt={selected.name} className="max-h-[360px] object-contain" /> : <FileText className="h-16 w-16 text-muted-foreground" />}
+                {typeof selected.mime === "string" && selected.mime.startsWith("image/") ? (
+                  <img src={selected.url} alt={selected.name} className="max-h-[360px] object-contain" />
+                ) : (
+                  <FileText className="h-16 w-16 text-muted-foreground" />
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><span className="text-muted-foreground">Type:</span> {selected.mime}</div>

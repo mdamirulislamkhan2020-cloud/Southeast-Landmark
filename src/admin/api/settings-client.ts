@@ -7,6 +7,7 @@ import {
   type ThemeSettings,
   type UserRole,
 } from "./settings";
+import { supabase } from "@/integrations/supabase/client";
 
 const API_BASE = (import.meta.env.VITE_ADMIN_API_BASE as string | undefined) ?? "/api";
 const USE_MOCK = (import.meta.env.VITE_ADMIN_USE_MOCK as string | undefined) !== "false";
@@ -114,13 +115,29 @@ export async function resetUserPassword(id: string): Promise<{ tempPassword: str
 export const DEFAULT_THEME: ThemeSettings = {
   logo: null,
   favicon: null,
-  primaryColor: "43 74% 49%",
-  secondaryColor: "220 14% 96%",
-  accentColor: "43 74% 49%",
+  primaryColor: "oklch(0.78 0.14 85)",
+  secondaryColor: "oklch(0.22 0.01 70)",
+  accentColor: "oklch(0.86 0.12 88)",
+  backgroundColor: "oklch(0.14 0.005 60)",
+  surfaceColor: "oklch(0.18 0.008 70)",
+  textColor: "oklch(0.96 0.02 90)",
+  mutedTextColor: "oklch(0.72 0.03 85)",
+  borderColor: "oklch(0.30 0.02 85 / 40%)",
+  successColor: "oklch(0.65 0.17 145)",
+  errorColor: "oklch(0.577 0.245 27.325)",
   fontHeading: "Playfair Display",
   fontBody: "Inter",
+  h1Size: "3.5rem",
+  h2Size: "2.5rem",
+  h3Size: "1.75rem",
+  h4Size: "1.25rem",
+  bodySize: "1rem",
+  smallSize: "0.875rem",
+  lineHeightHeading: "1.2",
+  lineHeightBody: "1.6",
+  letterSpacingHeading: "-0.02em",
   buttonStyle: "rounded",
-  radius: 8,
+  radius: 10,
   shadow: "md",
   headerStyle: "default",
   footerStyle: "default",
@@ -129,39 +146,184 @@ export const DEFAULT_THEME: ThemeSettings = {
 };
 
 export async function getTheme(): Promise<ThemeSettings> {
-  if (!USE_MOCK) return apiFetch<ThemeSettings>("/theme");
+  try {
+    const { data, error } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "theme_settings")
+      .maybeSingle();
+
+    if (!error && data && data.value && typeof data.value === "object") {
+      const merged = { ...DEFAULT_THEME, ...(data.value as Partial<ThemeSettings>) };
+      writeLS(LS_THEME, merged);
+      return merged;
+    }
+  } catch (err) {
+    console.warn("[Settings] getTheme fallback:", err);
+  }
+
   return { ...DEFAULT_THEME, ...readLS<Partial<ThemeSettings>>(LS_THEME, {}) };
 }
+
 export async function updateTheme(patch: Partial<ThemeSettings>): Promise<ThemeSettings> {
-  const next = { ...(await getTheme()), ...patch };
-  if (!USE_MOCK) return apiFetch<ThemeSettings>("/theme", { method: "PUT", body: JSON.stringify(next) });
+  const prev = await getTheme();
+  const next: ThemeSettings = { ...prev, ...patch };
+
+  try {
+    await supabase.from("app_settings").upsert({
+      key: "theme_settings",
+      value: next as unknown as any,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.warn("[Settings] updateTheme Supabase upsert fallback:", err);
+  }
+
   writeLS(LS_THEME, next);
-  window.dispatchEvent(new CustomEvent("sel:theme-updated", { detail: next }));
+  try {
+    window.dispatchEvent(new CustomEvent("sel:theme-updated", { detail: next }));
+  } catch {
+    /* ignore */
+  }
   return next;
 }
 
 // -------- Media --------
+const DEFAULT_MEDIA: MediaFile[] = [
+  {
+    id: "seed-hero",
+    name: "hero.jpg",
+    folder: "root",
+    url: "/assets/hero.jpg",
+    mime: "image/jpeg",
+    mimeType: "image/jpeg",
+    size: 245000,
+    createdAt: "2026-01-01T00:00:00.000Z",
+  },
+  {
+    id: "seed-about",
+    name: "about.jpg",
+    folder: "root",
+    url: "/assets/about.jpg",
+    mime: "image/jpeg",
+    mimeType: "image/jpeg",
+    size: 198000,
+    createdAt: "2026-01-01T00:00:00.000Z",
+  },
+  {
+    id: "seed-prop1",
+    name: "property-1.jpg",
+    folder: "properties",
+    url: "/assets/property-1.jpg",
+    mime: "image/jpeg",
+    mimeType: "image/jpeg",
+    size: 320000,
+    createdAt: "2026-01-01T00:00:00.000Z",
+  },
+  {
+    id: "seed-prop2",
+    name: "property-2.jpg",
+    folder: "properties",
+    url: "/assets/property-2.jpg",
+    mime: "image/jpeg",
+    mimeType: "image/jpeg",
+    size: 310000,
+    createdAt: "2026-01-01T00:00:00.000Z",
+  },
+  {
+    id: "seed-prop3",
+    name: "property-3.jpg",
+    folder: "properties",
+    url: "/assets/property-3.jpg",
+    mime: "image/jpeg",
+    mimeType: "image/jpeg",
+    size: 295000,
+    createdAt: "2026-01-01T00:00:00.000Z",
+  },
+];
+
 export async function listMedia(): Promise<MediaFile[]> {
-  if (!USE_MOCK) return apiFetch<MediaFile[]>("/media");
-  return readLS<MediaFile[]>(LS_MEDIA, []);
+  if (!USE_MOCK) {
+    try {
+      const res = await apiFetch<MediaFile[]>("/media");
+      if (Array.isArray(res) && res.length > 0) {
+        return res.map((item) => ({
+          ...item,
+          mime: item.mime || item.mimeType || "image/jpeg",
+          mimeType: item.mimeType || item.mime || "image/jpeg",
+        }));
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
+  const raw = readLS<MediaFile[] | null>(LS_MEDIA, null);
+  if (!raw || raw.length === 0) {
+    writeLS(LS_MEDIA, DEFAULT_MEDIA);
+    return DEFAULT_MEDIA;
+  }
+  return raw.map((item) => ({
+    ...item,
+    mime: item.mime || item.mimeType || "image/jpeg",
+    mimeType: item.mimeType || item.mime || "image/jpeg",
+  }));
 }
+
 export async function uploadMedia(file: File, folder = "root"): Promise<MediaFile> {
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result));
-    r.onerror = reject;
-    r.readAsDataURL(file);
-  });
+  let publicUrl = "";
+  try {
+    const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const filePath = `${folder}/${Date.now()}-${cleanName}`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("media")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (!uploadError && uploadData) {
+      const { data: publicUrlData } = supabase.storage
+        .from("media")
+        .getPublicUrl(uploadData.path || filePath);
+      if (publicUrlData?.publicUrl) {
+        publicUrl = publicUrlData.publicUrl;
+      }
+    }
+  } catch (err) {
+    console.warn("Supabase storage upload fallback:", err);
+  }
+
+  let finalUrl = publicUrl;
+  if (!finalUrl) {
+    finalUrl = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result));
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  const mimeType = file.type || "image/jpeg";
   const m: MediaFile = {
     id: uid(),
     name: file.name,
     folder,
-    url: dataUrl,
-    mime: file.type || "application/octet-stream",
+    url: finalUrl,
+    mime: mimeType,
+    mimeType: mimeType,
     size: file.size,
     createdAt: new Date().toISOString(),
   };
-  if (!USE_MOCK) return apiFetch<MediaFile>("/media", { method: "POST", body: JSON.stringify(m) });
+
+  if (!USE_MOCK) {
+    try {
+      return await apiFetch<MediaFile>("/media", { method: "POST", body: JSON.stringify(m) });
+    } catch {
+      // Fallback to local storage
+    }
+  }
+
   const all = readLS<MediaFile[]>(LS_MEDIA, []);
   all.unshift(m);
   writeLS(LS_MEDIA, all);
@@ -202,12 +364,39 @@ export const DEFAULT_GLOBAL: GlobalSettings = {
 };
 
 export async function getGlobalSettings(): Promise<GlobalSettings> {
-  if (!USE_MOCK) return apiFetch<GlobalSettings>("/settings/global");
+  try {
+    const { data, error } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "site_settings")
+      .maybeSingle();
+
+    if (!error && data && data.value && typeof data.value === "object") {
+      const merged = { ...DEFAULT_GLOBAL, ...(data.value as Partial<GlobalSettings>) };
+      writeLS(LS_GLOBAL, merged);
+      return merged;
+    }
+  } catch (err) {
+    console.warn("[Settings] getGlobalSettings fallback:", err);
+  }
+
   return { ...DEFAULT_GLOBAL, ...readLS<Partial<GlobalSettings>>(LS_GLOBAL, {}) };
 }
+
 export async function updateGlobalSettings(patch: Partial<GlobalSettings>): Promise<GlobalSettings> {
-  const next = { ...(await getGlobalSettings()), ...patch };
-  if (!USE_MOCK) return apiFetch<GlobalSettings>("/settings/global", { method: "PUT", body: JSON.stringify(next) });
+  const prev = await getGlobalSettings();
+  const next: GlobalSettings = { ...prev, ...patch };
+
+  try {
+    await supabase.from("app_settings").upsert({
+      key: "site_settings",
+      value: next as unknown as any,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.warn("[Settings] updateGlobalSettings Supabase upsert fallback:", err);
+  }
+
   writeLS(LS_GLOBAL, next);
   return next;
 }

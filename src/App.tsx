@@ -20,10 +20,13 @@ const AdminLogin = lazy(() => import("@/admin/pages/LoginPage").then((m) => ({ d
 const AdminDashboard = lazy(() => import("@/admin/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const AdminPagesList = lazy(() => import("@/admin/pages/PagesListPage").then((m) => ({ default: m.PagesListPage })));
 const AdminPageEditor = lazy(() => import("@/admin/pages/PageEditorPage").then((m) => ({ default: m.PageEditorPage })));
+const AdminCustomizer = lazy(() => import("@/admin/customizer/SiteCustomizerPage").then((m) => ({ default: m.SiteCustomizerPage })));
+const AdminVisualPageEditor = lazy(() => import("@/admin/pages/VisualPageEditorPage").then((m) => ({ default: m.VisualPageEditorPage })));
 const AdminLeads = lazy(() => import("@/admin/pages/LeadsCRMPage").then((m) => ({ default: m.LeadsCRMPage })));
 const AdminLeadDetail = lazy(() => import("@/admin/pages/LeadDetailPage").then((m) => ({ default: m.LeadDetailPage })));
 const AdminProperties = lazy(() => import("@/admin/pages/PropertiesListPage").then((m) => ({ default: m.PropertiesListPage })));
 const AdminPropertyEditor = lazy(() => import("@/admin/pages/PropertyEditorPage").then((m) => ({ default: m.PropertyEditorPage })));
+const AdminPlots = lazy(() => import("@/admin/pages/PlotsManagerPage").then((m) => ({ default: m.PlotsManagerPage })));
 const AdminBlog = lazy(() => import("@/admin/pages/BlogListPage").then((m) => ({ default: m.BlogListPage })));
 const AdminBlogEditor = lazy(() => import("@/admin/pages/BlogEditorPage").then((m) => ({ default: m.BlogEditorPage })));
 const AdminFaqs = lazy(() => import("@/admin/pages/FaqsPage").then((m) => ({ default: m.FaqsPage })));
@@ -46,6 +49,11 @@ const DynamicPage = lazy(() => import("@/pages/DynamicPage").then((m) => ({ defa
 const RequireAuth = lazy(() => import("@/admin/RequireAuth").then((m) => ({ default: m.RequireAuth })));
 const SeminarPage = lazy(() => import("@/pages/SeminarPage").then((m) => ({ default: m.SeminarPage })));
 const SoutheastCityPage = lazy(() => import("@/pages/SoutheastCityPage").then((m) => ({ default: m.SoutheastCityPage })));
+const CareerPage = lazy(() => import("@/pages/CareerPage").then((m) => ({ default: m.default || m.CareerPage })));
+const JobDetailPage = lazy(() => import("@/pages/JobDetailPage").then((m) => ({ default: m.default || m.JobDetailPage })));
+const AdminJobs = lazy(() => import("@/admin/pages/JobsListPage").then((m) => ({ default: m.JobsListPage })));
+const AdminJobEditor = lazy(() => import("@/admin/pages/JobEditorPage").then((m) => ({ default: m.JobEditorPage })));
+const AdminJobApplications = lazy(() => import("@/admin/pages/JobApplicationsPage").then((m) => ({ default: m.JobApplicationsPage })));
 
 export default function App() {
   useGtmPageview();
@@ -59,6 +67,28 @@ export default function App() {
         <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
         <Route path="/seminar" element={<SeminarPage />} />
         <Route path="/southeast-city" element={<SoutheastCityPage />} />
+        {/* Dedicated Full-Screen Visual CMS Page Builder & Site Customizer */}
+        <Route
+          path="/admin/customizer"
+          element={
+            <RequireAuth>
+              <ErrorBoundary scope="admin">
+                <AdminCustomizer />
+              </ErrorBoundary>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/pages/:id/edit"
+          element={
+            <RequireAuth>
+              <ErrorBoundary scope="admin">
+                <AdminVisualPageEditor />
+              </ErrorBoundary>
+            </RequireAuth>
+          }
+        />
+
         <Route
           path="/admin"
           element={
@@ -70,6 +100,12 @@ export default function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="pages" element={<AdminPagesList />} />
           <Route path="pages/:id" element={<AdminPageEditor />} />
+          <Route path="pages/:id/edit" element={<AdminVisualPageEditor />} />
+          <Route path="jobs" element={<AdminJobs />} />
+          <Route path="jobs/new" element={<AdminJobEditor />} />
+          <Route path="jobs/:id/edit" element={<AdminJobEditor />} />
+          <Route path="job-applications" element={<AdminJobApplications />} />
+          <Route path="plots" element={<AdminPlots />} />
           <Route path="properties" element={<AdminProperties />} />
           <Route path="properties/:id" element={<AdminPropertyEditor />} />
           <Route path="blog" element={<AdminBlog />} />
@@ -154,6 +190,8 @@ export default function App() {
               </>
             }
           />
+          <Route path="/career" element={<CareerPage />} />
+          <Route path="/career/:slug" element={<JobDetailPage />} />
           <Route path="/lead/:slug" element={<PublicLeadPage />} />
           <Route path="*" element={<DynamicPage />} />
                 </Routes>

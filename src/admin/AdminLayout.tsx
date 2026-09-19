@@ -1,12 +1,16 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, FileText, Users, Image, Palette, LogOut, ExternalLink, Building2, Newspaper, HelpCircle, MessageSquareQuote, Settings, UserCog, FormInput, BarChart3, Search, Plug, Menu as MenuIcon, Mail, Eye } from "lucide-react";
+import { LayoutDashboard, FileText, Users, Image, Palette, LogOut, ExternalLink, Building2, Newspaper, HelpCircle, MessageSquareQuote, Settings, UserCog, FormInput, BarChart3, Search, Plug, Menu as MenuIcon, Mail, Eye, LandPlot, Sliders, Briefcase, UserCheck } from "lucide-react";
 import { logout } from "./api/client";
 import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; end?: boolean; label: string; icon: typeof LayoutDashboard; disabled?: boolean };
 const nav: NavItem[] = [
   { to: "/admin", end: true, label: "Dashboard", icon: LayoutDashboard },
+  { to: "/admin/customizer", label: "Visual Customizer", icon: Sliders },
   { to: "/admin/pages", label: "Pages (CMS)", icon: FileText },
+  { to: "/admin/jobs", label: "Careers & Jobs (CMS)", icon: Briefcase },
+  { to: "/admin/job-applications", label: "Job Applications", icon: UserCheck },
+  { to: "/admin/plots", label: "Plot Inventory", icon: LandPlot },
   { to: "/admin/properties", label: "Properties", icon: Building2 },
   { to: "/admin/blog", label: "Blog", icon: Newspaper },
   { to: "/admin/faqs", label: "FAQs", icon: HelpCircle },

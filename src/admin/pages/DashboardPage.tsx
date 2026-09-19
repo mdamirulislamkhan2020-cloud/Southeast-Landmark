@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getDashboard } from "../api/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, FileText, Home, Newspaper, Eye, TrendingUp, CalendarDays, Layers } from "lucide-react";
+import { Users, FileText, Home, Newspaper, Eye, TrendingUp, CalendarDays, Layers, Briefcase, UserCheck } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from "recharts";
 import { Link } from "react-router-dom";
 import { useVisibility } from "@/lib/use-visibility";
@@ -66,6 +66,50 @@ export function DashboardPage() {
         {stat("Blog Posts", data.totalBlogPosts, Newspaper)}
         {stat("Total Pages", data.totalPages, Layers)}
         {stat("Property Views", data.propertyViews.toLocaleString(), Eye)}
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Link to="/admin/jobs" className="no-underline">
+          <Card className="hover:border-amber-500/40 transition">
+            <CardContent className="p-5 flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                  Career System (CMS)
+                </div>
+                <div className="text-base font-bold text-foreground">
+                  Job Postings Manager
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Create, edit, duplicate, and publish career openings
+                </p>
+              </div>
+              <div className="h-10 w-10 grid place-items-center rounded-lg bg-amber-500/15 text-amber-500">
+                <Briefcase className="h-5 w-5" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link to="/admin/job-applications" className="no-underline">
+          <Card className="hover:border-amber-500/40 transition">
+            <CardContent className="p-5 flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                  Recruitment Pipeline
+                </div>
+                <div className="text-base font-bold text-foreground">
+                  Candidate Applications
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Review applicant CVs, update stages & track HR notes
+                </p>
+              </div>
+              <div className="h-10 w-10 grid place-items-center rounded-lg bg-emerald-500/15 text-emerald-500">
+                <UserCheck className="h-5 w-5" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
