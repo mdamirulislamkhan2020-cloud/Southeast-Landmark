@@ -169,14 +169,15 @@ export async function updateTheme(patch: Partial<ThemeSettings>): Promise<ThemeS
   const prev = await getTheme();
   const next: ThemeSettings = { ...prev, ...patch };
 
-  try {
-    await supabase.from("app_settings").upsert({
-      key: "theme_settings",
-      value: next as unknown as any,
-      updated_at: new Date().toISOString(),
-    });
-  } catch (err) {
-    console.warn("[Settings] updateTheme Supabase upsert fallback:", err);
+  const { error } = await supabase.from("app_settings").upsert({
+    key: "theme_settings",
+    value: next as unknown as any,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("[Settings] updateTheme Supabase upsert error:", error);
+    throw new Error(`Failed to save theme settings: ${error.message}`);
   }
 
   writeLS(LS_THEME, next);
@@ -387,14 +388,15 @@ export async function updateGlobalSettings(patch: Partial<GlobalSettings>): Prom
   const prev = await getGlobalSettings();
   const next: GlobalSettings = { ...prev, ...patch };
 
-  try {
-    await supabase.from("app_settings").upsert({
-      key: "site_settings",
-      value: next as unknown as any,
-      updated_at: new Date().toISOString(),
-    });
-  } catch (err) {
-    console.warn("[Settings] updateGlobalSettings Supabase upsert fallback:", err);
+  const { error } = await supabase.from("app_settings").upsert({
+    key: "site_settings",
+    value: next as unknown as any,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("[Settings] updateGlobalSettings Supabase upsert error:", error);
+    throw new Error(`Failed to save site settings: ${error.message}`);
   }
 
   writeLS(LS_GLOBAL, next);

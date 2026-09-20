@@ -13,7 +13,14 @@ export function SettingsPage() {
   const [s, setS] = useState<GlobalSettings>(DEFAULT_GLOBAL);
   useEffect(() => { getGlobalSettings().then(setS); }, []);
   const set = <K extends keyof GlobalSettings>(k: K, v: GlobalSettings[K]) => setS((prev) => ({ ...prev, [k]: v }));
-  const save = async () => { await updateGlobalSettings(s); toast.success("Settings saved"); };
+  const save = async () => {
+    try {
+      await updateGlobalSettings(s);
+      toast.success("Settings saved");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save settings");
+    }
+  };
 
   return (
     <div className="space-y-4">

@@ -315,19 +315,18 @@ export async function getJobBySlug(slug: string): Promise<JobPost | null> {
 }
 
 async function persistJobsToSupabase(jobs: JobPost[]) {
-  writeLS(LS_JOBS, jobs);
-  try {
-    const { error } = await supabase.from("app_settings").upsert({
-      key: "cms_jobs_collection",
-      value: jobs as unknown as any,
-      updated_at: new Date().toISOString(),
-    });
-    if (error) {
-      console.warn("[JobsClient] persistJobsToSupabase Supabase error:", error);
-    }
-  } catch (err) {
-    console.warn("[JobsClient] persistJobsToSupabase exception:", err);
+  const { error } = await supabase.from("app_settings").upsert({
+    key: "cms_jobs_collection",
+    value: jobs as unknown as any,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("[JobsClient] persistJobsToSupabase error from Supabase:", error);
+    throw new Error(`Failed to save jobs: ${error.message}`);
   }
+
+  writeLS(LS_JOBS, jobs);
 }
 
 export async function saveJob(job: JobPost): Promise<JobPost> {
@@ -735,23 +734,23 @@ export async function updateJobApplicationStatus(
   }
 
   apps[idx] = app;
-  writeLS(LS_APPLICATIONS, apps);
 
-  // Sync back to Supabase
-  try {
-    await supabase
-      .from("leads")
-      .update({
-        status,
-        timeline: app.timeline as any,
-        notes: app.notes as any,
-        updated_at: app.updatedAt,
-      })
-      .eq("code", app.code);
-  } catch (err) {
-    console.warn("[JobsClient] updateJobApplicationStatus Supabase sync error:", err);
+  const { error } = await supabase
+    .from("leads")
+    .update({
+      status,
+      timeline: app.timeline as any,
+      notes: app.notes as any,
+      updated_at: app.updatedAt,
+    })
+    .eq("code", app.code);
+
+  if (error) {
+    console.error("[JobsClient] updateJobApplicationStatus Supabase error:", error);
+    throw new Error(`Failed to update application status: ${error.message}`);
   }
 
+  writeLS(LS_APPLICATIONS, apps);
   return app;
 }
 
@@ -778,22 +777,22 @@ export async function assignJobApplicationRecruiter(
     actor,
   });
 
-  apps[idx] = app;
-  writeLS(LS_APPLICATIONS, apps);
+  const { error } = await supabase
+    .from("leads")
+    .update({
+      assigned_to: recruiterId,
+      timeline: app.timeline as any,
+      updated_at: app.updatedAt,
+    })
+    .eq("code", app.code);
 
-  try {
-    await supabase
-      .from("leads")
-      .update({
-        assigned_to: recruiterId,
-        timeline: app.timeline as any,
-        updated_at: app.updatedAt,
-      })
-      .eq("code", app.code);
-  } catch {
-    /* ignore */
+  if (error) {
+    console.error("[JobsClient] assignJobApplicationRecruiter Supabase error:", error);
+    throw new Error(`Failed to assign recruiter: ${error.message}`);
   }
 
+  apps[idx] = app;
+  writeLS(LS_APPLICATIONS, apps);
   return app;
 }
 
@@ -821,36 +820,38 @@ export async function addJobApplicationNote(id: string, text: string, author = "
   });
 
   app.updatedAt = now;
-  apps[idx] = app;
-  writeLS(LS_APPLICATIONS, apps);
 
-  try {
-    await supabase
-      .from("leads")
-      .update({
-        notes: app.notes as any,
-        timeline: app.timeline as any,
-        updated_at: now,
-      })
-      .eq("code", app.code);
-  } catch {
-    /* ignore */
+  const { error } = await supabase
+    .from("leads")
+    .update({
+      notes: app.notes as any,
+      timeline: app.timeline as any,
+      updated_at: now,
+    })
+    .eq("code", app.code);
+
+  if (error) {
+    console.error("[JobsClient] addJobApplicationNote Supabase error:", error);
+    throw new Error(`Failed to add note: ${error.message}`);
   }
 
+  apps[idx] = app;
+  writeLS(LS_APPLICATIONS, apps);
   return app;
 }
 
 export async function deleteJobApplication(id: string): Promise<void> {
   const apps = readLS<JobApplication[]>(LS_APPLICATIONS, []);
   const target = apps.find((a) => a.id === id || a.code === id);
-  const remaining = apps.filter((a) => a.id !== id && a.code !== id);
-  writeLS(LS_APPLICATIONS, remaining);
 
   if (target?.code) {
-    try {
-      await supabase.from("leads").delete().eq("code", target.code);
-    } catch {
-      /* ignore */
+    const { error } = await supabase.from("leads").delete().eq("code", target.code);
+    if (error) {
+      console.error("[JobsClient] deleteJobApplication Supabase error:", error);
+      throw new Error(`Failed to delete application: ${error.message}`);
     }
   }
+
+  const remaining = apps.filter((a) => a.id !== id && a.code !== id);
+  writeLS(LS_APPLICATIONS, remaining);
 }

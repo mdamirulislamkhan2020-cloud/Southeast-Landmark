@@ -429,11 +429,15 @@ export async function listPages(): Promise<CmsPage[]> {
 }
 
 export async function getPage(id: string): Promise<CmsPage | null> {
-  const { data, error } = await supabase
-    .from("pages")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
+  let query = supabase.from("pages").select("*");
+  if (isUUID(id)) {
+    query = query.eq("id", id);
+  } else {
+    const normalized = normalizeSlug(id);
+    query = query.or(`slug.eq.${id},slug.eq.${normalized}`);
+  }
+
+  const { data, error } = await query.maybeSingle();
 
   if (error) {
     console.error(`[CMS] getPage(${id}) error from Supabase:`, error);
@@ -505,12 +509,15 @@ export async function updatePage(id: string, patch: Partial<CmsPage>): Promise<C
   if (patch.publishedAt !== undefined) updatePayload.published_at = patch.publishedAt || null;
   if (patch.archivedAt !== undefined) updatePayload.archived_at = patch.archivedAt || null;
 
-  const { data, error } = await supabase
-    .from("pages")
-    .update(updatePayload)
-    .eq("id", id)
-    .select()
-    .single();
+  let query = supabase.from("pages").update(updatePayload);
+  if (isUUID(id)) {
+    query = query.eq("id", id);
+  } else {
+    const normalized = normalizeSlug(id);
+    query = query.or(`slug.eq.${id},slug.eq.${normalized}`);
+  }
+
+  const { data, error } = await query.select().single();
 
   if (error) {
     console.error(`[CMS] updatePage(${id}) error from Supabase:`, error);
@@ -521,10 +528,15 @@ export async function updatePage(id: string, patch: Partial<CmsPage>): Promise<C
 }
 
 export async function deletePage(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("pages")
-    .delete()
-    .eq("id", id);
+  let query = supabase.from("pages").delete();
+  if (isUUID(id)) {
+    query = query.eq("id", id);
+  } else {
+    const normalized = normalizeSlug(id);
+    query = query.or(`slug.eq.${id},slug.eq.${normalized}`);
+  }
+
+  const { error } = await query;
 
   if (error) {
     console.error(`[CMS] deletePage(${id}) error from Supabase:`, error);

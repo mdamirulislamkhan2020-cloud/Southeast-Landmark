@@ -226,73 +226,90 @@ export async function getMenuBySlug(slug: string): Promise<Menu | null> {
 export async function createMenu(input: Partial<Menu>): Promise<Menu> {
   const ts = nowISO();
   const slug = (input.slug ?? `menu-${Date.now().toString(36)}`).replace(/[^a-z0-9-]/gi, "-").toLowerCase();
-  const menu: Menu = {
-    id: uid(),
-    name: input.name ?? "New Menu",
-    slug,
-    location: input.location ?? "custom",
-    description: input.description ?? "",
-    enabled: input.enabled ?? true,
-    items: input.items ?? [],
-    createdAt: ts,
-    updatedAt: ts,
-  };
+  const name = input.name ?? "New Menu";
 
-  try {
-    const { data, error } = await supabase
-      .from("menus")
-      .insert({
-        name: menu.name,
-        slug: menu.slug,
-        location: menu.location,
-        description: menu.description,
-        enabled: menu.enabled,
-        items: menu.items as unknown as any,
-      })
-      .select()
-      .single();
+  const { data, error } = await supabase
+    .from("menus")
+    .insert({
+      name,
+      slug,
+      location: input.location ?? "custom",
+      description: input.description ?? "",
+      enabled: input.enabled ?? true,
+      items: (input.items ?? []) as unknown as any,
+    })
+    .select()
+    .single();
 
-    if (!error && data) {
-      menu.id = data.id;
-    }
-  } catch (err) {
-    console.warn("[Navigation] createMenu Supabase insert fallback:", err);
+  if (error) {
+    console.error("[Navigation] createMenu error from Supabase:", error);
+    throw new Error(`Failed to create menu: ${error.message}`);
   }
 
+  const created: Menu = {
+    id: data.id,
+    name: data.name,
+    slug: data.slug,
+    location: (data.location as MenuLocation) || "custom",
+    description: data.description || "",
+    enabled: data.enabled ?? true,
+    items: (Array.isArray(data.items) ? data.items : []) as unknown as MenuItem[],
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+
   const all = await listMenus();
-  all.push(menu);
+  all.push(created);
   writeLS(LS_MENUS, all);
-  return menu;
+  return created;
 }
 
 export async function updateMenu(id: string, patch: Partial<Menu>): Promise<Menu> {
   const ts = nowISO();
+  const slug = patch.slug || patch.name?.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
-  try {
-    await supabase
-      .from("menus")
-      .update({
-        ...(patch.name !== undefined ? { name: patch.name } : {}),
-        ...(patch.slug !== undefined ? { slug: patch.slug } : {}),
-        ...(patch.location !== undefined ? { location: patch.location } : {}),
-        ...(patch.description !== undefined ? { description: patch.description } : {}),
-        ...(patch.enabled !== undefined ? { enabled: patch.enabled } : {}),
-        ...(patch.items !== undefined ? { items: patch.items as unknown as any } : {}),
-        updated_at: ts,
-      })
-      .eq("id", id);
-  } catch (err) {
-    console.warn("[Navigation] updateMenu Supabase update fallback:", err);
+  const { data, error } = await supabase
+    .from("menus")
+    .upsert({
+      ...(id && id.length > 20 ? { id } : {}),
+      name: patch.name || "Menu",
+      slug: slug || "header",
+      location: patch.location || "custom",
+      description: patch.description || "",
+      enabled: patch.enabled ?? true,
+      items: (patch.items ?? []) as unknown as any,
+      updated_at: ts,
+    }, { onConflict: "slug" })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[Navigation] updateMenu error from Supabase:", error);
+    throw new Error(`Failed to update menu: ${error.message}`);
   }
+
+  const updated: Menu = {
+    id: data.id,
+    name: data.name,
+    slug: data.slug,
+    location: (data.location as MenuLocation) || "custom",
+    description: data.description || "",
+    enabled: data.enabled ?? true,
+    items: (Array.isArray(data.items) ? data.items : []) as unknown as MenuItem[],
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
 
   const all = await listMenus();
-  const idx = all.findIndex((m) => m.id === id);
+  const idx = all.findIndex((m) => m.id === id || m.id === data.id || m.slug === data.slug);
   if (idx >= 0) {
-    all[idx] = { ...all[idx], ...patch, updatedAt: ts };
-    writeLS(LS_MENUS, all);
-    return all[idx];
+    all[idx] = updated;
+  } else {
+    all.push(updated);
   }
-  return { id, name: patch.name ?? "", slug: patch.slug ?? "", location: patch.location ?? "custom", enabled: true, items: patch.items ?? [], createdAt: ts, updatedAt: ts };
+
+  writeLS(LS_MENUS, all);
+  return updated;
 }
 
 export async function saveMenu(menu: Menu): Promise<Menu> {
@@ -301,10 +318,10 @@ export async function saveMenu(menu: Menu): Promise<Menu> {
 }
 
 export async function deleteMenu(id: string): Promise<void> {
-  try {
-    await supabase.from("menus").delete().eq("id", id);
-  } catch (err) {
-    console.warn("[Navigation] deleteMenu Supabase error:", err);
+  const { error } = await supabase.from("menus").delete().eq("id", id);
+  if (error) {
+    console.error("[Navigation] deleteMenu error from Supabase:", error);
+    throw new Error(`Failed to delete menu: ${error.message}`);
   }
   const all = (await listMenus()).filter((m) => m.id !== id);
   writeLS(LS_MENUS, all);
@@ -401,14 +418,15 @@ export async function saveHeaderSettings(patch: Partial<HeaderSettings>): Promis
   const prev = await getHeaderSettings();
   const next: HeaderSettings = { ...prev, ...patch };
 
-  try {
-    await supabase.from("nav_settings").upsert({
-      key: "header_settings",
-      value: next as unknown as any,
-      updated_at: nowISO(),
-    });
-  } catch (err) {
-    console.warn("[Navigation] saveHeaderSettings Supabase upsert error:", err);
+  const { error } = await supabase.from("nav_settings").upsert({
+    key: "header_settings",
+    value: next as unknown as any,
+    updated_at: nowISO(),
+  });
+
+  if (error) {
+    console.error("[Navigation] saveHeaderSettings error from Supabase:", error);
+    throw new Error(`Failed to save header settings: ${error.message}`);
   }
 
   writeLS(LS_HEADER, next);
@@ -510,14 +528,15 @@ export async function saveFooterSettings(patch: Partial<FooterSettings>): Promis
   const prev = await getFooterSettings();
   const next: FooterSettings = { ...prev, ...patch };
 
-  try {
-    await supabase.from("nav_settings").upsert({
-      key: "footer_settings",
-      value: next as unknown as any,
-      updated_at: nowISO(),
-    });
-  } catch (err) {
-    console.warn("[Navigation] saveFooterSettings Supabase upsert error:", err);
+  const { error } = await supabase.from("nav_settings").upsert({
+    key: "footer_settings",
+    value: next as unknown as any,
+    updated_at: nowISO(),
+  });
+
+  if (error) {
+    console.error("[Navigation] saveFooterSettings error from Supabase:", error);
+    throw new Error(`Failed to save footer settings: ${error.message}`);
   }
 
   writeLS(LS_FOOTER, next, FOOTER_EVENT);
@@ -566,14 +585,15 @@ export async function saveMobileMenuSettings(patch: Partial<MobileMenuSettings>)
   const prev = await getMobileMenuSettings();
   const next: MobileMenuSettings = { ...prev, ...patch };
 
-  try {
-    await supabase.from("nav_settings").upsert({
-      key: "mobile_menu_settings",
-      value: next as unknown as any,
-      updated_at: nowISO(),
-    });
-  } catch (err) {
-    console.warn("[Navigation] saveMobileMenuSettings Supabase upsert error:", err);
+  const { error } = await supabase.from("nav_settings").upsert({
+    key: "mobile_menu_settings",
+    value: next as unknown as any,
+    updated_at: nowISO(),
+  });
+
+  if (error) {
+    console.error("[Navigation] saveMobileMenuSettings error from Supabase:", error);
+    throw new Error(`Failed to save mobile menu settings: ${error.message}`);
   }
 
   writeLS(LS_MOBILE, next);

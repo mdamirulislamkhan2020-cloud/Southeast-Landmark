@@ -48,7 +48,14 @@ export function ThemePage() {
   const [t, setT] = useState<ThemeSettings>(DEFAULT_THEME);
   useEffect(() => { getTheme().then(setT); }, []);
   const update = (patch: Partial<ThemeSettings>) => setT((s) => ({ ...s, ...patch }));
-  const save = async () => { await updateTheme(t); toast.success("Theme saved — public site updated"); };
+  const save = async () => {
+    try {
+      await updateTheme(t);
+      toast.success("Theme saved — public site updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save theme");
+    }
+  };
 
   return (
     <div className="space-y-4">
