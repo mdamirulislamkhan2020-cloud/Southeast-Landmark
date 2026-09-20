@@ -1,23 +1,16 @@
-import { blockData, CmsAssignedLeadForm, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
-import { AboutHeroSection } from "@/components/sections/about/AboutHeroSection";
-import { AboutIntroSection } from "@/components/sections/about/AboutIntroSection";
-import { AboutStorySection } from "@/components/sections/about/AboutStorySection";
-import { AboutMissionVisionSection } from "@/components/sections/about/AboutMissionVisionSection";
+import { CmsAssignedLeadForm, useCmsPage } from "@/components/site/useCmsPageBlocks";
+import { defaultBlocksForSlug } from "@/admin/api/client";
+import { SectionRenderer } from "@/components/sections/SectionRenderer";
 
 export function AboutPage() {
-  const blocks = useCmsPageBlocks("/about");
-  const heroBlock = blockData(blocks, "about.hero");
-  const introBlock = blockData(blocks, "about.intro") || blockData(blocks, "about.features");
-  const storyBlock = blockData(blocks, "about.story");
-  const missionBlock = blockData(blocks, "about.mission");
-  const visionBlock = blockData(blocks, "about.vision");
+  const page = useCmsPage("/about");
+  const blocks = Array.isArray(page?.blocks) ? page.blocks : defaultBlocksForSlug("/about");
 
   return (
     <div className="w-full">
-      <AboutHeroSection data={heroBlock} />
-      <AboutIntroSection data={introBlock} />
-      <AboutStorySection data={storyBlock} />
-      <AboutMissionVisionSection missionData={missionBlock} visionData={visionBlock} />
+      {blocks.map((b) => (
+        <SectionRenderer key={b.id} block={b} containerWidth={1200} pageFormId={page?.formId ?? null} />
+      ))}
       <CmsAssignedLeadForm pageSlug="/about" />
     </div>
   );

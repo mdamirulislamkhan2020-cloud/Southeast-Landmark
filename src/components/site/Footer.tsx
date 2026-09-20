@@ -155,7 +155,7 @@ export function Footer() {
         {/* Dynamic Custom Columns */}
         {columnsList.map((col) => {
           if (col.type === "links") {
-            const colLinks = col.links && col.links.length > 0 ? col.links : links;
+            const colLinks = col.id === "col-links" ? links : (col.links && col.links.length > 0 ? col.links : links);
             return (
               <div key={col.id}>
                 <h4 className="mb-4 font-display text-base font-semibold" style={{ color: accentColor }}>

@@ -1,14 +1,13 @@
 import { useEffect, useRef } from "react";
-import { blockData, CmsAssignedLeadForm, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
-import { PropertyHeroSection } from "@/components/sections/property/PropertyHeroSection";
-import { PropertyContentSection } from "@/components/sections/property/PropertyContentSection";
+import { CmsAssignedLeadForm, useCmsPage } from "@/components/site/useCmsPageBlocks";
+import { defaultBlocksForSlug } from "@/admin/api/client";
+import { SectionRenderer } from "@/components/sections/SectionRenderer";
 import { fbqTrack } from "@/lib/fbq";
 import { gtmPush } from "@/lib/gtm";
 
 export function PropertyPage() {
-  const blocks = useCmsPageBlocks("/property");
-  const heroBlock = blockData(blocks, "property.hero");
-  const gridBlock = blockData(blocks, "property.grid");
+  const page = useCmsPage("/property");
+  const blocks = Array.isArray(page?.blocks) ? page.blocks : defaultBlocksForSlug("/property");
 
   // Analytics
   const viewContentFiredRef = useRef(false);
@@ -29,8 +28,9 @@ export function PropertyPage() {
 
   return (
     <div className="w-full">
-      <PropertyHeroSection data={heroBlock} />
-      <PropertyContentSection data={gridBlock} />
+      {blocks.map((b) => (
+        <SectionRenderer key={b.id} block={b} containerWidth={1200} pageFormId={page?.formId ?? null} />
+      ))}
       <CmsAssignedLeadForm pageSlug="/property" />
     </div>
   );

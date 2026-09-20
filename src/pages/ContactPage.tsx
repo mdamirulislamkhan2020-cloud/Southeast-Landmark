@@ -1,16 +1,16 @@
-import { blockData, CmsAssignedLeadForm, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
-import { ContactHeroSection } from "@/components/sections/contact/ContactHeroSection";
-import { ContactContentSection } from "@/components/sections/contact/ContactContentSection";
+import { CmsAssignedLeadForm, useCmsPage } from "@/components/site/useCmsPageBlocks";
+import { defaultBlocksForSlug } from "@/admin/api/client";
+import { SectionRenderer } from "@/components/sections/SectionRenderer";
 
 export function ContactPage() {
-  const blocks = useCmsPageBlocks("/contact");
-  const heroBlock = blockData(blocks, "contact.hero");
-  const contactBlock = blockData(blocks, "contact.info");
+  const page = useCmsPage("/contact");
+  const blocks = Array.isArray(page?.blocks) ? page.blocks : defaultBlocksForSlug("/contact");
 
   return (
     <div className="w-full">
-      <ContactHeroSection data={heroBlock} />
-      <ContactContentSection data={contactBlock} />
+      {blocks.map((b) => (
+        <SectionRenderer key={b.id} block={b} containerWidth={1200} pageFormId={page?.formId ?? null} />
+      ))}
       <CmsAssignedLeadForm pageSlug="/contact" />
     </div>
   );

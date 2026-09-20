@@ -1,13 +1,12 @@
 import { useEffect, useRef } from "react";
-import { blockData, CmsAssignedLeadForm, useCmsPageBlocks } from "@/components/site/useCmsPageBlocks";
-import { BlogHeroSection } from "@/components/sections/blog/BlogHeroSection";
-import { BlogContentSection } from "@/components/sections/blog/BlogContentSection";
+import { CmsAssignedLeadForm, useCmsPage } from "@/components/site/useCmsPageBlocks";
+import { defaultBlocksForSlug } from "@/admin/api/client";
+import { SectionRenderer } from "@/components/sections/SectionRenderer";
 import { gtmPush } from "@/lib/gtm";
 
 export function BlogPage() {
-  const blocks = useCmsPageBlocks("/blog");
-  const heroBlock = blockData(blocks, "blog.hero");
-  const gridBlock = blockData(blocks, "blog.grid");
+  const page = useCmsPage("/blog");
+  const blocks = Array.isArray(page?.blocks) ? page.blocks : defaultBlocksForSlug("/blog");
 
   const blogViewFiredRef = useRef(false);
   useEffect(() => {
@@ -18,8 +17,9 @@ export function BlogPage() {
 
   return (
     <div className="w-full">
-      <BlogHeroSection data={heroBlock} />
-      <BlogContentSection data={gridBlock} />
+      {blocks.map((b) => (
+        <SectionRenderer key={b.id} block={b} containerWidth={1200} pageFormId={page?.formId ?? null} />
+      ))}
       <CmsAssignedLeadForm pageSlug="/blog" />
     </div>
   );

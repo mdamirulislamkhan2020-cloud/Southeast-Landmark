@@ -186,7 +186,7 @@ export function PreviewFooter({
 
             {col.type === "links" && (
               <ul className="space-y-2 text-sm">
-                {(col.links || []).map((l) => (
+                {(col.id === "col-links" ? (fallbackLinks.length > 0 ? fallbackLinks : (col.links || [])) : (col.links && col.links.length > 0 ? col.links : fallbackLinks)).map((l) => (
                   <li key={l.id} className="hover:underline transition-colors" style={{ color: textColor }}>
                     {l.label}
                   </li>

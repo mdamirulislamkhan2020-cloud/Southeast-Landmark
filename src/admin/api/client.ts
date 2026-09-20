@@ -220,7 +220,7 @@ export function normalizeSlug(input: string): string {
  */
 export function rowToCmsPage(r: PageRow): CmsPage {
   const defaultBlocks = defaultBlocksForSlug(r.slug);
-  const rawBlocks = Array.isArray(r.blocks) && r.blocks.length > 0 ? (r.blocks as unknown as PageBlock[]) : defaultBlocks;
+  const rawBlocks = Array.isArray(r.blocks) ? (r.blocks as unknown as PageBlock[]) : defaultBlocks;
 
   return {
     id: r.id,
