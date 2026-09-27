@@ -30,7 +30,20 @@ import {
   AlignJustify,
 } from "lucide-react";
 import { MediaPickerDialog } from "./MediaPickerDialog";
+import { ProjectInspectors } from "./ProjectInspectors";
 import type { LeadForm } from "../api/forms";
+
+const BLOCK_KEY_TITLES: Record<string, string> = {
+  "project.hero": "Hero & Master Plan Header",
+  "project.location": "Strategic Location & Map",
+  "project.masterplan": "Township Master Plan Layout",
+  "project.blocks": "Block-Wise Zoning (A–D)",
+  "project.roads": "Roads & Infrastructure",
+  "project.amenities": "Modern Amenities & Lifestyle",
+  "project.plots": "Plot Inventory & Investment",
+  "project.sitevisit": "Site Visit Booking & Contact",
+  "project.faq": "Project Buyer FAQs",
+};
 
 interface VisualInspectorSidebarProps {
   page: Partial<CmsPage>;
@@ -258,6 +271,13 @@ export function VisualInspectorSidebar({
     );
   }
 
+  const blockKey =
+    (blockData.key as string) ||
+    (selectedBlock.type?.startsWith("project_")
+      ? selectedBlock.type.replace("_", ".")
+      : selectedBlock.type?.startsWith("project.")
+      ? selectedBlock.type
+      : "");
   const customStyles = (blockData.customStyles ?? {}) as Record<string, any>;
 
   return (
@@ -266,8 +286,8 @@ export function VisualInspectorSidebar({
       <div className="p-3.5 border-b border-border bg-secondary/15 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-foreground capitalize">
-              {selectedBlock.type.replace("_", " ")} Block
+            <span className="text-xs font-bold text-foreground">
+              {BLOCK_KEY_TITLES[blockKey] || `${selectedBlock.type.replace("_", " ")} Block`}
             </span>
             <span className="text-[10px] font-mono text-muted-foreground">
               #{selectedBlock.id.slice(0, 5)}
@@ -325,8 +345,18 @@ export function VisualInspectorSidebar({
 
         {/* CONTENT TAB */}
         <TabsContent value="content" className="flex-1 overflow-y-auto p-4 space-y-4 text-xs mt-0">
-          {/* HERO BLOCK */}
-          {selectedBlock.type === "hero" && (
+          {/* PROJECT-SPECIFIC INSPECTOR (when block key starts with project.) */}
+          {blockKey.startsWith("project.") ? (
+            <ProjectInspectors
+              blockKey={blockKey}
+              blockData={blockData}
+              updateData={updateData}
+              openMediaFor={openMediaFor}
+            />
+          ) : (
+            <>
+              {/* HERO BLOCK */}
+              {selectedBlock.type === "hero" && (
             <div className="space-y-3">
               <div className="space-y-1">
                 <Label className="text-xs">Breadcrumb / Eyebrow</Label>
@@ -914,7 +944,127 @@ export function VisualInspectorSidebar({
               />
             </div>
           )}
-        </TabsContent>
+
+          {/* GOOGLE MAP BLOCK */}
+          {selectedBlock.type === "map" && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Section Heading</Label>
+                <Input
+                  value={blockData.title || ""}
+                  onChange={(e) => updateData({ title: e.target.value })}
+                  className="h-8 text-xs font-medium"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Subtitle</Label>
+                <Input
+                  value={blockData.subtitle || ""}
+                  onChange={(e) => updateData({ subtitle: e.target.value })}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Map Embed URL (iframe source)</Label>
+                <Input
+                  value={blockData.embed || blockData.mapEmbedUrl || ""}
+                  onChange={(e) => updateData({ embed: e.target.value, mapEmbedUrl: e.target.value })}
+                  className="h-8 text-xs font-mono"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* CONTACT BLOCK */}
+          {selectedBlock.type === "contact" && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Section Title</Label>
+                <Input
+                  value={blockData.formTitle || blockData.title || ""}
+                  onChange={(e) => updateData({ formTitle: e.target.value, title: e.target.value })}
+                  className="h-8 text-xs font-medium"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Phone</Label>
+                <Input
+                  value={blockData.phone || ""}
+                  onChange={(e) => updateData({ phone: e.target.value })}
+                  className="h-8 text-xs font-mono"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Email</Label>
+                <Input
+                  value={blockData.email || ""}
+                  onChange={(e) => updateData({ email: e.target.value })}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Office Address</Label>
+                <Textarea
+                  rows={2}
+                  value={blockData.address || ""}
+                  onChange={(e) => updateData({ address: e.target.value })}
+                  className="text-xs"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* PROPERTY GRID BLOCK */}
+          {selectedBlock.type === "property_grid" && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Eyebrow</Label>
+                <Input
+                  value={blockData.eyebrow || ""}
+                  onChange={(e) => updateData({ eyebrow: e.target.value })}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Heading</Label>
+                <Input
+                  value={blockData.title || ""}
+                  onChange={(e) => updateData({ title: e.target.value })}
+                  className="h-8 text-xs font-medium"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Properties Count Limit</Label>
+                <Input
+                  type="number"
+                  value={blockData.limit || 6}
+                  onChange={(e) => updateData({ limit: parseInt(e.target.value, 10) || 6 })}
+                  className="h-8 text-xs font-mono"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">CTA Label</Label>
+                  <Input
+                    value={blockData.ctaLabel || ""}
+                    onChange={(e) => updateData({ ctaLabel: e.target.value })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">CTA Link</Label>
+                  <Input
+                    value={blockData.ctaHref || ""}
+                    onChange={(e) => updateData({ ctaHref: e.target.value })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </TabsContent>
 
         {/* STYLE TAB */}
         <TabsContent value="style" className="flex-1 overflow-y-auto p-4 space-y-4 text-xs mt-0">
@@ -1071,8 +1221,21 @@ export function VisualInspectorSidebar({
         <TabsContent value="advanced" className="flex-1 overflow-y-auto p-4 space-y-4 text-xs mt-0">
           <div className="space-y-3">
             <h4 className="font-semibold text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <Eye className="h-3.5 w-3.5 text-primary" /> Responsive Visibility
+              <Eye className="h-3.5 w-3.5 text-primary" /> Visibility Controls
             </h4>
+
+            <div className="flex items-center justify-between py-1 border-b border-border/40 pb-2">
+              <div>
+                <span className="text-xs font-semibold block">Visible on Public Site</span>
+                <span className="text-[10px] text-muted-foreground block">
+                  {customStyles.hidden ? "Hidden from visitors (Admin only)" : "Visible to all visitors"}
+                </span>
+              </div>
+              <Switch
+                checked={customStyles.hidden !== true}
+                onCheckedChange={(v) => updateStyle({ hidden: !v })}
+              />
+            </div>
 
             <div className="flex items-center justify-between py-1">
               <span className="text-xs">Show on Desktop</span>

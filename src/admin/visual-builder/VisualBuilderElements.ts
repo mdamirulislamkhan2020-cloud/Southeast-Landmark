@@ -29,7 +29,7 @@ export interface VisualElementDefinition {
   id: string;
   type: BlockType;
   label: string;
-  category: "Layout" | "Basic" | "Content" | "Dynamic";
+  category: "Layout" | "Basic" | "Content" | "Dynamic" | "Project";
   icon: typeof Layout;
   description: string;
   defaultData: Record<string, unknown>;
@@ -313,6 +313,151 @@ export const VISUAL_ELEMENTS: VisualElementDefinition[] = [
     description: "Interactive location map embed for project site or office",
     defaultData: {
       embed: "https://maps.google.com/maps?q=Dhaka,Bangladesh&t=&z=13&ie=UTF8&iwloc=&output=embed",
+    },
+  },
+
+  // PROJECT / MASTER PLAN PRESETS
+  {
+    id: "project_hero",
+    type: "hero",
+    label: "Project Hero & Header",
+    category: "Project",
+    icon: Flame,
+    description: "Full-width master layout banner with CTAs and key dimensional metrics",
+    defaultData: {
+      key: "project.hero",
+      eyebrow: "SOUTHEAST CITY",
+      title: "Southeast City Master Layout",
+      subtitle:
+        "A safe, modern, and nature-surrounded township in Bonogram, Savar—adjacent to the Mirpur Embankment and Shah Ali Bridge.",
+      ctaLabel: "Explore Master Plan",
+      ctaHref: "#master-plan",
+      secondaryCtaLabel: "Book a Site Visit",
+      secondaryCtaHref: "#site-visit",
+      tertiaryCtaLabel: "View Plot Options →",
+      tertiaryCtaHref: "#plot-options",
+    },
+  },
+  {
+    id: "project_location",
+    type: "map",
+    label: "Strategic Location & Map",
+    category: "Project",
+    icon: MapPin,
+    description: "Interactive Savar/Bonogram map, transit times, and 4 location cards",
+    defaultData: {
+      key: "project.location",
+      eyebrow: "LOCATION",
+      title: "Strategic Location & Accessibility",
+      subtitle:
+        "Situated at Bonogram, Savar—directly beside the Mirpur Embankment and Shah Ali Bridge—Southeast City balances instant arterial connectivity into the Dhaka metropolis with the tranquility of nature.",
+      mapEmbedUrl:
+        "https://maps.google.com/maps?q=Bonogram,+Savar,+Dhaka&t=&z=13&ie=UTF8&iwloc=&output=embed",
+    },
+  },
+  {
+    id: "project_masterplan",
+    type: "gallery",
+    label: "Township Master Plan Layout",
+    category: "Project",
+    icon: Layers,
+    description: "Interactive architectural layout schematic, sector viewer, and metrics",
+    defaultData: {
+      key: "project.masterplan",
+      eyebrow: "MASTER PLAN",
+      title: "Township Master Layout & Key Metrics",
+      subtitle:
+        "Engineered with human-centric zoning, expansive green buffers, and a hierarchical road network to deliver an idyllic residential ecosystem for generations to come.",
+    },
+  },
+  {
+    id: "project_blocks",
+    type: "features",
+    label: "Block-Wise Zoning (A–D)",
+    category: "Project",
+    icon: Building,
+    description: "Detailed breakdown of Blocks A, B, C, and D with zoning and road reservations",
+    defaultData: {
+      key: "project.blocks",
+      eyebrow: "ZONING & SECTORS",
+      title: "Block-Wise Planning Architecture",
+      subtitle:
+        "Every block is master-planned with distinct architectural zoning, dedicated road reservations, and easy access to neighborhood social infrastructure.",
+    },
+  },
+  {
+    id: "project_roads",
+    type: "features",
+    label: "Roads & Modern Utilities",
+    category: "Project",
+    icon: CheckSquare,
+    description: "60ft Boulevard, 40ft avenues, 30ft loops, and modern underground utilities",
+    defaultData: {
+      key: "project.roads",
+      eyebrow: "INFRASTRUCTURE",
+      title: "Engineered Road Network & Modern Utilities",
+      subtitle:
+        "Civil-engineered with comprehensive sub-surface drainage, underground utility ducts, and generous street widths to prevent future road cuts and traffic bottlenecks.",
+    },
+  },
+  {
+    id: "project_amenities",
+    type: "features",
+    label: "Amenities & Lifestyle",
+    category: "Project",
+    icon: Sparkles,
+    description: "Grand mosque, lake promenade, schools, clinics, and community arcade",
+    defaultData: {
+      key: "project.amenities",
+      eyebrow: "AMENITIES & LIFESTYLE",
+      title: "Designed for a Complete Township Lifestyle",
+      subtitle:
+        "From daily spiritual peace to children’s schooling and lakeside wellness, Southeast City provides every neighborhood comfort inside a secure gated boundary.",
+    },
+  },
+  {
+    id: "project_plots",
+    type: "property_grid",
+    label: "Plot Inventory & Calculator",
+    category: "Project",
+    icon: Building,
+    description: "3, 5, 10 Katha residential & commercial plots with installment calculator",
+    defaultData: {
+      key: "project.plots",
+      eyebrow: "PLOT INVENTORY & INVESTMENT",
+      title: "Plot Sizes & Flexible Ownership Plans",
+      subtitle:
+        "Choose from standard 3 Katha, 5 Katha, 10 Katha, and Commercial plots with transparent pricing, instant booking discounts, and flexible 36-to-60 month interest-free installment schedules.",
+    },
+  },
+  {
+    id: "project_sitevisit",
+    type: "contact",
+    label: "Site Visit Booking & Tour",
+    category: "Project",
+    icon: Phone,
+    description: "Guided site visit booking form with pickup locations and hotlines",
+    defaultData: {
+      key: "project.sitevisit",
+      eyebrow: "EXPERIENCE THE TOWNSHIP",
+      title: "Book a Guided Site Visit to Southeast City",
+      subtitle:
+        "Experience the natural red-soil elevation, wide boulevard alignment, and calm riverside surroundings firsthand. We provide complimentary air-conditioned round-trip transport from our Dhaka hubs.",
+    },
+  },
+  {
+    id: "project_faq",
+    type: "faq",
+    label: "Project Buyer FAQs",
+    category: "Project",
+    icon: HelpCircle,
+    description: "Essential answers on land titles, flood elevation, and payment terms",
+    defaultData: {
+      key: "project.faq",
+      eyebrow: "FREQUENTLY ASKED QUESTIONS",
+      title: "Essential Answers for Plot Buyers",
+      subtitle:
+        "Everything you need to know about Southeast City's land titles, connectivity, infrastructure, and booking procedures.",
     },
   },
 ];

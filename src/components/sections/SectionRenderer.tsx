@@ -33,6 +33,17 @@ import { FaqContentSection } from "./faq/FaqContentSection";
 import { ContactHeroSection } from "./contact/ContactHeroSection";
 import { ContactContentSection } from "./contact/ContactContentSection";
 
+// Project & Master Plan Sections
+import { ProjectHeroSection } from "./project/ProjectHeroSection";
+import { ProjectLocationSection } from "./project/ProjectLocationSection";
+import { ProjectMasterPlanSection } from "./project/ProjectMasterPlanSection";
+import { ProjectBlocksSection } from "./project/ProjectBlocksSection";
+import { ProjectRoadsSection } from "./project/ProjectRoadsSection";
+import { ProjectAmenitiesSection } from "./project/ProjectAmenitiesSection";
+import { ProjectPlotsSection } from "./project/ProjectPlotsSection";
+import { ProjectSiteVisitSection } from "./project/ProjectSiteVisitSection";
+import { ProjectFaqSection } from "./project/ProjectFaqSection";
+
 export interface SectionRendererProps {
   block: PageBlock;
   isEditable?: boolean;
@@ -50,7 +61,13 @@ export function SectionRenderer({
   containerWidth = 1200,
   pageFormId,
 }: SectionRendererProps) {
-  const blockKey = (block.data?.key as string) || "";
+  const blockKey =
+    (block.data?.key as string) ||
+    (block.type?.startsWith("project_")
+      ? block.type.replace("_", ".")
+      : block.type?.startsWith("project.")
+      ? block.type
+      : "");
   const data = (block.data ?? {}) as Record<string, any>;
 
   // 1. Check for built-in section keys
@@ -67,11 +84,7 @@ export function SectionRenderer({
       );
     case "home.features":
       return (
-        <HomeFeaturesSection
-          data={data}
-          isEditable={isEditable}
-          onUpdateField={onUpdateField}
-        />
+        <HomeFeaturesSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />
       );
     case "home.about":
       return (
@@ -84,11 +97,7 @@ export function SectionRenderer({
       );
     case "home.projects":
       return (
-        <HomeProjectsSection
-          data={data}
-          isEditable={isEditable}
-          onUpdateField={onUpdateField}
-        />
+        <HomeProjectsSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />
       );
     case "home.testimonials":
       return (
@@ -99,39 +108,17 @@ export function SectionRenderer({
         />
       );
     case "home.stats":
-      return (
-        <HomeStatsSection
-          data={data}
-          isEditable={isEditable}
-          onUpdateField={onUpdateField}
-        />
-      );
+      return <HomeStatsSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />;
     case "home.blog":
-      return (
-        <HomeBlogSection
-          data={data}
-          isEditable={isEditable}
-          onUpdateField={onUpdateField}
-        />
-      );
+      return <HomeBlogSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />;
 
     // ABOUT SECTIONS
     case "about.hero":
-      return (
-        <AboutHeroSection
-          data={data}
-          isEditable={isEditable}
-          onUpdateField={onUpdateField}
-        />
-      );
+      return <AboutHeroSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />;
     case "about.intro":
     case "about.features":
       return (
-        <AboutIntroSection
-          data={data}
-          isEditable={isEditable}
-          onUpdateField={onUpdateField}
-        />
+        <AboutIntroSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />
       );
     case "about.story":
       return (
@@ -164,73 +151,94 @@ export function SectionRenderer({
     // PROPERTY SECTIONS
     case "property.hero":
       return (
-        <PropertyHeroSection
-          data={data}
-          isEditable={isEditable}
-          onUpdateField={onUpdateField}
-        />
+        <PropertyHeroSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />
       );
     case "property.grid":
       return (
-        <PropertyContentSection
-          data={data}
-          isEditable={isEditable}
-          onUpdateField={onUpdateField}
-        />
+        <PropertyContentSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />
       );
 
     // BLOG SECTIONS
     case "blog.hero":
-      return (
-        <BlogHeroSection
-          data={data}
-          isEditable={isEditable}
-          onUpdateField={onUpdateField}
-        />
-      );
+      return <BlogHeroSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />;
     case "blog.grid":
       return (
-        <BlogContentSection
-          data={data}
-          isEditable={isEditable}
-          onUpdateField={onUpdateField}
-        />
+        <BlogContentSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />
       );
 
     // FAQ SECTIONS
     case "faq.hero":
-      return (
-        <FaqHeroSection
-          data={data}
-          isEditable={isEditable}
-          onUpdateField={onUpdateField}
-        />
-      );
+      return <FaqHeroSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />;
     case "faq.content":
       return (
-        <FaqContentSection
-          data={data}
-          isEditable={isEditable}
-          onUpdateField={onUpdateField}
-        />
+        <FaqContentSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />
       );
 
     // CONTACT SECTIONS
     case "contact.hero":
       return (
-        <ContactHeroSection
+        <ContactHeroSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />
+      );
+    case "contact.info":
+      return (
+        <ContactContentSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />
+      );
+
+    // PROJECT & MASTER PLAN SECTIONS
+    case "project.hero":
+      return (
+        <ProjectHeroSection
+          data={data}
+          isEditable={isEditable}
+          onUpdateField={onUpdateField}
+          onOpenMedia={onOpenMedia}
+        />
+      );
+    case "project.location":
+      return (
+        <ProjectLocationSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />
+      );
+    case "project.masterplan":
+      return (
+        <ProjectMasterPlanSection
+          data={data}
+          isEditable={isEditable}
+          onUpdateField={onUpdateField}
+          onOpenMedia={onOpenMedia}
+        />
+      );
+    case "project.blocks":
+      return (
+        <ProjectBlocksSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />
+      );
+    case "project.roads":
+      return (
+        <ProjectRoadsSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />
+      );
+    case "project.amenities":
+      return (
+        <ProjectAmenitiesSection
           data={data}
           isEditable={isEditable}
           onUpdateField={onUpdateField}
         />
       );
-    case "contact.info":
+    case "project.plots":
       return (
-        <ContactContentSection
+        <ProjectPlotsSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />
+      );
+    case "project.sitevisit":
+      return (
+        <ProjectSiteVisitSection
           data={data}
           isEditable={isEditable}
           onUpdateField={onUpdateField}
+          pageFormId={pageFormId}
         />
+      );
+    case "project.faq":
+      return (
+        <ProjectFaqSection data={data} isEditable={isEditable} onUpdateField={onUpdateField} />
       );
 
     // 2. Generic blocks: render via BlockRenderer

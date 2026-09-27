@@ -11,9 +11,11 @@ interface VisualElementsDrawerProps {
 
 export function VisualElementsDrawer({ onAddElement, onDragStart }: VisualElementsDrawerProps) {
   const [q, setQ] = useState("");
-  const [activeTab, setActiveTab] = useState<"All" | "Layout" | "Basic" | "Content" | "Dynamic">("All");
+  const [activeTab, setActiveTab] = useState<
+    "All" | "Project" | "Layout" | "Basic" | "Content" | "Dynamic"
+  >("All");
 
-  const categories = ["All", "Layout", "Basic", "Content", "Dynamic"] as const;
+  const categories = ["All", "Project", "Layout", "Basic", "Content", "Dynamic"] as const;
 
   const filtered = useMemo(() => {
     return VISUAL_ELEMENTS.filter((el) => {

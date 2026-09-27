@@ -64,6 +64,18 @@ const BLOCK_TYPE_LABELS: Record<string, { label: string; icon: typeof Layers }> 
   divider: { label: "Divider", icon: Layers },
 };
 
+const BLOCK_KEY_LABELS: Record<string, { label: string; icon: typeof Layers }> = {
+  "project.hero": { label: "Hero / Master Plan Header", icon: Flame },
+  "project.location": { label: "Strategic Location & Map", icon: MapPin },
+  "project.masterplan": { label: "Township Master Plan Layout", icon: Layers },
+  "project.blocks": { label: "Block-Wise Zoning (A–D)", icon: Building },
+  "project.roads": { label: "Road Network & Infrastructure", icon: CheckSquare },
+  "project.amenities": { label: "Modern Amenities & Lifestyle", icon: Sparkles },
+  "project.plots": { label: "Plot Inventory & Investment", icon: Building },
+  "project.sitevisit": { label: "Site Visit Booking & Contact", icon: Phone },
+  "project.faq": { label: "Project FAQs", icon: HelpCircle },
+};
+
 export function VisualCanvas({
   blocks,
   selectedBlockId,
@@ -171,7 +183,16 @@ export function VisualCanvas({
         {blocks.map((block, index) => {
           const isSelected = selectedBlockId === block.id && !previewMode;
           const isHovered = hoveredBlockId === block.id && !previewMode && !isSelected;
-          const meta = BLOCK_TYPE_LABELS[block.type] || { label: block.type, icon: Layers };
+          const blockKey =
+            (block.data?.key as string) ||
+            (block.type?.startsWith("project_")
+              ? block.type.replace("_", ".")
+              : block.type?.startsWith("project.")
+              ? block.type
+              : "");
+          const meta =
+            BLOCK_KEY_LABELS[blockKey] ||
+            BLOCK_TYPE_LABELS[block.type] || { label: block.type, icon: Layers };
           const Icon = meta.icon;
           const customStyles = (block.data?.customStyles ?? {}) as Record<string, any>;
 
@@ -181,7 +202,9 @@ export function VisualCanvas({
             (viewport === "tablet" && customStyles.showTablet === false) ||
             (viewport === "mobile" && customStyles.showMobile === false);
 
-          if (previewMode && hideInViewport) {
+          const isHiddenFromPublic = customStyles.hidden === true;
+
+          if (previewMode && (hideInViewport || isHiddenFromPublic)) {
             return null;
           }
 
@@ -205,7 +228,7 @@ export function VisualCanvas({
                     : ""
                 }`}
                 style={{
-                  opacity: hideInViewport ? 0.4 : 1,
+                  opacity: hideInViewport || isHiddenFromPublic ? 0.5 : 1,
                   backgroundColor: customStyles.bgColor || undefined,
                   color: customStyles.textColor || undefined,
                   paddingTop: customStyles.paddingY !== undefined ? `${customStyles.paddingY}px` : undefined,
@@ -213,6 +236,12 @@ export function VisualCanvas({
                   borderRadius: customStyles.borderRadius ? `${customStyles.borderRadius}px` : undefined,
                 }}
               >
+                {/* Hidden from public badge */}
+                {isHiddenFromPublic && !previewMode && (
+                  <div className="absolute top-2 right-2 z-20 bg-amber-500/90 text-white text-[10px] font-semibold px-2 py-0.5 rounded shadow pointer-events-none">
+                    Hidden on Live Site
+                  </div>
+                )}
                 {/* FLOATING ACTION TOOLBAR ON SELECTED BLOCK */}
                 {isSelected && (
                   <div className="absolute -top-9 left-2 z-30 flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-t-md shadow-md text-xs select-none">
